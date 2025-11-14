@@ -17,18 +17,18 @@ namespace ProjectFilesGenerator.Types
 {
 public partial class Assets
 {
-    public string File1_txt => "Assets\\file1.txt";
     public SubDirType SubDir { get; } = new();
     public partial class SubDirType
     {
-        public string File2_json => "Assets\\SubDir\\file2.json";
         public NestedType Nested { get; } = new();
         public partial class NestedType
         {
             public string File3_xml => "Assets\\SubDir\\Nested\\file3.xml";
         }
 
+        public string File2_json => "Assets\\SubDir\\file2.json";
     }
 
+    public string File1_txt => "Assets\\file1.txt";
 }
 }

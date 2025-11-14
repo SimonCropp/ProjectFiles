@@ -195,13 +195,8 @@ public class ProjectFilesSourceGenerator :
 
     static void GenerateRootProperties(StringBuilder builder, FileTreeNode node)
     {
-        foreach (var (name, childNode) in node.Children.OrderBy(_ => _.Key))
+        foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key))
         {
-            if (!childNode.IsDirectory)
-            {
-                continue;
-            }
-
             var className = ToValidIdentifier(name);
             builder.AppendLine($"        public static {className} {className} {{ get; }} = new();");
         }
@@ -211,13 +206,8 @@ public class ProjectFilesSourceGenerator :
     {
         var indent = new string(' ', indentCount * 4);
 
-        foreach (var (name, childNode) in node.Children.OrderBy(_ => _.Key))
+        foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key))
         {
-            if (!childNode.IsDirectory)
-            {
-                continue;
-            }
-
             var className = ToValidIdentifier(name);
 
             builder.AppendLine(
@@ -237,34 +227,34 @@ public class ProjectFilesSourceGenerator :
     {
         var indent = new string(' ', indentCount * 4);
 
-        foreach (var (name, childNode) in node.Children.OrderBy(_ => _.Key))
+        // Generate subdirectory properties first
+        foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key))
         {
-            if (childNode.IsDirectory)
-            {
-                var className = ToValidIdentifier(name);
-                // generate subdirectory property
-                builder.AppendLine($"{indent}public {className}Type {className} {{ get; }} = new();");
+            var className = ToValidIdentifier(name);
+            // generate subdirectory property
+            builder.AppendLine($"{indent}public {className}Type {className} {{ get; }} = new();");
 
-                // generate nested type definitions for subdirectory
-                builder.AppendLine(
-                    $$"""
-                      {{indent}}public partial class {{className}}Type
-                      {{indent}}{
-                      """);
+            // generate nested type definitions for subdirectory
+            builder.AppendLine(
+                $$"""
+                  {{indent}}public partial class {{className}}Type
+                  {{indent}}{
+                  """);
 
-                GenerateDirectoryMembers(builder, childNode, indentCount + 1);
+            GenerateDirectoryMembers(builder, childNode, indentCount + 1);
 
-                builder.AppendLine($"{indent}}}");
-                builder.AppendLine();
-            }
-            else
-            {
-                // generate file property
-                var propertyName = ToFilePropertyName(name);
-                var path = childNode.FullPath!.Replace("\\", @"\\");
+            builder.AppendLine($"{indent}}}");
+            builder.AppendLine();
+        }
 
-                builder.AppendLine($"""{indent}public string {propertyName} => "{path}";""");
-            }
+        // Generate file properties
+        foreach (var filePath in node.Files.OrderBy(_ => _))
+        {
+            var fileName = Path.GetFileName(filePath);
+            var propertyName = ToFilePropertyName(fileName);
+            var path = filePath.Replace("\\", @"\\");
+
+            builder.AppendLine($"""{indent}public string {propertyName} => "{path}";""");
         }
     }
 
@@ -289,7 +279,6 @@ public class ProjectFilesSourceGenerator :
     {
         var root = new FileTreeNode
         {
-            IsDirectory = true,
             FullPath = null
         };
 
@@ -298,23 +287,24 @@ public class ProjectFilesSourceGenerator :
             var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             var current = root;
 
-            for (var i = 0; i < parts.Length; i++)
+            for (var i = 0; i < parts.Length - 1; i++)
             {
                 var part = parts[i];
 
-                if (!current.Children.TryGetValue(part, out var child))
+                if (!current.Directories.TryGetValue(part, out var child))
                 {
-                    var isLast = i == parts.Length - 1;
                     child = new()
                     {
-                        IsDirectory = !isLast,
-                        FullPath = isLast ? file : null
+                        FullPath = null
                     };
-                    current.Children[part] = child;
+                    current.Directories[part] = child;
                 }
 
                 current = child;
             }
+
+            // Add the file to the current directory's Files list
+            current.Files.Add(file);
         }
 
         return root;
@@ -372,8 +362,8 @@ public class ProjectFilesSourceGenerator :
 
     class FileTreeNode
     {
-        public required bool IsDirectory { get; init; }
         public required string? FullPath { get; init; }
-        public Dictionary<string, FileTreeNode> Children { get; } = [];
+        public Dictionary<string, FileTreeNode> Directories { get; } = [];
+        public List<string> Files { get; } = [];
     }
 }
