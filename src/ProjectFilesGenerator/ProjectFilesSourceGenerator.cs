@@ -1,14 +1,9 @@
-using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Xml.Linq;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
-
-namespace ProjectFilesGenerator;
+﻿namespace ProjectFilesGenerator;
 
 [Generator]
 [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035:Do not use APIs banned for analyzers")]
-public class ProjectFilesSourceGenerator : IIncrementalGenerator
+public class ProjectFilesSourceGenerator :
+    IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -18,9 +13,9 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
 
         // Parse the project file and extract file paths
         var filePaths = projectFiles
-            .Select((file, cancellationToken) =>
+            .Select((file, cancel) =>
             {
-                var text = file.GetText(cancellationToken);
+                var text = file.GetText(cancel);
                 if (text == null)
                 {
                     return ImmutableArray<string>.Empty;
@@ -39,7 +34,7 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
         });
     }
 
-    private static ImmutableArray<string> ParseProjectFile(string content, string projectDir)
+    static ImmutableArray<string> ParseProjectFile(string content, string projectDir)
     {
         var doc = XDocument.Parse(content);
 
@@ -56,26 +51,32 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
                 var copyToOutput = item.Elements()
                     .FirstOrDefault(_ => _.Name.LocalName == "CopyToOutputDirectory");
 
-                if (copyToOutput?.Value is "PreserveNewest" or "Always")
+                if (copyToOutput?.Value is not ("PreserveNewest" or "Always"))
                 {
-                    var includeAttr = item.Attribute("Include")?.Value ?? item.Attribute("Update")?.Value;
-                    if (!string.IsNullOrEmpty(includeAttr))
-                    {
-                        // Expand glob patterns
-                        var expandedFiles = ExpandGlobPattern(includeAttr!, projectDir);
-                        files.AddRange(expandedFiles);
-                    }
+                    continue;
                 }
+
+                var include = item.Attribute("Include")?.Value ?? item.Attribute("Update")?.Value;
+                if (string.IsNullOrEmpty(include))
+                {
+                    continue;
+                }
+
+                // Expand glob patterns
+                var expanded = ExpandGlobPattern(include!, projectDir);
+                files.AddRange(expanded);
             }
         }
 
         return files.Distinct().OrderBy(_ => _).ToImmutableArray();
     }
 
+    static char separatorChar = Path.DirectorySeparatorChar;
+
     static IEnumerable<string> ExpandGlobPattern(string pattern, string projectDir)
     {
         // Normalize path separators
-        pattern = pattern.Replace('/', Path.DirectorySeparatorChar);
+        pattern = pattern.Replace('/', separatorChar);
 
         if (!Directory.Exists(projectDir))
         {
@@ -83,19 +84,17 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
         }
 
         // Check if pattern contains wildcards
-        if (pattern.Contains("*") ||
-            pattern.Contains("?"))
+        if (pattern.Contains('*') ||
+            pattern.Contains('?'))
         {
-            var parts = pattern.Split(Path.DirectorySeparatorChar);
+            var parts = pattern.Split(separatorChar);
             var hasRecursive = parts.Contains("**");
 
             if (hasRecursive)
             {
                 // Handle ** recursive pattern
-                var beforeRecursive = string.Join(Path.DirectorySeparatorChar.ToString(),
-                    parts.TakeWhile(_ => _ != "**"));
-                var afterRecursive = string.Join(Path.DirectorySeparatorChar.ToString(),
-                    parts.SkipWhile(_ => _ != "**").Skip(1));
+                var beforeRecursive = string.Join(separatorChar, parts.TakeWhile(_ => _ != "**"));
+                var afterRecursive = string.Join(separatorChar, parts.SkipWhile(_ => _ != "**").Skip(1));
 
                 var searchDir = string.IsNullOrEmpty(beforeRecursive)
                     ? projectDir
@@ -108,8 +107,8 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
 
                 var searchPattern = string.IsNullOrEmpty(afterRecursive) ? "*.*" : afterRecursive;
 
-                var foundFiles = Directory.GetFiles(searchDir, searchPattern, SearchOption.AllDirectories);
-                return foundFiles.Select(f => GetRelativePath(projectDir, f));
+                var found = Directory.GetFiles(searchDir, searchPattern, SearchOption.AllDirectories);
+                return found.Select(file => GetRelativePath(projectDir, file));
             }
             else
             {
@@ -122,7 +121,9 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
                     : Path.Combine(projectDir, dirPart);
 
                 if (!Directory.Exists(searchDir))
-                    return Enumerable.Empty<string>();
+                {
+                    return [];
+                }
 
                 var foundFiles = Directory.GetFiles(searchDir, filePart);
                 return foundFiles.Select(f => GetRelativePath(projectDir, f));
@@ -131,7 +132,7 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
 
         // No wildcards - just return the file if it exists
         var fullPath = Path.Combine(projectDir, pattern);
-        return File.Exists(fullPath) ? [pattern] : Enumerable.Empty<string>();
+        return File.Exists(fullPath) ? [pattern] : [];
     }
 
     static string GetRelativePath(string basePath, string fullPath)
@@ -139,18 +140,17 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
         var baseUri = new Uri(EnsureTrailingSlash(basePath));
         var fullUri = new Uri(fullPath);
         var relativeUri = baseUri.MakeRelativeUri(fullUri);
-        return Uri.UnescapeDataString(relativeUri.ToString()).Replace('/', Path.DirectorySeparatorChar);
+        return Uri.UnescapeDataString(relativeUri.ToString()).Replace('/', separatorChar);
     }
 
     static string EnsureTrailingSlash(string path)
     {
-        if (path.EndsWith(Path.DirectorySeparatorChar.ToString()))
+        if (path.EndsWith(separatorChar.ToString()))
         {
             return path;
         }
 
-        return path + Path.DirectorySeparatorChar;
-
+        return path + separatorChar;
     }
 
     static string GenerateSource(ImmutableArray<string> files)
@@ -158,16 +158,19 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
         var tree = BuildFileTree(files);
         var builder = new StringBuilder();
 
-        builder.AppendLine("// <auto-generated/>");
-        builder.AppendLine("#nullable enable");
-        builder.AppendLine();
-        builder.AppendLine("namespace ProjectFiles;");
-        builder.AppendLine();
-        builder.AppendLine("/// <summary>");
-        builder.AppendLine("/// Provides strongly-typed access to project files marked with CopyToOutputDirectory.");
-        builder.AppendLine("/// </summary>");
-        builder.AppendLine("public static partial class ProjectFiles");
-        builder.AppendLine("{");
+        builder.AppendLine(
+            """
+            // <auto-generated/>
+            #nullable enable
+
+            namespace ProjectFiles;
+
+            /// <summary>
+            /// Provides strongly-typed access to project files marked with CopyToOutputDirectory.
+            /// </summary>
+            public static partial class ProjectFiles
+            {
+            """);
 
         GenerateTreeNode(builder, tree, 1);
 
@@ -181,7 +184,8 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
         var root = new FileTreeNode
         {
             Name = "Root",
-            IsDirectory = true
+            IsDirectory = true,
+            FullPath = null
         };
 
         foreach (var file in files)
@@ -192,10 +196,10 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
             for (var i = 0; i < parts.Length; i++)
             {
                 var part = parts[i];
-                var isLast = i == parts.Length - 1;
 
                 if (!current.Children.TryGetValue(part, out var child))
                 {
+                    var isLast = i == parts.Length - 1;
                     child = new()
                     {
                         Name = part,
@@ -212,29 +216,28 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
         return root;
     }
 
-    static void GenerateTreeNode(StringBuilder builder, FileTreeNode node, int indent)
+    static void GenerateTreeNode(StringBuilder builder, FileTreeNode node, int indentCount)
     {
-        var indentStr = new string(' ', indent * 4);
+        var indent = new string(' ', indentCount * 4);
 
-        foreach (var child in node.Children.OrderBy(_ => _.Key))
+        foreach (var (name, childNode) in node.Children.OrderBy(_ => _.Key))
         {
-            var name = child.Key;
-            var childNode = child.Value;
-
             if (childNode.IsDirectory)
             {
                 // Generate nested static class for directory
                 var className = ToValidIdentifier(name);
-                builder.AppendLine($"{indentStr}/// <summary>");
-                builder.AppendLine($"{indentStr}/// Files in the '{name}' directory.");
-                builder.AppendLine($"{indentStr}/// </summary>");
-                builder.AppendLine($"{indentStr}public static partial class {className}");
-                builder.AppendLine($"{indentStr}{{");
+                builder.AppendLine(
+                    $$"""
+                      {{indent}}/// <summary>
+                      {{indent}}/// Files in the '{{name}}' directory.
+                      {{indent}}/// </summary>
+                      {{indent}}public static partial class {{className}}
+                      {{indent}}{
+                      """);
 
-                GenerateTreeNode(builder, childNode, indent + 1);
+                GenerateTreeNode(builder, childNode, indentCount + 1);
 
-                builder.AppendLine($"{indentStr}}}");
-                builder.AppendLine();
+                builder.AppendLine($"{indent}}}");
             }
             else
             {
@@ -246,159 +249,76 @@ public class ProjectFilesSourceGenerator : IIncrementalGenerator
                     propertyName += ToValidIdentifier(extension.TrimStart('.'), true);
                 }
 
-                var path = childNode.FullPath!.Replace("\\", "\\\\");
+                var path = childNode.FullPath!.Replace("\\", @"\\");
 
-                builder.AppendLine($"{indentStr}/// <summary>");
-                builder.AppendLine($"{indentStr}/// Path to '{name}'.");
-                builder.AppendLine($"{indentStr}/// </summary>");
-                builder.AppendLine($"{indentStr}public static string {propertyName} => \"{path}\";");
-                builder.AppendLine();
+                builder.AppendLine(
+                    $"""
+                     {indent}/// <summary>
+                     {indent}/// Path to '{name}'.
+                     {indent}/// </summary>
+                     {indent}public static string {propertyName} => "{path}";
+                     """);
             }
+
+            builder.AppendLine();
         }
     }
 
     static string ToValidIdentifier(string name, bool capitalizeFirst = false)
     {
-        if (string.IsNullOrEmpty(name))
-        {
-            return "_";
-        }
-
-        var sb = new StringBuilder();
+        var builder = new StringBuilder();
         var capitalizeNext = capitalizeFirst;
 
         foreach (var ch in name)
         {
             if (char.IsLetterOrDigit(ch))
             {
-                sb.Append(capitalizeNext ? char.ToUpperInvariant(ch) : ch);
+                builder.Append(capitalizeNext ? char.ToUpperInvariant(ch) : ch);
                 capitalizeNext = false;
             }
             else if (ch == '_')
             {
-                sb.Append('_');
+                builder.Append('_');
                 capitalizeNext = false;
             }
             else
             {
                 // Replace invalid characters with underscore and capitalize next
-                if (sb.Length > 0 && sb[sb.Length - 1] != '_')
+                if (builder.Length > 0 && builder[^1] != '_')
                 {
                     capitalizeNext = true;
                 }
             }
         }
 
-        var result = sb.ToString();
+        var result = builder.ToString();
 
         // Ensure it starts with a letter or underscore
         if (result.Length > 0 && char.IsDigit(result[0]))
+        {
             result = "_" + result;
+        }
 
         // Handle C# keywords
-        if (IsCSharpKeyword(result))
+        if (KeywordDetect.IsCSharpKeyword(result))
+        {
             result = "@" + result;
+        }
 
         // Capitalize first letter if it's a class/namespace
         if (!capitalizeFirst && result.Length > 0)
         {
-            result = char.ToUpperInvariant(result[0]) + result.Substring(1);
+            result = char.ToUpperInvariant(result[0]) + result[1..];
         }
 
         return string.IsNullOrEmpty(result) ? "_" : result;
     }
 
-    static bool IsCSharpKeyword(string identifier)
-    {
-        var keywords = new HashSet<string>
-        {
-            "abstract",
-            "as",
-            "base",
-            "bool",
-            "break",
-            "byte",
-            "case",
-            "catch",
-            "char",
-            "checked",
-            "class",
-            "const",
-            "continue",
-            "decimal",
-            "default",
-            "delegate",
-            "do",
-            "double",
-            "else",
-            "enum",
-            "event",
-            "explicit",
-            "extern",
-            "false",
-            "finally",
-            "fixed",
-            "float",
-            "for",
-            "foreach",
-            "goto",
-            "if",
-            "implicit",
-            "in",
-            "int",
-            "interface",
-            "internal",
-            "is",
-            "lock",
-            "long",
-            "namespace",
-            "new",
-            "null",
-            "object",
-            "operator",
-            "out",
-            "override",
-            "params",
-            "private",
-            "protected",
-            "public",
-            "readonly",
-            "ref",
-            "return",
-            "sbyte",
-            "sealed",
-            "short",
-            "sizeof",
-            "stackalloc",
-            "static",
-            "string",
-            "struct",
-            "switch",
-            "this",
-            "throw",
-            "true",
-            "try",
-            "typeof",
-            "uint",
-            "ulong",
-            "unchecked",
-            "unsafe",
-            "ushort",
-            "using",
-            "virtual",
-            "void",
-            "volatile",
-            "while"
-        };
-
-        return keywords.Contains(identifier);
-    }
-
     class FileTreeNode
     {
-        public string Name { get; set; } = string.Empty;
-        public bool IsDirectory { get; set; }
-        public string? FullPath { get; set; }
+        public required string Name { get; init; }
+        public required bool IsDirectory { get; init; }
+        public required string? FullPath { get; init; }
         public Dictionary<string, FileTreeNode> Children { get; } = [];
     }
 }

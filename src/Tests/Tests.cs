@@ -17,7 +17,9 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(project, ["config.json"]);
+        var result = TestHelper.Run(project, ["config.json"]);
+
+        return Verify(result);
     }
 
     [Test]
@@ -39,12 +41,14 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(
+        var result = TestHelper.Run(
             project,
             [
                 "Assets/Images/logo.png",
                 "Assets/Data/users.csv"
             ]);
+
+        return Verify(result);
     }
 
     [Test]
@@ -63,13 +67,15 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(
+        var result = TestHelper.Run(
             project,
             [
                 "Assets/file1.txt",
                 "Assets/SubDir/file2.json",
                 "Assets/SubDir/Nested/file3.xml"
             ]);
+
+        return Verify(result);
     }
 
     [Test]
@@ -94,13 +100,15 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(
+        var result = TestHelper.Run(
             project,
             [
                 "Data/users.csv",
                 "wwwroot/index.html",
                 "Config/appsettings.json"
             ]);
+
+        return Verify(result);
     }
 
     [Test]
@@ -125,13 +133,15 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(
+        var result = TestHelper.Run(
             project,
             [
                 "my-config.json",
                 "user_data.csv",
                 "file.with.dots.txt"
             ]);
+
+        return Verify(result);
     }
 
     [Test]
@@ -153,12 +163,14 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(
+        var result = TestHelper.Run(
             project,
             [
                 "1-first.txt",
                 "file123.json"
             ]);
+
+        return Verify(result);
     }
 
     [Test]
@@ -178,7 +190,9 @@ public class Tests
                       """;
 
         // No files in EmptyDir - should generate empty or minimal code
-        return TestHelper.Verify(project, []);
+        var result = TestHelper.Run(project, []);
+
+        return Verify(result);
     }
 
     [Test]
@@ -197,13 +211,15 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(
+        var result = TestHelper.Run(
             project,
             [
                 "Configs/appsettings.json",
                 "Configs/logging.json",
                 "Configs/database.json"
             ]);
+
+        return Verify(result);
     }
 
     [Test]
@@ -228,13 +244,15 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(
+        var result = TestHelper.Run(
             project,
             [
                 "class.txt",
                 "namespace.json",
                 "static.xml"
             ]);
+
+        return Verify(result);
     }
 
     [Test]
@@ -253,7 +271,7 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(
+        var result = TestHelper.Run(
             project,
             [
                 "Assets/Images/Icons/favicon.ico",
@@ -265,6 +283,8 @@ public class Tests
                 "Assets/Fonts/roboto.ttf",
                 "Assets/readme.txt"
             ]);
+
+        return Verify(result);
     }
 
     [Test]
@@ -283,7 +303,9 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(project, []);
+        var result = TestHelper.Run(project, []);
+
+        return Verify(result);
     }
 
     [Test]
@@ -305,6 +327,8 @@ public class Tests
                       </Project>
                       """;
 
-        return TestHelper.Verify(project, ["included.txt", "excluded.txt"]);
+        var result = TestHelper.Run(project, ["included.txt", "excluded.txt"]);
+
+        return Verify(result);
     }
 }

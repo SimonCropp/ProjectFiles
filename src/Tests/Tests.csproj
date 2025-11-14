@@ -16,8 +16,4 @@
     <ProjectReference Include="..\ProjectFilesGenerator\ProjectFilesGenerator.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EditorConfigFiles Remove=".editorconfig" />
-  </ItemGroup>
-
 </Project>
