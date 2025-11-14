@@ -128,8 +128,8 @@ public class ProjectFilesSourceGenerator :
                     return null;
                 }
 
-                var foundFiles = Directory.GetFiles(searchDir, filePart);
-                return foundFiles.Select(f => GetRelativePath(projectDir, f));
+                var found = Directory.GetFiles(searchDir, filePart);
+                return found.Select(file => GetRelativePath(projectDir, file));
             }
         }
 
