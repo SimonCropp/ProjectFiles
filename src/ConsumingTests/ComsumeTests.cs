@@ -19,6 +19,9 @@ public class ComsumeTests
     [Test]
     public void Config() =>
         IsTrue(File.Exists(ProjectFiles.Config.Appsettings_json));
+    [Test]
+    public void LowerCase() =>
+        IsTrue(File.Exists(ProjectFiles.LowerCase.LowerCase_json));
 
     [Test]
     public void Nested()
