@@ -7,6 +7,6 @@
 /// </summary>
 public static partial class ProjectFiles
 {
-    public static string IncludedTxt => "included.txt";
+    public static string Included_txt => "included.txt";
 
 }

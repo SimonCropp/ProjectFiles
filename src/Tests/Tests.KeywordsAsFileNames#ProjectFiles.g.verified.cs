@@ -7,10 +7,10 @@
 /// </summary>
 public static partial class ProjectFiles
 {
-    public static string @classTxt => "class.txt";
+    public static string @class_txt => "class.txt";
 
-    public static string @namespaceJson => "namespace.json";
+    public static string @namespace_json => "namespace.json";
 
-    public static string @staticXml => "static.xml";
+    public static string @static_xml => "static.xml";
 
 }

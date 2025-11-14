@@ -12,11 +12,11 @@ public static partial class ProjectFiles
     /// </summary>
     public static partial class Configs
     {
-        public static string AppsettingsJson => "Configs\\appsettings.json";
+        public static string Appsettings_json => "Configs\\appsettings.json";
 
-        public static string DatabaseJson => "Configs\\database.json";
+        public static string Database_json => "Configs\\database.json";
 
-        public static string LoggingJson => "Configs\\logging.json";
+        public static string Logging_json => "Configs\\logging.json";
 
     }
 

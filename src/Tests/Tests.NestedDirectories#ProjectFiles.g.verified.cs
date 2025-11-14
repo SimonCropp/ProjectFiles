@@ -17,7 +17,7 @@ public static partial class ProjectFiles
         /// </summary>
         public static partial class Data
         {
-            public static string UsersCsv => "Assets\\Data\\users.csv";
+            public static string Users_csv => "Assets\\Data\\users.csv";
 
         }
 
@@ -26,7 +26,7 @@ public static partial class ProjectFiles
         /// </summary>
         public static partial class Images
         {
-            public static string LogoPng => "Assets\\Images\\logo.png";
+            public static string Logo_png => "Assets\\Images\\logo.png";
 
         }
 

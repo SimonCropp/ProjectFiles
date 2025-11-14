@@ -22,9 +22,9 @@ public static partial class ProjectFiles
             /// </summary>
             public static partial class Config
             {
-                public static string SecretsJson => "Assets\\Data\\Config\\secrets.json";
+                public static string Secrets_json => "Assets\\Data\\Config\\secrets.json";
 
-                public static string SettingsJson => "Assets\\Data\\Config\\settings.json";
+                public static string Settings_json => "Assets\\Data\\Config\\settings.json";
 
             }
 
@@ -33,7 +33,7 @@ public static partial class ProjectFiles
             /// </summary>
             public static partial class Seeds
             {
-                public static string UsersCsv => "Assets\\Data\\Seeds\\users.csv";
+                public static string Users_csv => "Assets\\Data\\Seeds\\users.csv";
 
             }
 
@@ -44,7 +44,7 @@ public static partial class ProjectFiles
         /// </summary>
         public static partial class Fonts
         {
-            public static string RobotoTtf => "Assets\\Fonts\\roboto.ttf";
+            public static string Roboto_ttf => "Assets\\Fonts\\roboto.ttf";
 
         }
 
@@ -58,7 +58,7 @@ public static partial class ProjectFiles
             /// </summary>
             public static partial class Backgrounds
             {
-                public static string HeaderJpg => "Assets\\Images\\Backgrounds\\header.jpg";
+                public static string Header_jpg => "Assets\\Images\\Backgrounds\\header.jpg";
 
             }
 
@@ -67,15 +67,15 @@ public static partial class ProjectFiles
             /// </summary>
             public static partial class Icons
             {
-                public static string FaviconIco => "Assets\\Images\\Icons\\favicon.ico";
+                public static string Favicon_ico => "Assets\\Images\\Icons\\favicon.ico";
 
-                public static string LogoPng => "Assets\\Images\\Icons\\logo.png";
+                public static string Logo_png => "Assets\\Images\\Icons\\logo.png";
 
             }
 
         }
 
-        public static string ReadmeTxt => "Assets\\readme.txt";
+        public static string Readme_txt => "Assets\\readme.txt";
 
     }
 

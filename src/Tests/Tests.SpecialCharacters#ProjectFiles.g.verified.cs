@@ -7,10 +7,10 @@
 /// </summary>
 public static partial class ProjectFiles
 {
-    public static string FileWithDotsTxt => "file.with.dots.txt";
+    public static string FileWithDots_txt => "file.with.dots.txt";
 
-    public static string MyConfigJson => "my-config.json";
+    public static string MyConfig_json => "my-config.json";
 
-    public static string User_dataCsv => "user_data.csv";
+    public static string User_data_csv => "user_data.csv";
 
 }

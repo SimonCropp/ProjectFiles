@@ -7,8 +7,8 @@
 /// </summary>
 public static partial class ProjectFiles
 {
-    public static string _1FirstTxt => "1-first.txt";
+    public static string _1First_txt => "1-first.txt";
 
-    public static string File123Json => "file123.json";
+    public static string File123_json => "file123.json";
 
 }

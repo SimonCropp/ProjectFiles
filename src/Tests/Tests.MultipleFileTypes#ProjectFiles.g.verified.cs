@@ -12,7 +12,7 @@ public static partial class ProjectFiles
     /// </summary>
     public static partial class Config
     {
-        public static string AppsettingsJson => "Config\\appsettings.json";
+        public static string Appsettings_json => "Config\\appsettings.json";
 
     }
 
@@ -21,7 +21,7 @@ public static partial class ProjectFiles
     /// </summary>
     public static partial class Data
     {
-        public static string UsersCsv => "Data\\users.csv";
+        public static string Users_csv => "Data\\users.csv";
 
     }
 
@@ -30,7 +30,7 @@ public static partial class ProjectFiles
     /// </summary>
     public static partial class Wwwroot
     {
-        public static string IndexHtml => "wwwroot\\index.html";
+        public static string Index_html => "wwwroot\\index.html";
 
     }
 

@@ -223,7 +223,7 @@ public class ProjectFilesSourceGenerator :
             if (childNode.IsDirectory)
             {
                 // Generate nested static class for directory
-                var className = ToValidIdentifier(name);
+                var className = ToValidClassName(name);
                 builder.AppendLine(
                     $$"""
                       {{indent}}/// <summary>
@@ -240,11 +240,11 @@ public class ProjectFilesSourceGenerator :
             else
             {
                 // Generate property for file
-                var propertyName = ToValidIdentifier(Path.GetFileNameWithoutExtension(name));
+                var propertyName = ToValidPropertyName(Path.GetFileNameWithoutExtension(name));
                 var extension = Path.GetExtension(name);
                 if (!string.IsNullOrEmpty(extension))
                 {
-                    propertyName += ToValidIdentifier(extension);
+                    propertyName += '_' + extension[1..];
                 }
 
                 var path = childNode.FullPath!.Replace("\\", @"\\");
@@ -259,7 +259,7 @@ public class ProjectFilesSourceGenerator :
         }
     }
 
-    static string ToValidIdentifier(string name)
+    static string ToValidPropertyName(string name)
     {
         var builder = new StringBuilder();
         var capitalizeNext = false;
@@ -307,6 +307,37 @@ public class ProjectFilesSourceGenerator :
         }
 
         return string.IsNullOrEmpty(result) ? "_" : result;
+    }
+
+    static string ToValidClassName(string name)
+    {
+        var builder = new StringBuilder();
+
+        for (var index = 0; index < name.Length; index++)
+        {
+            var ch = name[index];
+            if (char.IsDigit(ch))
+            {
+                if (index == 0)
+                {
+                    builder.Append('_');
+                }
+
+                builder.Append(ch);
+                continue;
+            }
+
+            if (char.IsLetter(ch))
+            {
+                builder.Append(ch);
+                continue;
+            }
+
+            builder.Append('_');
+        }
+
+        builder.Append('_');
+        return builder.ToString();
     }
 
     class FileTreeNode

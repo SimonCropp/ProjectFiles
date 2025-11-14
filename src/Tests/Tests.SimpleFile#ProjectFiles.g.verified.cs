@@ -7,6 +7,6 @@
 /// </summary>
 public static partial class ProjectFiles
 {
-    public static string ConfigJson => "config.json";
+    public static string Config_json => "config.json";
 
 }

@@ -12,21 +12,21 @@ public static partial class ProjectFiles
     /// </summary>
     public static partial class Assets
     {
-        public static string File1Txt => "Assets\\file1.txt";
+        public static string File1_txt => "Assets\\file1.txt";
 
         /// <summary>
         /// Files in the 'SubDir' directory.
         /// </summary>
         public static partial class SubDir
         {
-            public static string File2Json => "Assets\\SubDir\\file2.json";
+            public static string File2_json => "Assets\\SubDir\\file2.json";
 
             /// <summary>
             /// Files in the 'Nested' directory.
             /// </summary>
             public static partial class Nested
             {
-                public static string File3Xml => "Assets\\SubDir\\Nested\\file3.xml";
+                public static string File3_xml => "Assets\\SubDir\\Nested\\file3.xml";
 
             }
 
