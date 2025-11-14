@@ -26,10 +26,8 @@ namespace ProjectFilesGenerator.Types
 /// </summary>
 public partial class Assets
 {
-    public DataType Data => new();
-
-    public ImagesType Images => new();
-
+    public DataType Data = new();
+    public ImagesType Images = new();
     /// <summary>
     /// Files in the 'Data' directory.
     /// </summary>

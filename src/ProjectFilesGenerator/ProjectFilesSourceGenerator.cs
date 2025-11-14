@@ -260,14 +260,15 @@ public class ProjectFilesSourceGenerator :
         // Then, generate subdirectory properties
         foreach (var (name, childNode) in node.Children.OrderBy(_ => _.Key))
         {
-            if (childNode.IsDirectory)
+            if (!childNode.IsDirectory)
             {
-                var className = ToValidIdentifier(name);
-                var typeName = className + "Type";
-
-                builder.AppendLine($"{indent}public {typeName} {className} => new();");
-                builder.AppendLine();
+                continue;
             }
+
+            var className = ToValidIdentifier(name);
+            var typeName = className + "Type";
+
+            builder.AppendLine($"{indent}public {typeName} {className} = new();");
         }
 
         // Finally, generate nested type definitions for subdirectories

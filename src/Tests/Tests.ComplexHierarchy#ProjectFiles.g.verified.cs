@@ -27,21 +27,16 @@ namespace ProjectFilesGenerator.Types
 public partial class Assets
 {
     public string Readme_txt => "Assets\\readme.txt";
-    public DataType Data => new();
-
-    public FontsType Fonts => new();
-
-    public ImagesType Images => new();
-
+    public DataType Data = new();
+    public FontsType Fonts = new();
+    public ImagesType Images = new();
     /// <summary>
     /// Files in the 'Data' directory.
     /// </summary>
     public partial class DataType
     {
-        public ConfigType Config => new();
-
-        public SeedsType Seeds => new();
-
+        public ConfigType Config = new();
+        public SeedsType Seeds = new();
         /// <summary>
         /// Files in the 'Config' directory.
         /// </summary>
@@ -74,10 +69,8 @@ public partial class Assets
     /// </summary>
     public partial class ImagesType
     {
-        public BackgroundsType Backgrounds => new();
-
-        public IconsType Icons => new();
-
+        public BackgroundsType Backgrounds = new();
+        public IconsType Icons = new();
         /// <summary>
         /// Files in the 'Backgrounds' directory.
         /// </summary>

@@ -1,7 +1,7 @@
 using ProjectFilesGenerator;
 
 [TestFixture]
-public class Tests
+public class ComsumeTests
 {
     [Test]
     public void Recursive() =>
