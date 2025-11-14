@@ -9,23 +9,23 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     public static partial class ProjectFiles
     {
-        public static Config Config { get; } = new();
-        public static Data Data { get; } = new();
-        public static wwwroot wwwroot { get; } = new();
+        public static ConfigType Config { get; } = new();
+        public static DataType Data { get; } = new();
+        public static wwwrootType wwwroot { get; } = new();
     }
 }
 
 namespace ProjectFilesGenerator.Types
 {
-public partial class Config
+public partial class ConfigType
 {
     public string appsettings_json => "Config\\appsettings.json";
 }
-public partial class Data
+public partial class DataType
 {
     public string users_csv => "Data\\users.csv";
 }
-public partial class wwwroot
+public partial class wwwrootType
 {
     public string index_html => "wwwroot\\index.html";
 }
