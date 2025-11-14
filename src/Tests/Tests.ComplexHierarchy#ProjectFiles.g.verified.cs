@@ -23,14 +23,14 @@ public partial class Assets
         public ConfigType Config { get; } = new();
         public partial class ConfigType
         {
-            public string Secrets_json => "Assets\\Data\\Config\\secrets.json";
-            public string Settings_json => "Assets\\Data\\Config\\settings.json";
+            public string secrets_json => "Assets\\Data\\Config\\secrets.json";
+            public string settings_json => "Assets\\Data\\Config\\settings.json";
         }
 
         public SeedsType Seeds { get; } = new();
         public partial class SeedsType
         {
-            public string Users_csv => "Assets\\Data\\Seeds\\users.csv";
+            public string users_csv => "Assets\\Data\\Seeds\\users.csv";
         }
 
     }
@@ -38,7 +38,7 @@ public partial class Assets
     public FontsType Fonts { get; } = new();
     public partial class FontsType
     {
-        public string Roboto_ttf => "Assets\\Fonts\\roboto.ttf";
+        public string roboto_ttf => "Assets\\Fonts\\roboto.ttf";
     }
 
     public ImagesType Images { get; } = new();
@@ -47,18 +47,18 @@ public partial class Assets
         public BackgroundsType Backgrounds { get; } = new();
         public partial class BackgroundsType
         {
-            public string Header_jpg => "Assets\\Images\\Backgrounds\\header.jpg";
+            public string header_jpg => "Assets\\Images\\Backgrounds\\header.jpg";
         }
 
         public IconsType Icons { get; } = new();
         public partial class IconsType
         {
-            public string Favicon_ico => "Assets\\Images\\Icons\\favicon.ico";
-            public string Logo_png => "Assets\\Images\\Icons\\logo.png";
+            public string favicon_ico => "Assets\\Images\\Icons\\favicon.ico";
+            public string logo_png => "Assets\\Images\\Icons\\logo.png";
         }
 
     }
 
-    public string Readme_txt => "Assets\\readme.txt";
+    public string readme_txt => "Assets\\readme.txt";
 }
 }

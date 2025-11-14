@@ -197,7 +197,7 @@ public class ProjectFilesSourceGenerator :
     {
         foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
         {
-            var className = ToValidClassName(Path.GetFileName(node.Path));
+            var className = ToValidName(Path.GetFileName(node.Path));
             builder.AppendLine($"        public static {className} {className} {{ get; }} = new();");
         }
     }
@@ -208,7 +208,7 @@ public class ProjectFilesSourceGenerator :
 
         foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
         {
-            var className = ToValidClassName(Path.GetFileName(node.Path));
+            var className = ToValidName(Path.GetFileName(node.Path));
 
             builder.AppendLine(
                 $$"""
@@ -230,7 +230,7 @@ public class ProjectFilesSourceGenerator :
         // Generate subdirectory properties first
         foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key))
         {
-            var className = ToValidClassName(name);
+            var className = ToValidName(name);
             // generate subdirectory property
             builder.AppendLine($"{indent}public {className}Type {className} {{ get; }} = new();");
 
@@ -263,7 +263,7 @@ public class ProjectFilesSourceGenerator :
         var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
         var extension = Path.GetExtension(fileName);
 
-        var propertyName = ToValidPropertyName(nameWithoutExtension);
+        var propertyName = ToValidName(nameWithoutExtension);
 
         if (!string.IsNullOrEmpty(extension))
         {
@@ -328,93 +328,37 @@ public class ProjectFilesSourceGenerator :
         return topLevelDirectories.Values.ToList();
     }
 
-    static string ToValidClassName(string name)
-    {
-        var builder = SanitizeIdentifier(name);
-
-        // Ensure it starts with a letter or underscore
-        if (char.IsDigit(builder[0]))
-        {
-            builder.Insert(0, '_');
-        }
-
-        // Capitalize first letter (PascalCase for class names)
-        if (builder.Length > 0 && char.IsLower(builder[0]))
-        {
-            builder[0] = char.ToUpperInvariant(builder[0]);
-        }
-
-        // Handle C# keywords
-        var result = builder.ToString();
-        if (KeywordDetect.IsCSharpKeyword(result))
-        {
-            builder.Insert(0, '@');
-            return builder.ToString();
-        }
-
-        return result;
-    }
-
-    static string ToValidPropertyName(string name)
-    {
-        var builder = SanitizeIdentifier(name);
-
-        if (builder.Length == 0)
-        {
-            return "_";
-        }
-
-        // Ensure it starts with a letter or underscore
-        if (char.IsDigit(builder[0]))
-        {
-            builder.Insert(0, '_');
-        }
-
-        // Capitalize first letter (PascalCase for property names)
-        if (builder.Length > 0 && char.IsLower(builder[0]))
-        {
-            builder[0] = char.ToUpperInvariant(builder[0]);
-        }
-
-        // Handle C# keywords
-        var result = builder.ToString();
-        if (KeywordDetect.IsCSharpKeyword(result))
-        {
-            builder.Insert(0, '@');
-            return builder.ToString();
-        }
-
-        return result;
-    }
-
-    static StringBuilder SanitizeIdentifier(string name)
+    static string ToValidName(string name)
     {
         var builder = new StringBuilder();
-        var capitalizeNext = false;
-
-        foreach (var ch in name)
+        var first = name[0];
+        if (char.IsLetter(first) || first == '_')
         {
+            builder.Append(first);
+        }
+        else
+        {
+            builder.Append('_');
+            if (char.IsDigit(first))
+            {
+                builder.Append(first);
+            }
+        }
+
+        for (var index = 1; index < name.Length; index++)
+        {
+            var ch = name[index];
             if (char.IsLetterOrDigit(ch))
             {
-                builder.Append(capitalizeNext ? char.ToUpperInvariant(ch) : ch);
-                capitalizeNext = false;
-            }
-            else if (ch == '_')
-            {
-                builder.Append('_');
-                capitalizeNext = false;
+                builder.Append(ch);
             }
             else
             {
-                // Replace invalid characters with underscore and capitalize next
-                if (builder.Length > 0 && builder[^1] != '_')
-                {
-                    capitalizeNext = true;
-                }
+                builder.Append('_');
             }
         }
 
-        return builder;
+        return KeywordDetect.Sanitize(builder);
     }
 
     class FileTreeNode

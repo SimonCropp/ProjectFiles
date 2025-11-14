@@ -20,13 +20,13 @@ public partial class Assets
     public DataType Data { get; } = new();
     public partial class DataType
     {
-        public string Users_csv => "Assets\\Data\\users.csv";
+        public string users_csv => "Assets\\Data\\users.csv";
     }
 
     public ImagesType Images { get; } = new();
     public partial class ImagesType
     {
-        public string Logo_png => "Assets\\Images\\logo.png";
+        public string logo_png => "Assets\\Images\\logo.png";
     }
 
 }

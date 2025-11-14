@@ -17,8 +17,8 @@ namespace ProjectFilesGenerator.Types
 {
 public partial class Configs
 {
-    public string Appsettings_json => "Configs\\appsettings.json";
-    public string Database_json => "Configs\\database.json";
-    public string Logging_json => "Configs\\logging.json";
+    public string appsettings_json => "Configs\\appsettings.json";
+    public string database_json => "Configs\\database.json";
+    public string logging_json => "Configs\\logging.json";
 }
 }

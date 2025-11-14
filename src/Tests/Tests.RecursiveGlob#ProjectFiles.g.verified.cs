@@ -23,12 +23,12 @@ public partial class Assets
         public NestedType Nested { get; } = new();
         public partial class NestedType
         {
-            public string File3_xml => "Assets\\SubDir\\Nested\\file3.xml";
+            public string file3_xml => "Assets\\SubDir\\Nested\\file3.xml";
         }
 
-        public string File2_json => "Assets\\SubDir\\file2.json";
+        public string file2_json => "Assets\\SubDir\\file2.json";
     }
 
-    public string File1_txt => "Assets\\file1.txt";
+    public string file1_txt => "Assets\\file1.txt";
 }
 }

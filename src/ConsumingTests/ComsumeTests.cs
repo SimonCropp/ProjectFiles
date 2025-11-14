@@ -18,15 +18,15 @@ public class ComsumeTests
 
     [Test]
     public void Config() =>
-        IsTrue(File.Exists(ProjectFiles.Config.Appsettings_json));
+        IsTrue(File.Exists(ProjectFiles.Config.appsettings_json));
     [Test]
     public void LowerCase() =>
-        IsTrue(File.Exists(ProjectFiles.LowerCase.LowerCase_json));
+        IsTrue(File.Exists(ProjectFiles.lower_case.lower_case_json));
 
     [Test]
     public void Nested()
     {
         IsTrue(File.Exists(ProjectFiles.RecursiveDirectory.SubDir.NestedFile_txt));
-        IsTrue(File.Exists(ProjectFiles.Config.Appsettings_json));
+        IsTrue(File.Exists(ProjectFiles.Config.appsettings_json));
     }
 }

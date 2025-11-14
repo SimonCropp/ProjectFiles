@@ -11,7 +11,7 @@ namespace ProjectFilesGenerator
     {
         public static Config Config { get; } = new();
         public static Data Data { get; } = new();
-        public static Wwwroot Wwwroot { get; } = new();
+        public static wwwroot wwwroot { get; } = new();
     }
 }
 
@@ -19,14 +19,14 @@ namespace ProjectFilesGenerator.Types
 {
 public partial class Config
 {
-    public string Appsettings_json => "Config\\appsettings.json";
+    public string appsettings_json => "Config\\appsettings.json";
 }
 public partial class Data
 {
-    public string Users_csv => "Data\\users.csv";
+    public string users_csv => "Data\\users.csv";
 }
-public partial class Wwwroot
+public partial class wwwroot
 {
-    public string Index_html => "wwwroot\\index.html";
+    public string index_html => "wwwroot\\index.html";
 }
 }

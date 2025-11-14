@@ -83,6 +83,13 @@ static class KeywordDetect
         "while"
     ];
 
-    public static bool IsCSharpKeyword(string identifier) =>
-        keywords.Contains(identifier);
+    public static string Sanitize(StringBuilder builder)
+    {
+        var result = builder.ToString();
+        if (keywords.Contains(result))
+        {
+            return string.Concat("@", result);
+        }
+        return result;
+    }
 }
