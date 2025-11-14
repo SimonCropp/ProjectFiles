@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/.SolutionItems/">
+    <File Path="../.gitattributes" />
     <File Path="../readme.md" />
     <File Path=".editorconfig" />
     <File Path="appveyor.yml" />
@@ -8,7 +9,7 @@
     <File Path="global.json" />
     <File Path="mdsnippets.json" />
   </Folder>
-  <Project Path="ExampleApp/ExampleApp.csproj" />
   <Project Path="Tests/Tests.csproj" />
+  <Project Path="ConsumingTests/ConsumingTests.csproj" />
   <Project Path="ProjectFilesGenerator/ProjectFilesGenerator.csproj" />
 </Solution>
