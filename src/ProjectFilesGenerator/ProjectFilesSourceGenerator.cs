@@ -195,9 +195,9 @@ public class ProjectFilesSourceGenerator :
 
     static void GenerateRootProperties(StringBuilder builder, List<FileTreeNode> topLevelNodes)
     {
-        foreach (var node in topLevelNodes.OrderBy(_ => _.FullPath))
+        foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
         {
-            var className = ToValidIdentifier(Path.GetFileName(node.FullPath));
+            var className = ToValidClassName(Path.GetFileName(node.Path));
             builder.AppendLine($"        public static {className} {className} {{ get; }} = new();");
         }
     }
@@ -206,9 +206,9 @@ public class ProjectFilesSourceGenerator :
     {
         var indent = new string(' ', indentCount * 4);
 
-        foreach (var node in topLevelNodes.OrderBy(_ => _.FullPath))
+        foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
         {
-            var className = ToValidIdentifier(Path.GetFileName(node.FullPath));
+            var className = ToValidClassName(Path.GetFileName(node.Path));
 
             builder.AppendLine(
                 $$"""
@@ -230,7 +230,7 @@ public class ProjectFilesSourceGenerator :
         // Generate subdirectory properties first
         foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key))
         {
-            var className = ToValidIdentifier(name);
+            var className = ToValidClassName(name);
             // generate subdirectory property
             builder.AppendLine($"{indent}public {className}Type {className} {{ get; }} = new();");
 
@@ -263,7 +263,7 @@ public class ProjectFilesSourceGenerator :
         var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
         var extension = Path.GetExtension(fileName);
 
-        var propertyName = ToValidIdentifier(nameWithoutExtension);
+        var propertyName = ToValidPropertyName(nameWithoutExtension);
 
         if (!string.IsNullOrEmpty(extension))
         {
@@ -293,7 +293,10 @@ public class ProjectFilesSourceGenerator :
             var topLevelName = parts[0];
             if (!topLevelDirectories.TryGetValue(topLevelName, out var topLevelNode))
             {
-                topLevelNode = new FileTreeNode { FullPath = topLevelName };
+                topLevelNode = new()
+                {
+                    Path = topLevelName
+                };
                 topLevelDirectories[topLevelName] = topLevelNode;
             }
 
@@ -308,7 +311,10 @@ public class ProjectFilesSourceGenerator :
 
                 if (!current.Directories.TryGetValue(part, out var child))
                 {
-                    child = new FileTreeNode { FullPath = currentPath };
+                    child = new()
+                    {
+                        Path = currentPath
+                    };
                     current.Directories[part] = child;
                 }
 
@@ -322,7 +328,66 @@ public class ProjectFilesSourceGenerator :
         return topLevelDirectories.Values.ToList();
     }
 
-    static string ToValidIdentifier(string name)
+    static string ToValidClassName(string name)
+    {
+        var builder = SanitizeIdentifier(name);
+
+        // Ensure it starts with a letter or underscore
+        if (char.IsDigit(builder[0]))
+        {
+            builder.Insert(0, '_');
+        }
+
+        // Capitalize first letter (PascalCase for class names)
+        if (builder.Length > 0 && char.IsLower(builder[0]))
+        {
+            builder[0] = char.ToUpperInvariant(builder[0]);
+        }
+
+        // Handle C# keywords
+        var result = builder.ToString();
+        if (KeywordDetect.IsCSharpKeyword(result))
+        {
+            builder.Insert(0, '@');
+            return builder.ToString();
+        }
+
+        return result;
+    }
+
+    static string ToValidPropertyName(string name)
+    {
+        var builder = SanitizeIdentifier(name);
+
+        if (builder.Length == 0)
+        {
+            return "_";
+        }
+
+        // Ensure it starts with a letter or underscore
+        if (char.IsDigit(builder[0]))
+        {
+            builder.Insert(0, '_');
+        }
+
+        // Capitalize first letter (PascalCase for property names)
+        if (builder.Length > 0 && char.IsLower(builder[0]))
+        {
+            builder[0] = char.ToUpperInvariant(builder[0]);
+        }
+
+        // Handle C# keywords
+        var result = builder.ToString();
+        if (KeywordDetect.IsCSharpKeyword(result))
+        {
+            builder.Insert(0, '@');
+            return builder.ToString();
+        }
+
+        return result;
+    }
+
+    static StringBuilder SanitizeIdentifier(string name)
     {
         var builder = new StringBuilder();
         var capitalizeNext = false;
@@ -349,38 +414,12 @@ public class ProjectFilesSourceGenerator :
             }
         }
 
-        // Handle empty result
-        if (builder.Length == 0)
-        {
-            return "_";
-        }
-
-        // Ensure it starts with a letter or underscore
-        if (char.IsDigit(builder[0]))
-        {
-            builder.Insert(0, '_');
-        }
-
-        // Capitalize first letter if it's a class/namespace
-        if (builder.Length > 0 && char.IsLower(builder[0]))
-        {
-            builder[0] = char.ToUpperInvariant(builder[0]);
-        }
-
-        // Handle C# keywords
-        var result = builder.ToString();
-        if (KeywordDetect.IsCSharpKeyword(result))
-        {
-            builder.Insert(0, '@');
-            return builder.ToString();
-        }
-
-        return result;
+        return builder;
     }
 
     class FileTreeNode
     {
-        public required string FullPath { get; init; }
+        public required string Path { get; init; }
         public Dictionary<string, FileTreeNode> Directories { get; } = [];
         public List<string> Files { get; } = [];
     }
