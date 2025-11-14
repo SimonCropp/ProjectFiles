@@ -198,7 +198,7 @@ public class ProjectFilesSourceGenerator :
         foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
         {
             var className = ToValidName(Path.GetFileName(node.Path));
-            builder.AppendLine($"        public static {className} {className} {{ get; }} = new();");
+            builder.AppendLine($"        public static {className}Type {className} {{ get; }} = new();");
         }
     }
 
@@ -212,7 +212,7 @@ public class ProjectFilesSourceGenerator :
 
             builder.AppendLine(
                 $$"""
-                  {{indent}}public partial class {{className}}
+                  {{indent}}public partial class {{className}}Type
                   {{indent}}{
                   """);
 
