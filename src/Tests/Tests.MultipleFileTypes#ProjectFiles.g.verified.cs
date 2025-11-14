@@ -6,24 +6,13 @@ using ProjectFilesGenerator.Types;
 
 namespace ProjectFilesGenerator
 {
-    /// <summary>
-    /// Provides strongly-typed access to project files marked with CopyToOutputDirectory.
-    /// </summary>
+    /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     public static partial class ProjectFiles
     {
-        /// <summary>
-        /// Files in the 'Config' directory.
-        /// </summary>
         public static Config Config => new();
 
-        /// <summary>
-        /// Files in the 'Data' directory.
-        /// </summary>
         public static Data Data => new();
 
-        /// <summary>
-        /// Files in the 'wwwroot' directory.
-        /// </summary>
         public static Wwwroot Wwwroot => new();
 
     }
@@ -31,23 +20,14 @@ namespace ProjectFilesGenerator
 
 namespace ProjectFilesGenerator.Types
 {
-/// <summary>
-/// Files in the 'Config' directory.
-/// </summary>
 public partial class Config
 {
     public string Appsettings_json => "Config\\appsettings.json";
 }
-/// <summary>
-/// Files in the 'Data' directory.
-/// </summary>
 public partial class Data
 {
     public string Users_csv => "Data\\users.csv";
 }
-/// <summary>
-/// Files in the 'wwwroot' directory.
-/// </summary>
 public partial class Wwwroot
 {
     public string Index_html => "wwwroot\\index.html";

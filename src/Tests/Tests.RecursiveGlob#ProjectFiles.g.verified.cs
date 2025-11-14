@@ -6,14 +6,9 @@ using ProjectFilesGenerator.Types;
 
 namespace ProjectFilesGenerator
 {
-    /// <summary>
-    /// Provides strongly-typed access to project files marked with CopyToOutputDirectory.
-    /// </summary>
+    /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     public static partial class ProjectFiles
     {
-        /// <summary>
-        /// Files in the 'Assets' directory.
-        /// </summary>
         public static Assets Assets => new();
 
     }
@@ -21,23 +16,14 @@ namespace ProjectFilesGenerator
 
 namespace ProjectFilesGenerator.Types
 {
-/// <summary>
-/// Files in the 'Assets' directory.
-/// </summary>
 public partial class Assets
 {
     public string File1_txt => "Assets\\file1.txt";
     public SubDirType SubDir { get; } = new();
-    /// <summary>
-    /// Files in the 'SubDir' directory.
-    /// </summary>
     public partial class SubDirType
     {
         public string File2_json => "Assets\\SubDir\\file2.json";
         public NestedType Nested { get; } = new();
-        /// <summary>
-        /// Files in the 'Nested' directory.
-        /// </summary>
         public partial class NestedType
         {
             public string File3_xml => "Assets\\SubDir\\Nested\\file3.xml";

@@ -6,14 +6,9 @@ using ProjectFilesGenerator.Types;
 
 namespace ProjectFilesGenerator
 {
-    /// <summary>
-    /// Provides strongly-typed access to project files marked with CopyToOutputDirectory.
-    /// </summary>
+    /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     public static partial class ProjectFiles
     {
-        /// <summary>
-        /// Files in the 'Configs' directory.
-        /// </summary>
         public static Configs Configs => new();
 
     }
@@ -21,9 +16,6 @@ namespace ProjectFilesGenerator
 
 namespace ProjectFilesGenerator.Types
 {
-/// <summary>
-/// Files in the 'Configs' directory.
-/// </summary>
 public partial class Configs
 {
     public string Appsettings_json => "Configs\\appsettings.json";

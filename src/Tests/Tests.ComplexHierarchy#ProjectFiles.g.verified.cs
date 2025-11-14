@@ -6,14 +6,9 @@ using ProjectFilesGenerator.Types;
 
 namespace ProjectFilesGenerator
 {
-    /// <summary>
-    /// Provides strongly-typed access to project files marked with CopyToOutputDirectory.
-    /// </summary>
+    /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     public static partial class ProjectFiles
     {
-        /// <summary>
-        /// Files in the 'Assets' directory.
-        /// </summary>
         public static Assets Assets => new();
 
     }
@@ -21,21 +16,12 @@ namespace ProjectFilesGenerator
 
 namespace ProjectFilesGenerator.Types
 {
-/// <summary>
-/// Files in the 'Assets' directory.
-/// </summary>
 public partial class Assets
 {
     public DataType Data { get; } = new();
-    /// <summary>
-    /// Files in the 'Data' directory.
-    /// </summary>
     public partial class DataType
     {
         public ConfigType Config { get; } = new();
-        /// <summary>
-        /// Files in the 'Config' directory.
-        /// </summary>
         public partial class ConfigType
         {
             public string Secrets_json => "Assets\\Data\\Config\\secrets.json";
@@ -43,9 +29,6 @@ public partial class Assets
         }
 
         public SeedsType Seeds { get; } = new();
-        /// <summary>
-        /// Files in the 'Seeds' directory.
-        /// </summary>
         public partial class SeedsType
         {
             public string Users_csv => "Assets\\Data\\Seeds\\users.csv";
@@ -54,33 +37,21 @@ public partial class Assets
     }
 
     public FontsType Fonts { get; } = new();
-    /// <summary>
-    /// Files in the 'Fonts' directory.
-    /// </summary>
     public partial class FontsType
     {
         public string Roboto_ttf => "Assets\\Fonts\\roboto.ttf";
     }
 
     public ImagesType Images { get; } = new();
-    /// <summary>
-    /// Files in the 'Images' directory.
-    /// </summary>
     public partial class ImagesType
     {
         public BackgroundsType Backgrounds { get; } = new();
-        /// <summary>
-        /// Files in the 'Backgrounds' directory.
-        /// </summary>
         public partial class BackgroundsType
         {
             public string Header_jpg => "Assets\\Images\\Backgrounds\\header.jpg";
         }
 
         public IconsType Icons { get; } = new();
-        /// <summary>
-        /// Files in the 'Icons' directory.
-        /// </summary>
         public partial class IconsType
         {
             public string Favicon_ico => "Assets\\Images\\Icons\\favicon.ico";

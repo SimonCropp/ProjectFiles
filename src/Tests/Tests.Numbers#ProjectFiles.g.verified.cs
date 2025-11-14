@@ -6,9 +6,7 @@ using ProjectFilesGenerator.Types;
 
 namespace ProjectFilesGenerator
 {
-    /// <summary>
-    /// Provides strongly-typed access to project files marked with CopyToOutputDirectory.
-    /// </summary>
+    /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     public static partial class ProjectFiles
     {
     }

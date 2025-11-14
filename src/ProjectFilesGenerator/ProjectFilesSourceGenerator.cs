@@ -170,9 +170,7 @@ public class ProjectFilesSourceGenerator :
 
             namespace ProjectFilesGenerator
             {
-                /// <summary>
-                /// Provides strongly-typed access to project files marked with CopyToOutputDirectory.
-                /// </summary>
+                /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
                 public static partial class ProjectFiles
                 {
             """);
@@ -205,13 +203,7 @@ public class ProjectFilesSourceGenerator :
             }
 
             var className = ToValidIdentifier(name);
-            builder.AppendLine(
-                $"""
-                         /// <summary>
-                         /// Files in the '{name}' directory.
-                         /// </summary>
-                         public static {className} {className} => new();
-                 """);
+            builder.AppendLine($"        public static {className} {className} => new();");
             builder.AppendLine();
         }
     }
@@ -231,9 +223,6 @@ public class ProjectFilesSourceGenerator :
 
             builder.AppendLine(
                 $$"""
-                  {{indent}}/// <summary>
-                  {{indent}}/// Files in the '{{name}}' directory.
-                  {{indent}}/// </summary>
                   {{indent}}public partial class {{className}}
                   {{indent}}{
                   """);
@@ -260,9 +249,6 @@ public class ProjectFilesSourceGenerator :
                 // generate nested type definitions for subdirectory
                 builder.AppendLine(
                     $$"""
-                      {{indent}}/// <summary>
-                      {{indent}}/// Files in the '{{name}}' directory.
-                      {{indent}}/// </summary>
                       {{indent}}public partial class {{className}}Type
                       {{indent}}{
                       """);
