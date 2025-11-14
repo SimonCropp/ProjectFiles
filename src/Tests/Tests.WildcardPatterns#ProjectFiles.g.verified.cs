@@ -9,8 +9,7 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     public static partial class ProjectFiles
     {
-        public static Configs Configs => new();
-
+        public static Configs Configs { get; } = new();
     }
 }
 

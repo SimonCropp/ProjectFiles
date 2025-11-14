@@ -203,8 +203,7 @@ public class ProjectFilesSourceGenerator :
             }
 
             var className = ToValidIdentifier(name);
-            builder.AppendLine($"        public static {className} {className} => new();");
-            builder.AppendLine();
+            builder.AppendLine($"        public static {className} {className} {{ get; }} = new();");
         }
     }
 

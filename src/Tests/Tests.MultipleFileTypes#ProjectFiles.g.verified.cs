@@ -9,12 +9,9 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     public static partial class ProjectFiles
     {
-        public static Config Config => new();
-
-        public static Data Data => new();
-
-        public static Wwwroot Wwwroot => new();
-
+        public static Config Config { get; } = new();
+        public static Data Data { get; } = new();
+        public static Wwwroot Wwwroot { get; } = new();
     }
 }
 
