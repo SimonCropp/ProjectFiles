@@ -86,3 +86,184 @@ public static partial class ProjectFiles
     }
 
 }
+
+// ==============================================================================
+// New Slash Operator API (GeneratedPaths.g.cs)
+// ==============================================================================
+
+/// <summary>
+/// Represents a path segment that can be composed using the / operator.
+/// </summary>
+public readonly struct PathNode
+{
+    /// <summary>
+    /// Gets the path value.
+    /// </summary>
+    public string Value { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PathNode"/> struct.
+    /// </summary>
+    /// <param name="value">The path value.</param>
+    public PathNode(string value) => Value = value;
+
+    /// <summary>
+    /// Returns the string representation of this path node.
+    /// </summary>
+    public override string ToString() => Value;
+
+    /// <summary>
+    /// Implicitly converts a <see cref="PathNode"/> to a string.
+    /// </summary>
+    public static implicit operator string(PathNode p) => p.Value;
+
+    /// <summary>
+    /// Gets an empty path node.
+    /// </summary>
+    public static PathNode Empty => new PathNode("");
+
+    /// <summary>
+    /// Combines two path nodes using the / separator.
+    /// </summary>
+    public static PathNode operator /(PathNode left, PathNode right)
+        => new PathNode(string.IsNullOrEmpty(left.Value) ? right.Value : left.Value + "/" + right.Value);
+
+    /// <summary>
+    /// Combines a path node with a string using the / separator.
+    /// </summary>
+    public static PathNode operator /(PathNode left, string right)
+        => new PathNode(string.IsNullOrEmpty(left.Value) ? right : left.Value + "/" + right);
+}
+
+/// <summary>
+/// Provides path composition support using the / operator for project files.
+/// Use with 'using static GeneratedPaths;' to access directory and file path nodes.
+/// 
+/// Example usage:
+///     using static GeneratedPaths;
+///     
+///     // Compose paths using the / operator
+///     var path = SpecificDirectory / Dir2 / File4.Txt;  
+///     // Result: "SpecificDirectory/Dir2/File4.txt"
+///     
+///     // Implicit conversion to string
+///     string pathString = SpecificDirectory / Dir1 / File1.Txt;
+/// </summary>
+public static class GeneratedPaths
+{
+    /// <summary>
+    /// PathNode for the 'Config' directory.
+    /// </summary>
+    public static readonly PathNode Config = new PathNode("Config");
+
+    /// <summary>
+    /// PathNode for the 'RecursiveDirectory' directory.
+    /// </summary>
+    public static readonly PathNode RecursiveDirectory = new PathNode("RecursiveDirectory");
+
+    /// <summary>
+    /// PathNode for the 'SubDir' directory.
+    /// </summary>
+    public static readonly PathNode SubDir = new PathNode("SubDir");
+
+    /// <summary>
+    /// PathNode for the 'SpecificDirectory' directory.
+    /// </summary>
+    public static readonly PathNode SpecificDirectory = new PathNode("SpecificDirectory");
+
+    /// <summary>
+    /// PathNode for the 'Dir1' directory.
+    /// </summary>
+    public static readonly PathNode Dir1 = new PathNode("Dir1");
+
+    /// <summary>
+    /// PathNode for the 'Dir2' directory.
+    /// </summary>
+    public static readonly PathNode Dir2 = new PathNode("Dir2");
+
+    /// <summary>
+    /// File extensions for 'appsettings'.
+    /// </summary>
+    public static class Appsettings
+    {
+        /// <summary>
+        /// PathNode for 'appsettings.json'.
+        /// </summary>
+        public static PathNode Json => new PathNode("appsettings.json");
+
+    }
+
+    /// <summary>
+    /// File extensions for 'SomeFile'.
+    /// </summary>
+    public static class SomeFile
+    {
+        /// <summary>
+        /// PathNode for 'SomeFile.txt'.
+        /// </summary>
+        public static PathNode Txt => new PathNode("SomeFile.txt");
+
+    }
+
+    /// <summary>
+    /// File extensions for 'NestedFile'.
+    /// </summary>
+    public static class NestedFile
+    {
+        /// <summary>
+        /// PathNode for 'NestedFile.txt'.
+        /// </summary>
+        public static PathNode Txt => new PathNode("NestedFile.txt");
+
+    }
+
+    /// <summary>
+    /// File extensions for 'File1'.
+    /// </summary>
+    public static class File1
+    {
+        /// <summary>
+        /// PathNode for 'File1.txt'.
+        /// </summary>
+        public static PathNode Txt => new PathNode("File1.txt");
+
+    }
+
+    /// <summary>
+    /// File extensions for 'File2'.
+    /// </summary>
+    public static class File2
+    {
+        /// <summary>
+        /// PathNode for 'File2.txt'.
+        /// </summary>
+        public static PathNode Txt => new PathNode("File2.txt");
+
+    }
+
+    /// <summary>
+    /// File extensions for 'File3'.
+    /// </summary>
+    public static class File3
+    {
+        /// <summary>
+        /// PathNode for 'File3.txt'.
+        /// </summary>
+        public static PathNode Txt => new PathNode("File3.txt");
+
+    }
+
+    /// <summary>
+    /// File extensions for 'File4'.
+    /// </summary>
+    public static class File4
+    {
+        /// <summary>
+        /// PathNode for 'File4.txt'.
+        /// </summary>
+        public static PathNode Txt => new PathNode("File4.txt");
+
+    }
+
+}
+

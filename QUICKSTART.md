@@ -46,6 +46,7 @@ dotnet build
 
 ### Step 4: Use the Generated API
 
+**Traditional Dot-Access API:**
 ```csharp
 using ProjectFiles;
 
@@ -55,6 +56,25 @@ var config = File.ReadAllText(configPath);
 
 var dataPath = ProjectFiles.ProjectFiles.Data.UsersCsv;
 var users = File.ReadAllLines(dataPath);
+```
+
+**New Slash-Operator API (Recommended):**
+```csharp
+using static GeneratedPaths;
+
+// Compose paths naturally using the / operator
+var configPath = Config / Appsettings.Json;
+var config = File.ReadAllText(configPath);
+
+var dataPath = Data / Users.Csv;
+var users = File.ReadAllLines(dataPath);
+
+// Compose directory paths
+var nestedPath = SpecificDirectory / Dir2 / File4.Txt;
+// Result: "SpecificDirectory/Dir2/File4.txt"
+
+// Implicit conversion to string works automatically
+string path = Assets / Images / Logo.Png;
 ```
 
 ## Common Patterns
@@ -115,10 +135,77 @@ With this config:
 ```
 
 Access like this:
+
+**Dot-Access API:**
 ```csharp
 var activeUsers = ProjectFiles.ProjectFiles.Data.Users.ActiveCsv;
 var archivedUsers = ProjectFiles.ProjectFiles.Data.Users.ArchivedCsv;
 var catalog = ProjectFiles.ProjectFiles.Data.Products.CatalogJson;
+```
+
+**Slash-Operator API:**
+```csharp
+using static GeneratedPaths;
+
+var activeUsers = Data / Users / Active.Csv;
+var archivedUsers = Data / Users / Archived.Csv;
+var catalog = Data / Products / Catalog.Json;
+```
+
+## Slash Operator API
+
+The generator creates two APIs for accessing files:
+
+1. **Traditional Dot-Access API** - Backwards compatible nested static classes
+2. **Slash-Operator API** - New composition-based approach using the `/` operator
+
+### Benefits of the Slash-Operator API
+
+✅ **More intuitive** - Paths look like actual file paths  
+✅ **Concise** - No repetitive class names  
+✅ **Composable** - Build paths dynamically  
+✅ **Type-safe** - Still strongly-typed with IntelliSense  
+✅ **Forward-slash paths** - Uses `/` separator regardless of OS
+
+### How It Works
+
+The generator creates:
+- **PathNode struct** - A value type representing a path segment
+- **GeneratedPaths class** - Static class with PathNode properties for directories and files
+- **File extension classes** - Static classes grouping files by name with extension properties
+
+Example structure:
+```csharp
+// Directory PathNodes
+public static readonly PathNode Config = new PathNode("Config");
+public static readonly PathNode Data = new PathNode("Data");
+
+// File extension classes
+public static class Users {
+    public static PathNode Csv => new PathNode("Users.csv");
+}
+```
+
+### Using the Slash-Operator API
+
+Add this using statement to your file:
+```csharp
+using static GeneratedPaths;
+```
+
+Then compose paths naturally:
+```csharp
+// Simple file access
+var config = File.ReadAllText(Config / Appsettings.Json);
+
+// Nested directories
+var path = Assets / Images / Icons / Logo.Png;
+
+// Assign to string (implicit conversion)
+string filePath = Data / Users.Csv;
+
+// Use in any method expecting a string
+Console.WriteLine($"Loading: {Config / Settings.Xml}");
 ```
 
 ## Tips
@@ -138,19 +225,25 @@ var catalog = ProjectFiles.ProjectFiles.Data.Products.CatalogJson;
 
 ## Viewing Generated Code
 
+The generator creates two files:
+- `ProjectFiles.g.cs` - Traditional dot-access API
+- `GeneratedPaths.g.cs` - Slash-operator API with PathNode
+
 ### In JetBrains Rider:
 1. Right-click your project
 2. Click "Generate Code"
 3. Select "View Generated Source"
-4. Navigate to `ProjectFilesGenerator` → `ProjectFiles.g.cs`
+4. Navigate to `ProjectFilesGenerator` → `ProjectFiles.g.cs` or `GeneratedPaths.g.cs`
 
 ### In Visual Studio:
 1. Solution Explorer → Show All Files
 2. Expand "Dependencies" → "Analyzers" → "ProjectFilesGenerator"
-3. Open `ProjectFiles.g.cs`
+3. Open `ProjectFiles.g.cs` or `GeneratedPaths.g.cs`
 
 ### Using File System:
-Look in: `obj\Debug\net10.0\generated\ProjectFilesGenerator\ProjectFilesGenerator.ProjectFilesSourceGenerator\ProjectFiles.g.cs`
+Look in: `obj\Debug\net10.0\generated\ProjectFilesGenerator\ProjectFilesGenerator.ProjectFilesSourceGenerator\`
+- `ProjectFiles.g.cs` - Dot-access API
+- `GeneratedPaths.g.cs` - Slash-operator API
 
 ## Troubleshooting
 
