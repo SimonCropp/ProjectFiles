@@ -26,17 +26,13 @@ namespace ProjectFilesGenerator.Types
 /// </summary>
 public partial class Assets
 {
-    public string Readme_txt => "Assets\\readme.txt";
     public DataType Data = new();
-    public FontsType Fonts = new();
-    public ImagesType Images = new();
     /// <summary>
     /// Files in the 'Data' directory.
     /// </summary>
     public partial class DataType
     {
         public ConfigType Config = new();
-        public SeedsType Seeds = new();
         /// <summary>
         /// Files in the 'Config' directory.
         /// </summary>
@@ -46,6 +42,7 @@ public partial class Assets
             public string Settings_json => "Assets\\Data\\Config\\settings.json";
         }
 
+        public SeedsType Seeds = new();
         /// <summary>
         /// Files in the 'Seeds' directory.
         /// </summary>
@@ -56,6 +53,7 @@ public partial class Assets
 
     }
 
+    public FontsType Fonts = new();
     /// <summary>
     /// Files in the 'Fonts' directory.
     /// </summary>
@@ -64,13 +62,13 @@ public partial class Assets
         public string Roboto_ttf => "Assets\\Fonts\\roboto.ttf";
     }
 
+    public ImagesType Images = new();
     /// <summary>
     /// Files in the 'Images' directory.
     /// </summary>
     public partial class ImagesType
     {
         public BackgroundsType Backgrounds = new();
-        public IconsType Icons = new();
         /// <summary>
         /// Files in the 'Backgrounds' directory.
         /// </summary>
@@ -79,6 +77,7 @@ public partial class Assets
             public string Header_jpg => "Assets\\Images\\Backgrounds\\header.jpg";
         }
 
+        public IconsType Icons = new();
         /// <summary>
         /// Files in the 'Icons' directory.
         /// </summary>
@@ -90,5 +89,6 @@ public partial class Assets
 
     }
 
+    public string Readme_txt => "Assets\\readme.txt";
 }
 }

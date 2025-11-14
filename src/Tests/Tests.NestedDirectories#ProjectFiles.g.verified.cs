@@ -27,7 +27,6 @@ namespace ProjectFilesGenerator.Types
 public partial class Assets
 {
     public DataType Data = new();
-    public ImagesType Images = new();
     /// <summary>
     /// Files in the 'Data' directory.
     /// </summary>
@@ -36,6 +35,7 @@ public partial class Assets
         public string Users_csv => "Assets\\Data\\users.csv";
     }
 
+    public ImagesType Images = new();
     /// <summary>
     /// Files in the 'Images' directory.
     /// </summary>

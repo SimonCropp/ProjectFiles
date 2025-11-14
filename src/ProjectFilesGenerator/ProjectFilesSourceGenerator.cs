@@ -246,50 +246,36 @@ public class ProjectFilesSourceGenerator :
     {
         var indent = new string(' ', indentCount * 4);
 
-        // First, generate all file properties
-        foreach (var (name, childNode) in node.Children.OrderBy(_ => _.Key))
-        {
-            if (!childNode.IsDirectory)
-            {
-                var propertyName = ToFilePropertyName(name);
-                var path = childNode.FullPath!.Replace("\\", @"\\");
-
-                builder.AppendLine($"{indent}public string {propertyName} => \"{path}\";");
-            }
-        }
-
-        // Then, generate subdirectory properties
-        foreach (var (name, childNode) in node.Children.OrderBy(_ => _.Key))
-        {
-            if (!childNode.IsDirectory)
-            {
-                continue;
-            }
-
-            var className = ToValidIdentifier(name);
-            builder.AppendLine($"{indent}public {className}Type {className} = new();");
-        }
-
-        // Finally, generate nested type definitions for subdirectories
         foreach (var (name, childNode) in node.Children.OrderBy(_ => _.Key))
         {
             if (childNode.IsDirectory)
             {
                 var className = ToValidIdentifier(name);
+                // generate subdirectory property
+                builder.AppendLine($"{indent}public {className}Type {className} = new();");
 
+                // generate nested type definitions for subdirectory
                 builder.AppendLine(
                     $$"""
-                     {{indent}}/// <summary>
-                     {{indent}}/// Files in the '{{name}}' directory.
-                     {{indent}}/// </summary>
-                     {{indent}}public partial class {{className}}Type
-                     {{indent}}{
-                     """);
+                      {{indent}}/// <summary>
+                      {{indent}}/// Files in the '{{name}}' directory.
+                      {{indent}}/// </summary>
+                      {{indent}}public partial class {{className}}Type
+                      {{indent}}{
+                      """);
 
                 GenerateDirectoryMembers(builder, childNode, indentCount + 1);
 
                 builder.AppendLine($"{indent}}}");
                 builder.AppendLine();
+            }
+            else
+            {
+                // generate file property
+                var propertyName = ToFilePropertyName(name);
+                var path = childNode.FullPath!.Replace("\\", @"\\");
+
+                builder.AppendLine($"""{indent}public string {propertyName} => "{path}";""");
             }
         }
     }
