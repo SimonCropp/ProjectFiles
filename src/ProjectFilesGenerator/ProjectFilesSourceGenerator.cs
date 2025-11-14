@@ -193,22 +193,22 @@ public class ProjectFilesSourceGenerator :
         return builder.ToString();
     }
 
-    static void GenerateRootProperties(StringBuilder builder, FileTreeNode node)
+    static void GenerateRootProperties(StringBuilder builder, List<FileTreeNode> topLevelNodes)
     {
-        foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key))
+        foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
         {
-            var className = ToValidIdentifier(name);
+            var className = ToValidIdentifier(Path.GetFileName(node.Path));
             builder.AppendLine($"        public static {className} {className} {{ get; }} = new();");
         }
     }
 
-    static void GenerateTypeDefinitions(StringBuilder builder, FileTreeNode node, int indentCount)
+    static void GenerateTypeDefinitions(StringBuilder builder, List<FileTreeNode> topLevelNodes, int indentCount)
     {
         var indent = new string(' ', indentCount * 4);
 
-        foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key))
+        foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
         {
-            var className = ToValidIdentifier(name);
+            var className = ToValidIdentifier(Path.GetFileName(node.Path));
 
             builder.AppendLine(
                 $$"""
@@ -217,7 +217,7 @@ public class ProjectFilesSourceGenerator :
                   """);
 
             // Generate file properties and subdirectory properties
-            GenerateDirectoryMembers(builder, childNode, indentCount + 1);
+            GenerateDirectoryMembers(builder, node, indentCount + 1);
 
             builder.AppendLine($"{indent}}}");
         }
@@ -275,27 +275,45 @@ public class ProjectFilesSourceGenerator :
         return propertyName;
     }
 
-    static FileTreeNode BuildFileTree(ImmutableArray<string> files)
+    static List<FileTreeNode> BuildFileTree(ImmutableArray<string> files)
     {
-        var root = new FileTreeNode
-        {
-            FullPath = null
-        };
+        var topLevelDirectories = new Dictionary<string, FileTreeNode>();
 
         foreach (var file in files)
         {
             var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            var current = root;
 
-            for (var i = 0; i < parts.Length - 1; i++)
+            // Skip files without a directory (root-level files)
+            if (parts.Length < 2)
+            {
+                continue;
+            }
+
+            // Get or create top-level directory
+            var topLevelName = parts[0];
+            if (!topLevelDirectories.TryGetValue(topLevelName, out var topLevelNode))
+            {
+                topLevelNode = new()
+                {
+                    Path = topLevelName
+                };
+                topLevelDirectories[topLevelName] = topLevelNode;
+            }
+
+            var current = topLevelNode;
+            var currentPath = topLevelName;
+
+            // Navigate through middle directories
+            for (var i = 1; i < parts.Length - 1; i++)
             {
                 var part = parts[i];
+                currentPath = currentPath + Path.DirectorySeparatorChar + part;
 
                 if (!current.Directories.TryGetValue(part, out var child))
                 {
                     child = new()
                     {
-                        FullPath = null
+                        Path = currentPath
                     };
                     current.Directories[part] = child;
                 }
@@ -303,11 +321,11 @@ public class ProjectFilesSourceGenerator :
                 current = child;
             }
 
-            // Add the file to the current directory's Files list
+            // Add file to current directory
             current.Files.Add(file);
         }
 
-        return root;
+        return topLevelDirectories.Values.ToList();
     }
 
     static string ToValidIdentifier(string name)
@@ -362,7 +380,7 @@ public class ProjectFilesSourceGenerator :
 
     class FileTreeNode
     {
-        public required string? FullPath { get; init; }
+        public required string Path { get; init; }
         public Dictionary<string, FileTreeNode> Directories { get; } = [];
         public List<string> Files { get; } = [];
     }
