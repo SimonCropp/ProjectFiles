@@ -7,6 +7,14 @@ public class Generator :
     static string projectFileContent;
     static string projectDirectoryContent;
 
+    static readonly DiagnosticDescriptor LogWarning = new(
+        id: "PFSG001",
+        title: "ProjectFiles Message",
+        messageFormat: "{0}",
+        category: "ProjectFiles.Generator",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
     static Generator()
     {
         projectFileContent  = ReadResouce("ProjectFile");
@@ -45,6 +53,7 @@ public class Generator :
         // Generate the source
         context.RegisterSourceOutput(filePaths, (spc, files) =>
         {
+            //spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "AAA"));
             var source = GenerateSource(files);
             spc.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
             spc.AddSource("ProjectFiles.ProjectDirectory.g.cs", SourceText.From(projectDirectoryContent, Encoding.UTF8));
