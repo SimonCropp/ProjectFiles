@@ -46,6 +46,7 @@ public class Generator :
                     return ImmutableArray<string>.Empty;
                 }
 
+                var projectDir = Path.GetDirectoryName(file.Path) ?? string.Empty;
                 return ParseProjectFile(text.ToString(), projectDir);
             })
             .Where(_ => _.Length > 0);
