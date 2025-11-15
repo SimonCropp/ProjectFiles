@@ -4,9 +4,6 @@
 public class Generator :
     IIncrementalGenerator
 {
-    static string projectFileContent;
-    static string projectDirectoryContent;
-
     // static readonly DiagnosticDescriptor LogWarning = new(
     //     id: "PFSG001",
     //     title: "ProjectFiles Message",
@@ -15,22 +12,20 @@ public class Generator :
     //     DiagnosticSeverity.Warning,
     //     isEnabledByDefault: true);
 
-    static Generator()
-    {
-        projectFileContent  = ReadResouce("ProjectFile");
-        projectDirectoryContent  = ReadResouce("ProjectDirectory");
-    }
-
-    static string ReadResouce(string name)
-    {
-        var assembly = typeof(Generator).Assembly;
-        using var stream = assembly.GetManifestResourceStream($"ProjectFiles.{name}.cs")!;
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
-    }
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        // Get template files from AdditionalTextsProvider
+        var templateFiles = context.AdditionalTextsProvider
+            .Where(_ => _.Path.EndsWith("ProjectFile.cs", StringComparison.OrdinalIgnoreCase) ||
+                       _.Path.EndsWith("ProjectDirectory.cs", StringComparison.OrdinalIgnoreCase))
+            .Select((file, cancel) =>
+            {
+                var fileName = Path.GetFileName(file.Path);
+                var text = file.GetText(cancel);
+                return (fileName, content: text?.ToString() ?? string.Empty);
+            })
+            .Collect();
+
         // Get all additional files that are .csproj files
         var projectFiles = context.AdditionalTextsProvider
             .Where(_ => _.Path.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase));
@@ -50,9 +45,30 @@ public class Generator :
             })
             .Where(_ => _.Length > 0);
 
+        // Combine template files and project files for generation
+        var combined = filePaths.Combine(templateFiles);
+
         // Generate the source
-        context.RegisterSourceOutput(filePaths, (spc, files) =>
+        context.RegisterSourceOutput(combined, (spc, data) =>
         {
+            var (files, templates) = data;
+            
+            // Extract template contents
+            var projectFileContent = string.Empty;
+            var projectDirectoryContent = string.Empty;
+            
+            foreach (var (fileName, content) in templates)
+            {
+                if (fileName.Equals("ProjectFile.cs", StringComparison.OrdinalIgnoreCase))
+                {
+                    projectFileContent = content;
+                }
+                else if (fileName.Equals("ProjectDirectory.cs", StringComparison.OrdinalIgnoreCase))
+                {
+                    projectDirectoryContent = content;
+                }
+            }
+
             //spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "AAA"));
             var source = GenerateSource(files);
             spc.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
