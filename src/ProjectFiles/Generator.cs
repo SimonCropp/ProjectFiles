@@ -7,13 +7,13 @@ public class Generator :
     static string projectFileContent;
     static string projectDirectoryContent;
 
-    static readonly DiagnosticDescriptor LogWarning = new(
-        id: "PFSG001",
-        title: "ProjectFiles Message",
-        messageFormat: "{0}",
-        category: "ProjectFiles.Generator",
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+    // static readonly DiagnosticDescriptor LogWarning = new(
+    //     id: "PFSG001",
+    //     title: "ProjectFiles Message",
+    //     messageFormat: "{0}",
+    //     category: "ProjectFiles.Generator",
+    //     DiagnosticSeverity.Warning,
+    //     isEnabledByDefault: true);
 
     static Generator()
     {
@@ -45,7 +45,7 @@ public class Generator :
                     return ImmutableArray<string>.Empty;
                 }
 
-                var projectDir = Path.GetDirectoryName(file.Path) ?? string.Empty;
+                var projectDir = Path.GetDirectoryName(file.Path)!;
                 return ParseProjectFile(text.ToString(), projectDir);
             })
             .Where(_ => _.Length > 0);
@@ -107,11 +107,6 @@ public class Generator :
     {
         // Normalize path separators
         pattern = pattern.Replace('/', separatorChar);
-
-        if (!Directory.Exists(projectDir))
-        {
-            return null;
-        }
 
         // Check if pattern contains wildcards
         if (pattern.Contains('*') ||
@@ -235,7 +230,7 @@ public class Generator :
         return builder.ToString();
     }
 
-    static void GenerateRootProperties(StringBuilder builder, List<FileTreeNode> topLevelNodes)
+    static void GenerateRootProperties(StringBuilder builder, List<DirectoryNode> topLevelNodes)
     {
         foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
         {
@@ -244,7 +239,7 @@ public class Generator :
         }
     }
 
-    static void GenerateTypeDefinitions(StringBuilder builder, List<FileTreeNode> topLevelNodes, int indentCount)
+    static void GenerateTypeDefinitions(StringBuilder builder, List<DirectoryNode> topLevelNodes, int indentCount)
     {
         var indent = new string(' ', indentCount * 4);
 
@@ -265,7 +260,7 @@ public class Generator :
         }
     }
 
-    static void GenerateDirectoryMembers(StringBuilder builder, FileTreeNode node, int indentCount)
+    static void GenerateDirectoryMembers(StringBuilder builder, DirectoryNode node, int indentCount)
     {
         var indent = new string(' ', indentCount * 4);
 
@@ -323,9 +318,9 @@ public class Generator :
         return propertyName;
     }
 
-    static (List<FileTreeNode> Directories, List<string> RootFiles) BuildFileTree(ImmutableArray<string> files)
+    static (List<DirectoryNode> Directories, List<string> RootFiles) BuildFileTree(ImmutableArray<string> files)
     {
-        var topLevelDirectories = new Dictionary<string, FileTreeNode>();
+        var topLevelDirectories = new Dictionary<string, DirectoryNode>();
         var rootFiles = new List<string>();
 
         foreach (var file in files)
@@ -378,11 +373,10 @@ public class Generator :
         return (topLevelDirectories.Values.ToList(), rootFiles);
     }
 
-
-    class FileTreeNode
+    class DirectoryNode
     {
         public required string Path { get; init; }
-        public Dictionary<string, FileTreeNode> Directories { get; } = [];
+        public Dictionary<string, DirectoryNode> Directories { get; } = [];
         public List<string> Files { get; } = [];
     }
 }
