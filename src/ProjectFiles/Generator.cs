@@ -7,20 +7,19 @@ public class Generator :
     static SourceText projectFileContent;
     static SourceText projectDirectoryContent;
 
-    // static readonly DiagnosticDescriptor LogWarning = new(
-    //     id: "PFSG001",
-    //     title: "ProjectFiles Message",
-    //     messageFormat: "{0}",
-    //     category: "ProjectFiles.Generator",
-    //     DiagnosticSeverity.Warning,
-    //     isEnabledByDefault: true);
-
     static Generator()
     {
         projectFileContent = ReadResouce("ProjectFile");
         projectDirectoryContent = ReadResouce("ProjectDirectory");
     }
 
+    static readonly DiagnosticDescriptor LogWarning = new(
+        id: "PFSG001",
+        title: "ProjectFiles Message",
+        messageFormat: "{0}",
+        category: "ProjectFiles.Generator",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
     static SourceText ReadResouce(string name)
     {
         var assembly = typeof(Generator).Assembly;
@@ -31,133 +30,80 @@ public class Generator :
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Get all additional files that are .csproj files
-        var projectFiles = context.AdditionalTextsProvider
-            .Where(_ => _.Path.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase));
+        // Get the project directory from the .csproj file
+        var projectDirectory = context.AdditionalTextsProvider
+            .Where(file => file.Path.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+            .Select((file, ct) => Path.GetDirectoryName(file.Path)!)
+            .Collect()
+            .Select((dirs, ct) => dirs.FirstOrDefault());
 
-        // Parse the project file and extract file paths
-        var filePaths = projectFiles
-            .Select((file, cancel) =>
+        Dictionary<string, List<string>> dictionary = [];
+        List<string> globalKeys = [];
+        // Get all additional files with CopyToOutputDirectory metadata
+        var filesWithCopyMetadata = context.AdditionalTextsProvider
+            .Combine(context.AnalyzerConfigOptionsProvider)
+            .Select((pair, ct) =>
             {
-                var text = file.GetText(cancel);
-                if (text == null)
+                var (additionalText, configOptions) = pair;
+
+                // Skip the .csproj file itself
+                if (additionalText.Path.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
                 {
-                    return ImmutableArray<string>.Empty;
+                    return null;
+                }
+//https://platform.uno/blog/using-msbuild-items-and-properties-in-c-9-source-generators/
+                var options = configOptions.GetOptions(additionalText);
+                dictionary.Add(additionalText.Path, options.Keys.ToList());
+                globalKeys.AddRange(configOptions.GlobalOptions.Keys);
+                // Check for CopyToOutputDirectory metadata
+                if (options.TryGetValue("build_metadata.AdditionalFiles.CopyToOutputDirectory", out var copyValue)
+                    && copyValue is "PreserveNewest" or "Always")
+                {
+                    return additionalText.Path;
                 }
 
-                var projectDir = Path.GetDirectoryName(file.Path)!;
-                return ParseProjectFile(text.ToString(), projectDir);
+                return null;
             })
-            .Where(_ => _.Length > 0);
+            .Where(path => path is not null)
+            .Collect();
 
-        // Generate the source
-        context.RegisterSourceOutput(filePaths, (spc, files) =>
+        // Combine project directory with file list
+        var generatorInput = projectDirectory.Combine(filesWithCopyMetadata);
+
+        context.RegisterSourceOutput(generatorInput, (spc, input) =>
         {
-            //spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "AAA"));
-            var source = GenerateSource(files);
+            var (projectDir, absolutePaths) = input;
+            foreach (var key in globalKeys)
+            {
+                spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
+            }
+
+            foreach (var (key, value) in dictionary)
+            {
+                spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
+                foreach (var x in value)
+                {
+                    spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "    " + x ));
+
+                }
+            }
+            if (projectDir == null || absolutePaths.IsEmpty)
+            {
+                return;
+            }
+
+            // Convert absolute paths to relative paths
+            var relativeFiles = absolutePaths
+                .Select(path => GetRelativePath(projectDir, path!))
+                .Distinct()
+                .OrderBy(x => x)
+                .ToImmutableArray();
+
+            var source = GenerateSource(relativeFiles);
             spc.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
             spc.AddSource("ProjectFiles.ProjectDirectory.g.cs", projectDirectoryContent);
             spc.AddSource("ProjectFiles.ProjectFile.g.cs", projectFileContent);
         });
-    }
-
-    static ImmutableArray<string> ParseProjectFile(string content, string projectDir)
-    {
-        var doc = XDocument.Parse(content);
-
-        var files = new List<string>();
-
-        // Find all None, Content, and other item types with CopyToOutputDirectory
-        var itemGroups = doc.Descendants()
-            .Where(_ => _.Name.LocalName == "ItemGroup");
-
-        foreach (var itemGroup in itemGroups)
-        {
-            foreach (var item in itemGroup.Elements())
-            {
-                var copyToOutput = item.Elements()
-                    .FirstOrDefault(_ => _.Name.LocalName == "CopyToOutputDirectory");
-
-                if (copyToOutput?.Value is not ("PreserveNewest" or "Always"))
-                {
-                    continue;
-                }
-
-                var include = item.Attribute("Include")?.Value ?? item.Attribute("Update")?.Value;
-                if (string.IsNullOrEmpty(include))
-                {
-                    continue;
-                }
-
-                // Expand glob patterns
-                var expanded = ExpandGlobPattern(include!, projectDir);
-                if (expanded != null)
-                {
-                    files.AddRange(expanded);
-                }
-            }
-        }
-
-        return files.Distinct().OrderBy(_ => _).ToImmutableArray();
-    }
-
-    static char separatorChar = Path.DirectorySeparatorChar;
-
-    static IEnumerable<string>? ExpandGlobPattern(string pattern, string projectDir)
-    {
-        // Normalize path separators
-        pattern = pattern.Replace('/', separatorChar);
-
-        // Check if pattern contains wildcards
-        if (pattern.Contains('*') ||
-            pattern.Contains('?'))
-        {
-            var parts = pattern.Split(separatorChar);
-            var hasRecursive = parts.Contains("**");
-
-            if (hasRecursive)
-            {
-                // Handle ** recursive pattern
-                var beforeRecursive = string.Join(separatorChar, parts.TakeWhile(_ => _ != "**"));
-                var afterRecursive = string.Join(separatorChar, parts.SkipWhile(_ => _ != "**").Skip(1));
-
-                var searchDir = string.IsNullOrEmpty(beforeRecursive)
-                    ? projectDir
-                    : Path.Combine(projectDir, beforeRecursive);
-
-                if (!Directory.Exists(searchDir))
-                {
-                    return null;
-                }
-
-                var searchPattern = string.IsNullOrEmpty(afterRecursive) ? "*.*" : afterRecursive;
-
-                var found = Directory.GetFiles(searchDir, searchPattern, SearchOption.AllDirectories);
-                return found.Select(file => GetRelativePath(projectDir, file));
-            }
-            else
-            {
-                // Handle single directory with wildcards
-                var dirPart = Path.GetDirectoryName(pattern) ?? string.Empty;
-                var filePart = Path.GetFileName(pattern);
-
-                var searchDir = string.IsNullOrEmpty(dirPart)
-                    ? projectDir
-                    : Path.Combine(projectDir, dirPart);
-
-                if (!Directory.Exists(searchDir))
-                {
-                    return null;
-                }
-
-                var found = Directory.GetFiles(searchDir, filePart);
-                return found.Select(file => GetRelativePath(projectDir, file));
-            }
-        }
-
-        // No wildcards - just return the file if it exists
-        var fullPath = Path.Combine(projectDir, pattern);
-        return File.Exists(fullPath) ? [pattern] : null;
     }
 
     static string GetRelativePath(string basePath, string fullPath)
@@ -165,17 +111,17 @@ public class Generator :
         var baseUri = new Uri(EnsureTrailingSlash(basePath));
         var fullUri = new Uri(fullPath);
         var relativeUri = baseUri.MakeRelativeUri(fullUri);
-        return Uri.UnescapeDataString(relativeUri.ToString()).Replace('/', separatorChar);
+        return Uri.UnescapeDataString(relativeUri.ToString()).Replace('/', Path.DirectorySeparatorChar);
     }
 
     static string EnsureTrailingSlash(string path)
     {
-        if (path.EndsWith(separatorChar.ToString()))
+        if (path.EndsWith(Path.DirectorySeparatorChar.ToString()))
         {
             return path;
         }
 
-        return path + separatorChar;
+        return path + Path.DirectorySeparatorChar;
     }
 
     static string GenerateSource(ImmutableArray<string> files)

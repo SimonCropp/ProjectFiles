@@ -12,15 +12,21 @@
     <ItemGroup>
       <!-- Add all None items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(None)"
-                       Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />
+                       Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" >
+        <Generator_Enabled>true</Generator_Enabled>
+        <Generator_Group>server</Generator_Group>
+      </AdditionalFiles>
 
       <!-- Add all Content items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(Content)"
-                       Condition="'%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(Content.CopyToOutputDirectory)' == 'Always'" />
+                       Condition="'%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(Content.CopyToOutputDirectory)' == 'Always'" >
+        <Generator_Enabled>true</Generator_Enabled>
+        <Generator_Group>server</Generator_Group>
+      </AdditionalFiles>
 
-      <!-- Add other item types if needed (EmbeddedResource, etc.) -->
-      <AdditionalFiles Include="@(EmbeddedResource)"
-                       Condition="'%(EmbeddedResource.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(EmbeddedResource.CopyToOutputDirectory)' == 'Always'" />
+<!--      &lt;!&ndash; Add other item types if needed (EmbeddedResource, etc.) &ndash;&gt;-->
+<!--      <AdditionalFiles Include="@(EmbeddedResource)"-->
+<!--                       Condition="'%(EmbeddedResource.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(EmbeddedResource.CopyToOutputDirectory)' == 'Always'" />-->
     </ItemGroup>
   </Target>
 
