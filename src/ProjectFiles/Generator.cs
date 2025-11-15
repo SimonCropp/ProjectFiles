@@ -42,8 +42,7 @@ public class Generator :
 
                 var projectDir = Path.GetDirectoryName(file.Path)!;
                 return ParseProjectFile(text.ToString(), projectDir);
-            })
-            .Where(_ => _.Length > 0);
+            });
 
         // Combine template files and project files for generation
         var combined = filePaths.Combine(templateFiles);
@@ -52,6 +51,12 @@ public class Generator :
         context.RegisterSourceOutput(combined, (spc, data) =>
         {
             var (files, templates) = data;
+            
+            // Skip generation if no files to process
+            if (files.Length == 0)
+            {
+                return;
+            }
             
             // Extract template contents
             var projectFileContent = string.Empty;
