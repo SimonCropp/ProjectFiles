@@ -7,6 +7,15 @@ public class Generator :
     static string projectFileContent;
     static string projectDirectoryContent;
 
+    // Diagnostic descriptors for logging
+    static readonly DiagnosticDescriptor GeneratorStarted = new(
+        id: "PFSG001",
+        title: "ProjectFiles Generator Started",
+        messageFormat: "ProjectFiles source generator started",
+        category: "ProjectFiles.Generator",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
     static Generator()
     {
         projectFileContent  = ReadResouce("ProjectFile");
@@ -37,7 +46,6 @@ public class Generator :
                     return ImmutableArray<string>.Empty;
                 }
 
-                var projectDir = Path.GetDirectoryName(file.Path) ?? string.Empty;
                 return ParseProjectFile(text.ToString(), projectDir);
             })
             .Where(_ => _.Length > 0);
@@ -45,6 +53,7 @@ public class Generator :
         // Generate the source
         context.RegisterSourceOutput(filePaths, (spc, files) =>
         {
+            spc.ReportDiagnostic(Diagnostic.Create(GeneratorStarted, Location.None));
             var source = GenerateSource(files);
             spc.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
             spc.AddSource("ProjectFiles.ProjectDirectory.g.cs", SourceText.From(projectDirectoryContent, Encoding.UTF8));
