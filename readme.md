@@ -50,6 +50,32 @@ Mark files with `CopyToOutputDirectory` set to either `PreserveNewest` or `Alway
 ```
 
 
+## Strong typed file access
+
+The files can be consumed via a strong typed API:
+
+```
+[TestFixture]
+public class ComsumeTests
+{
+    [Test]
+    public void Config() =>
+        IsTrue(File.Exists(ProjectFiles.Config.appsettings_json));
+
+    [Test]
+    public void Recursive() =>
+        IsTrue(File.Exists(ProjectFiles.RecursiveDirectory.SomeFile_txt));
+
+    [Test]
+    public void Specific()
+    {
+        IsTrue(File.Exists(ProjectFiles.SpecificDirectory.Dir1.File1_txt));
+        IsTrue(File.Exists(ProjectFiles.SpecificDirectory.Dir1.File2_txt));
+        IsTrue(File.Exists(ProjectFiles.SpecificDirectory.Dir2.File4_txt));
+        IsTrue(File.Exists(ProjectFiles.SpecificDirectory.File3_txt));
+    }
+```
+
 ## Generated Code Structure
 
 The generator creates three files:
@@ -196,8 +222,7 @@ The generator follows these rules when converting file and directory names to C#
 ### Directory Names → Class Names (PascalCase)
 
 - **Valid characters preserved**: `MyDirectory` → `MyDirectory`
-- **Invalid characters replaced**: `my-directory` → `MyDirectory`
-- **Hyphens capitalize next letter**: `lower-case` → `LowerCase`
+- **Invalid characters replaced**: `my-directory` → `my_directory`
 - **Leading digits prefixed**: `123folder` → `_123folder`
 - **Keywords escaped**: `class` → `@class`
 
@@ -207,19 +232,7 @@ The generator follows these rules when converting file and directory names to C#
 - **Name converted to identifier**: `appsettings.json` → `appsettings_json`
 - **Extension lowercased with underscore**: `File.txt` → `File_txt`
 - **Multiple dots preserved**: `app.config.json` → `app_config_json`
-- **Special characters replaced**: `my-file.xml` → `MyFile_xml`
-
-
-### Examples
-
-| Original Name | Generated Identifier | Type |
-|--------------|---------------------|------|
-| `Config` | `ConfigType` | Class |
-| `lower-case` | `LowerCaseType` | Class |
-| `appsettings.json` | `appsettings_json` | Property |
-| `NestedFile.txt` | `NestedFile_txt` | Property |
-| `my-config.xml` | `MyConfig_xml` | Property |
-| `2024-data` | `_2024Data` | Class |
+- **Special characters replaced**: `my-file.xml` → `my_file_xml`
 
 
 ## Glob Pattern Support
