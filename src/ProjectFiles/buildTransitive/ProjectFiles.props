@@ -1,7 +1,36 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- Mark project file as additional file so the generator can read it -->
+<Project>
+
+  <!--
+    This MSBuild target automatically adds all files with CopyToOutputDirectory
+    to AdditionalFiles so the source generator can access them with their metadata.
+
+    MSBuild will automatically evaluate conditions and only include files where
+    conditions are true, eliminating the need for manual condition parsing.
+  -->
+
+  <Target Name="AddProjectFilesToAdditionalFiles" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <!-- Add all None items with CopyToOutputDirectory -->
+      <AdditionalFiles Include="@(None)"
+                       Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />
+
+      <!-- Add all Content items with CopyToOutputDirectory -->
+      <AdditionalFiles Include="@(Content)"
+                       Condition="'%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(Content.CopyToOutputDirectory)' == 'Always'" />
+
+      <!-- Add other item types if needed (EmbeddedResource, etc.) -->
+      <AdditionalFiles Include="@(EmbeddedResource)"
+                       Condition="'%(EmbeddedResource.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(EmbeddedResource.CopyToOutputDirectory)' == 'Always'" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Make the CopyToOutputDirectory metadata visible to the source generator.
+    This allows the generator to verify that files have the correct metadata.
+  -->
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildProjectFullPath)" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="CopyToOutputDirectory" />
   </ItemGroup>
+
 </Project>
