@@ -1,6 +1,9 @@
 ﻿//HintName: ProjectFiles.ProjectDirectory.g.cs
 namespace ProjectFilesGenerator;
 
+using System.IO;
+using System.Collections.Generic;
+
 abstract partial class ProjectDirectory(string path)
 {
     public string Path { get; } = path;

@@ -268,6 +268,9 @@ Base class for all generated directory types:
 ```cs
 namespace ProjectFilesGenerator;
 
+using System.IO;
+using System.Collections.Generic;
+
 abstract partial class ProjectDirectory(string path)
 {
     public string Path { get; } = path;
@@ -295,7 +298,7 @@ abstract partial class ProjectDirectory(string path)
     public DirectoryInfo Info => new(Path);
 }
 ```
-<sup><a href='/src/ProjectFiles/ProjectDirectory.cs#L1-L28' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectDirectory.cs' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Templates/ProjectDirectory.cs#L1-L31' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectDirectory.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
@@ -307,6 +310,12 @@ Class for all generated file instances:
 <a id='snippet-ProjectFile.cs'></a>
 ```cs
 namespace ProjectFilesGenerator;
+
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
 
 partial class ProjectFile(string path)
 {
@@ -329,13 +338,26 @@ partial class ProjectFile(string path)
     public string ReadAllText() =>
         File.ReadAllText(Path);
 
-    public Task<string> ReadAllTextAsync() =>
-        File.ReadAllTextAsync(Path);
+    public string ReadAllText(Encoding encoding) =>
+        File.ReadAllText(Path, encoding);
 
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER
+    public Task<string> ReadAllTextAsync(CancellationToken cancel = default) =>
+        File.ReadAllTextAsync(Path, cancel);
+
+    public Task<string> ReadAllTextAsync(Encoding encoding, CancellationToken cancel = default) =>
+        File.ReadAllTextAsync(Path, encoding,cancel);
+#else
+    public Task<string> ReadAllTextAsync(CancellationToken cancel = default) =>
+        Task.FromResult(File.ReadAllText(Path));
+
+    public Task<string> ReadAllTextAsync(Encoding encoding, CancellationToken cancel = default) =>
+        Task.FromResult(File.ReadAllText(Path, encoding));
+#endif
     public FileInfo Info => new(Path);
 }
 ```
-<sup><a href='/src/ProjectFiles/ProjectFile.cs#L1-L28' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectFile.cs' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Templates/ProjectFile.cs#L1-L47' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectFile.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 

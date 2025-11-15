@@ -1,5 +1,4 @@
-﻿//HintName: ProjectFiles.ProjectFile.g.cs
-namespace ProjectFilesGenerator;
+﻿namespace ProjectFilesGenerator;
 
 using System.IO;
 using System.Text;
