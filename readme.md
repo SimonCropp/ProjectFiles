@@ -286,9 +286,10 @@ abstract partial class ProjectDirectory(string path)
 <sup><a href='/src/ProjectFiles/ProjectDirectory.cs#L1-L16' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectDirectory.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
+
 ### `ProjectFile`
 
-Base class for all generated file types:
+Class for all generated file instances:
 
 <!-- snippet: ProjectFile.cs -->
 <a id='snippet-ProjectFile.cs'></a>
