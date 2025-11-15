@@ -17,8 +17,10 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" />
-    <EmbeddedResource Include="..\Templates\ProjectDirectory.cs"/>
-    <EmbeddedResource Include="..\Templates\ProjectFile.cs"/>
+    <AdditionalFiles Include="..\Templates\ProjectDirectory.cs"/>
+    <AdditionalFiles Include="..\Templates\ProjectFile.cs"/>
+    <None Include="..\Templates\ProjectDirectory.cs" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Templates\ProjectFile.cs" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" CopyToOutputDirectory="PreserveNewest" />
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 

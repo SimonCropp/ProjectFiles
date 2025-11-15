@@ -52,6 +52,12 @@
     </None>
   </ItemGroup>
   
+  <!-- Temporary: Directly include template files for debugging -->
+  <ItemGroup>
+    <AdditionalFiles Include="..\Templates\ProjectFile.cs" />
+    <AdditionalFiles Include="..\Templates\ProjectDirectory.cs" />
+  </ItemGroup>
+  
   <Import Project="$(ProjectDir)..\ProjectFiles\buildTransitive\ProjectFiles.props" />
 
 </Project>

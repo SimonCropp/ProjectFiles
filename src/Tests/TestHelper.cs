@@ -54,10 +54,21 @@ public static class TestHelper
 
         // Create additional text for the project file
         var additionalText = new TestAdditionalText(projectPath, projectContent);
+        
+        // Read template files from Templates folder
+        var templateDir = Path.Combine(Path.GetDirectoryName(typeof(TestHelper).Assembly.Location)!, "..", "..", "..", "..", "Templates");
+        var projectFileTemplatePath = Path.Combine(templateDir, "ProjectFile.cs");
+        var projectDirectoryTemplatePath = Path.Combine(templateDir, "ProjectDirectory.cs");
+        
+        var projectFileTemplateText = File.ReadAllText(projectFileTemplatePath);
+        var projectDirectoryTemplateText = File.ReadAllText(projectDirectoryTemplatePath);
+        
+        var projectFileTemplate = new TestAdditionalText(projectFileTemplatePath, projectFileTemplateText);
+        var projectDirectoryTemplate = new TestAdditionalText(projectDirectoryTemplatePath, projectDirectoryTemplateText);
 
         // Run the generator
         GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-        driver = driver.AddAdditionalTexts([additionalText]);
+        driver = driver.AddAdditionalTexts([additionalText, projectFileTemplate, projectDirectoryTemplate]);
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out _);
 
         // Get the results

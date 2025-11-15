@@ -3,5 +3,12 @@
   <!-- Mark project file as additional file so the generator can read it -->
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildProjectFullPath)" />
+    <!-- Promote template files to consuming projects -->
+    <!-- Check for NuGet package structure first -->
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\analyzers\dotnet\cs\ProjectDirectory.cs" Condition="Exists('$(MSBuildThisFileDirectory)..\analyzers\dotnet\cs\ProjectDirectory.cs')" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\analyzers\dotnet\cs\ProjectFile.cs" Condition="Exists('$(MSBuildThisFileDirectory)..\analyzers\dotnet\cs\ProjectFile.cs')" />
+    <!-- For local development with project references, include from Templates folder -->
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\..\Templates\ProjectDirectory.cs" Condition="Exists('$(MSBuildThisFileDirectory)..\..\Templates\ProjectDirectory.cs')" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\..\Templates\ProjectFile.cs" Condition="Exists('$(MSBuildThisFileDirectory)..\..\Templates\ProjectFile.cs')" />
   </ItemGroup>
 </Project>
