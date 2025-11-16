@@ -39,6 +39,7 @@ public class Generator :
 
         Dictionary<string, List<string>> dictionary = [];
         List<string> globalKeys = [];
+        string? sourceItemGroupValue = null;
         // Get all additional files with CopyToOutputDirectory metadata
         var filesWithCopyMetadata = context.AdditionalTextsProvider
             .Combine(context.AnalyzerConfigOptionsProvider)
@@ -53,6 +54,10 @@ public class Generator :
                 }
 //https://platform.uno/blog/using-msbuild-items-and-properties-in-c-9-source-generators/
                 var options = configOptions.GetOptions(additionalText);
+                if (options.TryGetValue("build_metadata.AdditionalFiles.SourceItemGroup", out var sourceItemGroup))
+                {
+                    sourceItemGroupValue = sourceItemGroup;
+                }
                 dictionary.Add(additionalText.Path, options.Keys.ToList());
                 globalKeys.AddRange(configOptions.GlobalOptions.Keys);
                 // Check for CopyToOutputDirectory metadata
@@ -75,16 +80,19 @@ public class Generator :
             var (projectDir, absolutePaths) = input;
             foreach (var key in globalKeys)
             {
-                spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
+               // spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
             }
 
+            spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, sourceItemGroupValue));
             foreach (var (key, value) in dictionary)
             {
-                spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
-                foreach (var x in value)
+                if (key == @"C:\Code\ProjectFiles\src\ConsumingTests\Config\appsettings.json")
                 {
-                    spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "    " + x ));
-
+                    spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
+                    foreach (var x in value)
+                    {
+                        spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "____" + x));
+                    }
                 }
             }
             if (projectDir == null || absolutePaths.IsEmpty)

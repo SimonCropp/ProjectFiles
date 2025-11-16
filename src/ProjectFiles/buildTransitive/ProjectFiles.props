@@ -8,7 +8,7 @@
     conditions are true, eliminating the need for manual condition parsing.
   -->
 
-  <Target Name="AddProjectFilesToAdditionalFiles" BeforeTargets="CoreCompile">
+  <Target Name="AddProjectFilesToAdditionalFiles" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
     <ItemGroup>
       <!-- Add all None items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(None)"
@@ -19,6 +19,7 @@
 
       <!-- Add all Content items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(Content)"
+                       SourceItemGroup="PRIResource"
                        Condition="'%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(Content.CopyToOutputDirectory)' == 'Always'" >
         <Generator_Enabled>true</Generator_Enabled>
         <Generator_Group>server</Generator_Group>
@@ -36,6 +37,8 @@
   -->
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildProjectFullPath)" />
+
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="SourceItemGroup" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="CopyToOutputDirectory" />
   </ItemGroup>
 
