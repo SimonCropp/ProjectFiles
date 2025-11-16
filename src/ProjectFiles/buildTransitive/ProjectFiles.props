@@ -13,19 +13,11 @@
       <!-- Add all None items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(None)"
                        ProjectFiles="true"
-                       Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" >
-        <Generator_Enabled>true</Generator_Enabled>
-        <Generator_Group>server</Generator_Group>
-      </AdditionalFiles>
-
+                       Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />
       <!-- Add all Content items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(Content)"
                        ProjectFilesGenerator="true"
-                       Condition="'%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(Content.CopyToOutputDirectory)' == 'Always'" >
-        <Generator_Enabled>true</Generator_Enabled>
-        <Generator_Group>server</Generator_Group>
-      </AdditionalFiles>
-
+                       Condition="'%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(Content.CopyToOutputDirectory)' == 'Always'" />
     </ItemGroup>
   </Target>
 
