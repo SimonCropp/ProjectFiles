@@ -31,7 +31,6 @@
                            $([System.String]::Copy('%(None.DefiningProjectFullPath)').EndsWith('Microsoft.NET.Sdk.DefaultItems.props'))
                          )
                        " />
-
     </ItemGroup>
   </Target>
 
