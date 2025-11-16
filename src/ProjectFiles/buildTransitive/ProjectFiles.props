@@ -8,12 +8,30 @@
     conditions are true, eliminating the need for manual condition parsing.
   -->
 
-  <Target Name="AddProjectFilesToAdditionalFiles" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+  <Target Name="AddProjectFilesToAdditionalFiles"
+          BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+    <Message Text="None item: %(None.Identity),
+     DefiningProject: %(None.DefiningProjectFullPath),
+      FullPath: %(None.FullPath)"
+             Importance="high"
+             Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />
+
     <ItemGroup>
-      <!-- Add all None items with CopyToOutputDirectory -->
+      <!-- Add items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(None)"
                        ProjectFilesGenerator="%(RelativeDir)%(Filename)%(Extension)"
-                       Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />
+                       Condition="
+                         (
+                           '%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR
+                           '%(None.CopyToOutputDirectory)' == 'Always'
+                         )
+                         AND
+                         (
+                           '%(None.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' OR
+                           $([System.String]::Copy('%(None.DefiningProjectFullPath)').EndsWith('Microsoft.NET.Sdk.DefaultItems.props'))
+                         )
+                       " />
+
     </ItemGroup>
   </Target>
 

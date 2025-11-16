@@ -55,10 +55,7 @@ public class Generator :
                 if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var sourceItemGroup))
                 {
                     values.Add(additionalText.Path, sourceItemGroup);
-                    if (sourceItemGroup == "true")
-                    {
-                        return additionalText.Path;
-                    }
+                    return additionalText.Path;
                 }
 
                 return null;
@@ -76,10 +73,10 @@ public class Generator :
             {
                 spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key.Key + ": " + key.Value));
             }
-            foreach (var key in filesWithCopyMetadata)
-            {
-                spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
-            }
+            // foreach (var key in filesWithCopyMetadata)
+            // {
+            //     spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
+            // }
 
             if (projectDir == null || filesWithCopyMetadata.IsEmpty)
             {
