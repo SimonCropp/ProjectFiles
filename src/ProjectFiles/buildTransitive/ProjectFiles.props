@@ -12,6 +12,7 @@
     <ItemGroup>
       <!-- Add all None items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(None)"
+                       ProjectFiles="true"
                        Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" >
         <Generator_Enabled>true</Generator_Enabled>
         <Generator_Group>server</Generator_Group>
@@ -19,15 +20,12 @@
 
       <!-- Add all Content items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(Content)"
-                       SourceItemGroup="PRIResource"
+                       ProjectFilesGenerator="true"
                        Condition="'%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(Content.CopyToOutputDirectory)' == 'Always'" >
         <Generator_Enabled>true</Generator_Enabled>
         <Generator_Group>server</Generator_Group>
       </AdditionalFiles>
 
-<!--      &lt;!&ndash; Add other item types if needed (EmbeddedResource, etc.) &ndash;&gt;-->
-<!--      <AdditionalFiles Include="@(EmbeddedResource)"-->
-<!--                       Condition="'%(EmbeddedResource.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(EmbeddedResource.CopyToOutputDirectory)' == 'Always'" />-->
     </ItemGroup>
   </Target>
 
@@ -37,9 +35,7 @@
   -->
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildProjectFullPath)" />
-
-    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="SourceItemGroup" />
-    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="CopyToOutputDirectory" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ProjectFilesGenerator" />
   </ItemGroup>
 
 </Project>

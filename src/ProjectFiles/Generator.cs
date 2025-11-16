@@ -54,7 +54,7 @@ public class Generator :
                 }
 //https://platform.uno/blog/using-msbuild-items-and-properties-in-c-9-source-generators/
                 var options = configOptions.GetOptions(additionalText);
-                if (options.TryGetValue("build_metadata.AdditionalFiles.SourceItemGroup", out var sourceItemGroup))
+                if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var sourceItemGroup))
                 {
                     sourceItemGroupValue = sourceItemGroup;
                 }
