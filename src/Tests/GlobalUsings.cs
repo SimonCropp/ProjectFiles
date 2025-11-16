@@ -1,5 +1,11 @@
-﻿// Global using directives
-
+﻿global using System.Collections.Immutable;
+global using System.Diagnostics.CodeAnalysis;
+global using System.Runtime.CompilerServices;
+global using System.Text;
 global using Microsoft.CodeAnalysis;
 global using Microsoft.CodeAnalysis.CSharp;
+global using Microsoft.CodeAnalysis.Diagnostics;
 global using Microsoft.CodeAnalysis.Text;
+global using NUnit.Framework;
+global using ProjectFiles;
+global using VerifyTests;

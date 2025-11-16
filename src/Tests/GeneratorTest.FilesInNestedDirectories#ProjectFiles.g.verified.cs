@@ -11,7 +11,6 @@ namespace ProjectFilesGenerator
     {
         public static ConfigType Config { get; } = new();
         public static DataType Data { get; } = new();
-        public static wwwrootType wwwroot { get; } = new();
     }
 }
 
@@ -19,14 +18,22 @@ namespace ProjectFilesGenerator.Types
 {
 partial class ConfigType() : ProjectDirectory("Config")
 {
+    public DevType Dev { get; } = new();
+    public partial class DevType
+    {
+        public ProjectFile appsettings_dev_json { get; } = new("Config/Dev/appsettings.dev.json");
+    }
+
+    public ProdType Prod { get; } = new();
+    public partial class ProdType
+    {
+        public ProjectFile appsettings_prod_json { get; } = new("Config/Prod/appsettings.prod.json");
+    }
+
     public ProjectFile appsettings_json { get; } = new("Config/appsettings.json");
 }
 partial class DataType() : ProjectDirectory("Data")
 {
-    public ProjectFile users_csv { get; } = new("Data/users.csv");
-}
-partial class wwwrootType() : ProjectDirectory("wwwroot")
-{
-    public ProjectFile index_html { get; } = new("wwwroot/index.html");
+    public ProjectFile seed_sql { get; } = new("Data/seed.sql");
 }
 }
