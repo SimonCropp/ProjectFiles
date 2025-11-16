@@ -10,11 +10,11 @@
 
   <Target Name="AddProjectFilesToAdditionalFiles"
           BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
-    <Message Text="None item: %(None.Identity),
-     DefiningProject: %(None.DefiningProjectFullPath),
-      FullPath: %(None.FullPath)"
-             Importance="high"
-             Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />
+<!--    <Message Text="None item: %(None.Identity),-->
+<!--     DefiningProject: %(None.DefiningProjectFullPath),-->
+<!--      FullPath: %(None.FullPath)"-->
+<!--             Importance="high"-->
+<!--             Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />-->
 
     <ItemGroup>
       <!-- Add items with CopyToOutputDirectory -->

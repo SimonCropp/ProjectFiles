@@ -46,7 +46,7 @@ public class Generator :
 
                 return null;
             })
-            .Where(path => path is not null)
+            .Where(_ => !string.IsNullOrWhiteSpace(_))
             .Select((path, _) => path!)
             .Collect();
 

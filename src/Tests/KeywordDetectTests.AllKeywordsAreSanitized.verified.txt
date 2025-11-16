@@ -1,0 +1,310 @@
+﻿[
+  {
+    Keyword: abstract,
+    Sanitized: @abstract
+  },
+  {
+    Keyword: as,
+    Sanitized: @as
+  },
+  {
+    Keyword: base,
+    Sanitized: @base
+  },
+  {
+    Keyword: bool,
+    Sanitized: @bool
+  },
+  {
+    Keyword: break,
+    Sanitized: @break
+  },
+  {
+    Keyword: byte,
+    Sanitized: @byte
+  },
+  {
+    Keyword: case,
+    Sanitized: @case
+  },
+  {
+    Keyword: catch,
+    Sanitized: @catch
+  },
+  {
+    Keyword: char,
+    Sanitized: @char
+  },
+  {
+    Keyword: checked,
+    Sanitized: @checked
+  },
+  {
+    Keyword: class,
+    Sanitized: @class
+  },
+  {
+    Keyword: const,
+    Sanitized: @const
+  },
+  {
+    Keyword: continue,
+    Sanitized: @continue
+  },
+  {
+    Keyword: decimal,
+    Sanitized: @decimal
+  },
+  {
+    Keyword: default,
+    Sanitized: @default
+  },
+  {
+    Keyword: delegate,
+    Sanitized: @delegate
+  },
+  {
+    Keyword: do,
+    Sanitized: @do
+  },
+  {
+    Keyword: double,
+    Sanitized: @double
+  },
+  {
+    Keyword: else,
+    Sanitized: @else
+  },
+  {
+    Keyword: enum,
+    Sanitized: @enum
+  },
+  {
+    Keyword: event,
+    Sanitized: @event
+  },
+  {
+    Keyword: explicit,
+    Sanitized: @explicit
+  },
+  {
+    Keyword: extern,
+    Sanitized: @extern
+  },
+  {
+    Keyword: false,
+    Sanitized: @false
+  },
+  {
+    Keyword: finally,
+    Sanitized: @finally
+  },
+  {
+    Keyword: fixed,
+    Sanitized: @fixed
+  },
+  {
+    Keyword: float,
+    Sanitized: @float
+  },
+  {
+    Keyword: for,
+    Sanitized: @for
+  },
+  {
+    Keyword: foreach,
+    Sanitized: @foreach
+  },
+  {
+    Keyword: goto,
+    Sanitized: @goto
+  },
+  {
+    Keyword: if,
+    Sanitized: @if
+  },
+  {
+    Keyword: implicit,
+    Sanitized: @implicit
+  },
+  {
+    Keyword: in,
+    Sanitized: @in
+  },
+  {
+    Keyword: int,
+    Sanitized: @int
+  },
+  {
+    Keyword: interface,
+    Sanitized: @interface
+  },
+  {
+    Keyword: internal,
+    Sanitized: @internal
+  },
+  {
+    Keyword: is,
+    Sanitized: @is
+  },
+  {
+    Keyword: lock,
+    Sanitized: @lock
+  },
+  {
+    Keyword: long,
+    Sanitized: @long
+  },
+  {
+    Keyword: namespace,
+    Sanitized: @namespace
+  },
+  {
+    Keyword: new,
+    Sanitized: @new
+  },
+  {
+    Keyword: null,
+    Sanitized: @null
+  },
+  {
+    Keyword: object,
+    Sanitized: @object
+  },
+  {
+    Keyword: operator,
+    Sanitized: @operator
+  },
+  {
+    Keyword: out,
+    Sanitized: @out
+  },
+  {
+    Keyword: override,
+    Sanitized: @override
+  },
+  {
+    Keyword: params,
+    Sanitized: @params
+  },
+  {
+    Keyword: private,
+    Sanitized: @private
+  },
+  {
+    Keyword: protected,
+    Sanitized: @protected
+  },
+  {
+    Keyword: public,
+    Sanitized: @public
+  },
+  {
+    Keyword: readonly,
+    Sanitized: @readonly
+  },
+  {
+    Keyword: ref,
+    Sanitized: @ref
+  },
+  {
+    Keyword: return,
+    Sanitized: @return
+  },
+  {
+    Keyword: sbyte,
+    Sanitized: @sbyte
+  },
+  {
+    Keyword: sealed,
+    Sanitized: @sealed
+  },
+  {
+    Keyword: short,
+    Sanitized: @short
+  },
+  {
+    Keyword: sizeof,
+    Sanitized: @sizeof
+  },
+  {
+    Keyword: stackalloc,
+    Sanitized: @stackalloc
+  },
+  {
+    Keyword: static,
+    Sanitized: @static
+  },
+  {
+    Keyword: string,
+    Sanitized: @string
+  },
+  {
+    Keyword: struct,
+    Sanitized: @struct
+  },
+  {
+    Keyword: switch,
+    Sanitized: @switch
+  },
+  {
+    Keyword: this,
+    Sanitized: @this
+  },
+  {
+    Keyword: throw,
+    Sanitized: @throw
+  },
+  {
+    Keyword: true,
+    Sanitized: @true
+  },
+  {
+    Keyword: try,
+    Sanitized: @try
+  },
+  {
+    Keyword: typeof,
+    Sanitized: @typeof
+  },
+  {
+    Keyword: uint,
+    Sanitized: @uint
+  },
+  {
+    Keyword: ulong,
+    Sanitized: @ulong
+  },
+  {
+    Keyword: unchecked,
+    Sanitized: @unchecked
+  },
+  {
+    Keyword: unsafe,
+    Sanitized: @unsafe
+  },
+  {
+    Keyword: ushort,
+    Sanitized: @ushort
+  },
+  {
+    Keyword: using,
+    Sanitized: @using
+  },
+  {
+    Keyword: virtual,
+    Sanitized: @virtual
+  },
+  {
+    Keyword: void,
+    Sanitized: @void
+  },
+  {
+    Keyword: volatile,
+    Sanitized: @volatile
+  },
+  {
+    Keyword: while,
+    Sanitized: @while
+  }
+]
