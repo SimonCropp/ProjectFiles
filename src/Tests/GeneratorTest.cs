@@ -59,8 +59,7 @@ public class GeneratorTest
             .WithUpdatedAnalyzerConfigOptions(optionsProvider)
             .RunGenerators(CreateCompilation());
 
-        return Verify(driver)
-            .UseDirectory("Snapshots");
+        return Verify(driver);
     }
 
     [Test]
@@ -97,8 +96,7 @@ public class GeneratorTest
             .WithUpdatedAnalyzerConfigOptions(optionsProvider)
             .RunGenerators(CreateCompilation());
 
-        return Verify(driver)
-            .UseDirectory("Snapshots");
+        return Verify(driver);
     }
 
     [Test]
@@ -130,8 +128,7 @@ public class GeneratorTest
             .WithUpdatedAnalyzerConfigOptions(optionsProvider)
             .RunGenerators(CreateCompilation());
 
-        return Verify(driver)
-            .UseDirectory("Snapshots");
+        return Verify(driver);
     }
 
     [Test]
@@ -173,8 +170,7 @@ public class GeneratorTest
             .WithUpdatedAnalyzerConfigOptions(optionsProvider)
             .RunGenerators(CreateCompilation());
 
-        return Verify(driver)
-            .UseDirectory("Snapshots");
+        return Verify(driver);
     }
 
     [Test]
@@ -211,8 +207,7 @@ public class GeneratorTest
             .WithUpdatedAnalyzerConfigOptions(optionsProvider)
             .RunGenerators(CreateCompilation());
 
-        return Verify(driver)
-            .UseDirectory("Snapshots");
+        return Verify(driver);
     }
 
     [Test]
@@ -249,8 +244,7 @@ public class GeneratorTest
             .WithUpdatedAnalyzerConfigOptions(optionsProvider)
             .RunGenerators(CreateCompilation());
 
-        return Verify(driver)
-            .UseDirectory("Snapshots");
+        return Verify(driver);
     }
 
     [Test]
@@ -287,8 +281,7 @@ public class GeneratorTest
             .WithUpdatedAnalyzerConfigOptions(optionsProvider)
             .RunGenerators(CreateCompilation());
 
-        return Verify(driver)
-            .UseDirectory("Snapshots");
+        return Verify(driver);
     }
 
     [Test]
