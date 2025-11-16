@@ -7,4 +7,5 @@ global using Microsoft.CodeAnalysis.CSharp;
 global using Microsoft.CodeAnalysis.Diagnostics;
 global using Microsoft.CodeAnalysis.Text;
 global using NUnit.Framework;
+global using ProjectFiles;
 global using VerifyTests;
