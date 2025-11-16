@@ -37,6 +37,7 @@ public class Generator :
             .Collect()
             .Select((dirs, ct) => dirs.FirstOrDefault());
 
+        Dictionary<string, string> values = [];
         // Get all additional files with CopyToOutputDirectory metadata
         var filesWithCopyMetadata = context.AdditionalTextsProvider
             .Combine(context.AnalyzerConfigOptionsProvider)
@@ -53,7 +54,11 @@ public class Generator :
                 var options = configOptions.GetOptions(additionalText);
                 if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var sourceItemGroup))
                 {
-                    return additionalText.Path;
+                    values.Add(additionalText.Path, sourceItemGroup);
+                    if (sourceItemGroup == "true")
+                    {
+                        return additionalText.Path;
+                    }
                 }
 
                 return null;
@@ -67,6 +72,10 @@ public class Generator :
         context.RegisterSourceOutput(generatorInput, (spc, input) =>
         {
             var (projectDir, filesWithCopyMetadata) = input;
+            foreach (var key in values)
+            {
+                spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key.Key + ": " + key.Value));
+            }
             foreach (var key in filesWithCopyMetadata)
             {
                 spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));

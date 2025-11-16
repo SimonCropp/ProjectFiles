@@ -12,12 +12,8 @@
     <ItemGroup>
       <!-- Add all None items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(None)"
-                       ProjectFiles="true"
-                       Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />
-      <!-- Add all Content items with CopyToOutputDirectory -->
-      <AdditionalFiles Include="@(Content)"
                        ProjectFilesGenerator="true"
-                       Condition="'%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(Content.CopyToOutputDirectory)' == 'Always'" />
+                       Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />
     </ItemGroup>
   </Target>
 
