@@ -31,27 +31,27 @@ public class Generator :
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Get all additional files that are .csproj files
-        var projectFiles = context.AdditionalTextsProvider
-            .Where(_ => _.Path.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase));
-
-        // Parse the project file and extract file paths
-        var filePaths = projectFiles
-            .Select((file, cancel) =>
+        // Get all additional files with CopyToOutputDirectory metadata
+        var files = context.AdditionalTextsProvider
+            .Combine(context.AnalyzerConfigOptionsProvider)
+            .Select((pair, _) =>
             {
-                var text = file.GetText(cancel);
-                if (text == null)
+                var (additionalText, configOptions) = pair;
+
+                var options = configOptions.GetOptions(additionalText);
+                if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var relativePath))
                 {
-                    return ImmutableArray<string>.Empty;
+                    return relativePath;
                 }
 
-                var projectDir = Path.GetDirectoryName(file.Path)!;
-                return ParseProjectFile(text.ToString(), projectDir);
+                return null;
             })
-            .Where(_ => _.Length > 0);
+            .Where(_ => !string.IsNullOrWhiteSpace(_))
+            .Select((path, _) => path!)
+            .Collect();
 
         // Generate the source
-        context.RegisterSourceOutput(filePaths, (spc, files) =>
+        context.RegisterSourceOutput(files, (spc, files) =>
         {
             //spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "AAA"));
             var source = GenerateSource(files);
@@ -59,123 +59,6 @@ public class Generator :
             spc.AddSource("ProjectFiles.ProjectDirectory.g.cs", projectDirectoryContent);
             spc.AddSource("ProjectFiles.ProjectFile.g.cs", projectFileContent);
         });
-    }
-
-    static ImmutableArray<string> ParseProjectFile(string content, string projectDir)
-    {
-        var doc = XDocument.Parse(content);
-
-        var files = new List<string>();
-
-        // Find all None, Content, and other item types with CopyToOutputDirectory
-        var itemGroups = doc.Descendants()
-            .Where(_ => _.Name.LocalName == "ItemGroup");
-
-        foreach (var itemGroup in itemGroups)
-        {
-            foreach (var item in itemGroup.Elements())
-            {
-                var copyToOutput = item.Elements()
-                    .FirstOrDefault(_ => _.Name.LocalName == "CopyToOutputDirectory");
-
-                if (copyToOutput?.Value is not ("PreserveNewest" or "Always"))
-                {
-                    continue;
-                }
-
-                var include = item.Attribute("Include")?.Value ?? item.Attribute("Update")?.Value;
-                if (string.IsNullOrEmpty(include))
-                {
-                    continue;
-                }
-
-                // Expand glob patterns
-                var expanded = ExpandGlobPattern(include!, projectDir);
-                if (expanded != null)
-                {
-                    files.AddRange(expanded);
-                }
-            }
-        }
-
-        return files.Distinct().OrderBy(_ => _).ToImmutableArray();
-    }
-
-    static char separatorChar = Path.DirectorySeparatorChar;
-
-    static IEnumerable<string>? ExpandGlobPattern(string pattern, string projectDir)
-    {
-        // Normalize path separators
-        pattern = pattern.Replace('/', separatorChar);
-
-        // Check if pattern contains wildcards
-        if (pattern.Contains('*') ||
-            pattern.Contains('?'))
-        {
-            var parts = pattern.Split(separatorChar);
-            var hasRecursive = parts.Contains("**");
-
-            if (hasRecursive)
-            {
-                // Handle ** recursive pattern
-                var beforeRecursive = string.Join(separatorChar, parts.TakeWhile(_ => _ != "**"));
-                var afterRecursive = string.Join(separatorChar, parts.SkipWhile(_ => _ != "**").Skip(1));
-
-                var searchDir = string.IsNullOrEmpty(beforeRecursive)
-                    ? projectDir
-                    : Path.Combine(projectDir, beforeRecursive);
-
-                if (!Directory.Exists(searchDir))
-                {
-                    return null;
-                }
-
-                var searchPattern = string.IsNullOrEmpty(afterRecursive) ? "*.*" : afterRecursive;
-
-                var found = Directory.GetFiles(searchDir, searchPattern, SearchOption.AllDirectories);
-                return found.Select(file => GetRelativePath(projectDir, file));
-            }
-            else
-            {
-                // Handle single directory with wildcards
-                var dirPart = Path.GetDirectoryName(pattern) ?? string.Empty;
-                var filePart = Path.GetFileName(pattern);
-
-                var searchDir = string.IsNullOrEmpty(dirPart)
-                    ? projectDir
-                    : Path.Combine(projectDir, dirPart);
-
-                if (!Directory.Exists(searchDir))
-                {
-                    return null;
-                }
-
-                var found = Directory.GetFiles(searchDir, filePart);
-                return found.Select(file => GetRelativePath(projectDir, file));
-            }
-        }
-
-        // No wildcards - just return the file if it exists
-        var fullPath = Path.Combine(projectDir, pattern);
-        return File.Exists(fullPath) ? [pattern] : null;
-    }
-
-    static string GetRelativePath(string basePath, string fullPath)
-    {
-        var baseUri = new Uri(EnsureTrailingSlash(basePath));
-        var fullUri = new Uri(fullPath);
-        var relativeUri = baseUri.MakeRelativeUri(fullUri);
-        return Uri.UnescapeDataString(relativeUri.ToString()).Replace('/', separatorChar);
-    }
-
-    static string EnsureTrailingSlash(string path)
-    {
-        if (path.EndsWith(separatorChar.ToString()))
-        {
-            return path;
-        }
-
-        return path + separatorChar;
     }
 
     static string GenerateSource(ImmutableArray<string> files)

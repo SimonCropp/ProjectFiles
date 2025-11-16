@@ -9,12 +9,15 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     static partial class ProjectFiles
     {
-        public static ProjectFile file_with_dots_txt { get; } = new("file.with.dots.txt");
-        public static ProjectFile my_config_json { get; } = new("my-config.json");
-        public static ProjectFile user_data_csv { get; } = new("user_data.csv");
+        public static ConfigType Config { get; } = new();
     }
 }
 
 namespace ProjectFilesGenerator.Types
 {
+partial class ConfigType() : ProjectDirectory("Config")
+{
+    public ProjectFile appsettings_json { get; } = new("Config/appsettings.json");
+    public ProjectFile database_json { get; } = new("Config/database.json");
+}
 }

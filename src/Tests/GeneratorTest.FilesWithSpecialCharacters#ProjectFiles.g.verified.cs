@@ -9,9 +9,9 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     static partial class ProjectFiles
     {
-        public static ProjectFile @class_txt { get; } = new("class.txt");
-        public static ProjectFile @namespace_json { get; } = new("namespace.json");
-        public static ProjectFile @static_xml { get; } = new("static.xml");
+        public static ProjectFile app_settings_dev_json { get; } = new("app.settings.dev.json");
+        public static ProjectFile file_with_underscore_txt { get; } = new("file_with_underscore.txt");
+        public static ProjectFile my_config_json { get; } = new("my-config.json");
     }
 }
 

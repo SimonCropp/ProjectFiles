@@ -1,4 +1,4 @@
-class Identifier
+public static class Identifier
 {
     public static string Build(string name)
     {

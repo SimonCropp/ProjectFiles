@@ -1,4 +1,4 @@
-﻿static class KeywordDetect
+﻿public static class KeywordDetect
 {
     static HashSet<string> keywords =
     [
