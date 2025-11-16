@@ -12,7 +12,7 @@
     <ItemGroup>
       <!-- Add all None items with CopyToOutputDirectory -->
       <AdditionalFiles Include="@(None)"
-                       ProjectFilesGenerator="true"
+                       ProjectFilesGenerator="%(RelativeDir)%(Filename)%(Extension)"
                        Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR '%(None.CopyToOutputDirectory)' == 'Always'" />
     </ItemGroup>
   </Target>
