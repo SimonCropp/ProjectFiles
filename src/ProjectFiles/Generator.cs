@@ -37,9 +37,6 @@ public class Generator :
             .Collect()
             .Select((dirs, ct) => dirs.FirstOrDefault());
 
-        Dictionary<string, List<string>> dictionary = [];
-        List<string> globalKeys = [];
-        string? sourceItemGroupValue = null;
         // Get all additional files with CopyToOutputDirectory metadata
         var filesWithCopyMetadata = context.AdditionalTextsProvider
             .Combine(context.AnalyzerConfigOptionsProvider)
@@ -56,14 +53,6 @@ public class Generator :
                 var options = configOptions.GetOptions(additionalText);
                 if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var sourceItemGroup))
                 {
-                    sourceItemGroupValue = sourceItemGroup;
-                }
-                dictionary.Add(additionalText.Path, options.Keys.ToList());
-                globalKeys.AddRange(configOptions.GlobalOptions.Keys);
-                // Check for CopyToOutputDirectory metadata
-                if (options.TryGetValue("build_metadata.AdditionalFiles.CopyToOutputDirectory", out var copyValue)
-                    && copyValue is "PreserveNewest" or "Always")
-                {
                     return additionalText.Path;
                 }
 
@@ -77,31 +66,19 @@ public class Generator :
 
         context.RegisterSourceOutput(generatorInput, (spc, input) =>
         {
-            var (projectDir, absolutePaths) = input;
-            foreach (var key in globalKeys)
+            var (projectDir, filesWithCopyMetadata) = input;
+            foreach (var key in filesWithCopyMetadata)
             {
-               // spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
+                spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
             }
 
-            spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, sourceItemGroupValue));
-            foreach (var (key, value) in dictionary)
-            {
-                if (key == @"C:\Code\ProjectFiles\src\ConsumingTests\Config\appsettings.json")
-                {
-                    spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, key));
-                    foreach (var x in value)
-                    {
-                        spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "____" + x));
-                    }
-                }
-            }
-            if (projectDir == null || absolutePaths.IsEmpty)
+            if (projectDir == null || filesWithCopyMetadata.IsEmpty)
             {
                 return;
             }
 
             // Convert absolute paths to relative paths
-            var relativeFiles = absolutePaths
+            var relativeFiles = filesWithCopyMetadata
                 .Select(path => GetRelativePath(projectDir, path!))
                 .Distinct()
                 .OrderBy(x => x)
