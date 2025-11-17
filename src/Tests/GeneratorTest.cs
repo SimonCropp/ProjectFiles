@@ -24,7 +24,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -51,7 +51,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -88,7 +88,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -120,7 +120,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -162,7 +162,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -199,7 +199,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -236,7 +236,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -273,7 +273,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -310,7 +310,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -357,7 +357,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
@@ -392,7 +392,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalText(additionalFiles)
+            .AddAdditionalTexts(additionalFiles)
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
 
