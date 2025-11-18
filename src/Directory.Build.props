@@ -2,12 +2,13 @@
 <Project>
   <PropertyGroup>
     <NoWarn>CS1591;NU1608;NU1109;RS2008</NoWarn>
-    <Version>0.1.0-beta.6</Version>
+    <Version>0.1.0-beta.7</Version>
     <LangVersion>preview</LangVersion>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <ResolveAssemblyReferencesSilent>true</ResolveAssemblyReferencesSilent>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    <Description>A C# source generator that provides strongly-typed, compile-time access to project files marked with CopyToOutputDirectory in the .csproj file.</Description>
   </PropertyGroup>
 </Project>
