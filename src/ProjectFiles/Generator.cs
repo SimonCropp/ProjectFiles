@@ -1,4 +1,4 @@
-﻿namespace ProjectFiles;
+namespace ProjectFiles;
 
 [Generator]
 public class Generator :
@@ -6,14 +6,6 @@ public class Generator :
 {
     static SourceText projectFileContent;
     static SourceText projectDirectoryContent;
-
-    // static readonly DiagnosticDescriptor LogWarning = new(
-    //     id: "PFSG001",
-    //     title: "ProjectFiles Message",
-    //     messageFormat: "{0}",
-    //     category: "ProjectFiles.Generator",
-    //     DiagnosticSeverity.Warning,
-    //     isEnabledByDefault: true);
 
     static Generator()
     {
@@ -32,10 +24,27 @@ public class Generator :
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        // Get MSBuild properties
+        var msbuildProperties = context.AnalyzerConfigOptionsProvider
+            .Select((provider, _) =>
+            {
+                provider.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDir);
+                provider.GlobalOptions.TryGetValue("build_property.MSBuildProjectFullPath", out var projectFile);
+                provider.GlobalOptions.TryGetValue("build_property.SolutionDir", out var solutionDir);
+                provider.GlobalOptions.TryGetValue("build_property.SolutionPath", out var solutionFile);
+
+                return new MSBuildProperties(
+                    projectDir,
+                    projectFile,
+                    solutionDir,
+                    solutionFile
+                );
+            });
+
         // Get all additional files with CopyToOutputDirectory metadata
         var files = context.AdditionalTextsProvider
             .Combine(context.AnalyzerConfigOptionsProvider)
-            .Select(pair =>
+            .Select((pair, _) =>
             {
                 var (additionalText, configOptions) = pair;
 
@@ -51,18 +60,21 @@ public class Generator :
             .Select(_ => _!)
             .Collect();
 
+        // Combine files and properties
+        var combined = files.Combine(msbuildProperties);
+
         // Generate the source
-        context.RegisterSourceOutput(files, (context, files) =>
+        context.RegisterSourceOutput(combined, (context, data) =>
         {
-            //spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "AAA"));
-            var source = GenerateSource(files, context.CancellationToken);
+            var (fileList, props) = data;
+            var source = GenerateSource(fileList, props, context.CancellationToken);
             context.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
             context.AddSource("ProjectFiles.ProjectDirectory.g.cs", projectDirectoryContent);
             context.AddSource("ProjectFiles.ProjectFile.g.cs", projectFileContent);
         });
     }
 
-    static string GenerateSource(ImmutableArray<string> files, Cancel cancel)
+    static string GenerateSource(ImmutableArray<string> files, MSBuildProperties properties, Cancel cancel)
     {
         var (tree, rootFiles) = BuildFileTree(files, cancel);
         var builder = new StringBuilder();
@@ -80,6 +92,14 @@ public class Generator :
                 static partial class ProjectFiles
                 {
             """);
+
+        // Generate default properties
+        GenerateDefaultProperties(builder, properties);
+
+        if ((rootFiles.Count > 0 || tree.Count > 0) && HasAnyDefaultProperty(properties))
+        {
+            builder.AppendLine();
+        }
 
         // Generate root-level file properties
         foreach (var filePath in rootFiles.OrderBy(_ => _))
@@ -115,6 +135,39 @@ public class Generator :
 
         return builder.ToString();
     }
+
+    static void GenerateDefaultProperties(StringBuilder builder, MSBuildProperties properties)
+    {
+        if (!string.IsNullOrWhiteSpace(properties.ProjectDirectory))
+        {
+            var path = PathToCSharpString(properties.ProjectDirectory);
+            builder.AppendLine($$"""        public static ProjectDirectory ProjectDirectory { get; } = new({{path}});""");
+        }
+
+        if (!string.IsNullOrWhiteSpace(properties.ProjectFile))
+        {
+            var path = PathToCSharpString(properties.ProjectFile);
+            builder.AppendLine($$"""        public static ProjectFile ProjectFile { get; } = new({{path}});""");
+        }
+
+        if (!string.IsNullOrWhiteSpace(properties.SolutionDirectory))
+        {
+            var path = PathToCSharpString(properties.SolutionDirectory);
+            builder.AppendLine($$"""        public static ProjectDirectory SolutionDirectory { get; } = new({{path}});""");
+        }
+
+        if (!string.IsNullOrWhiteSpace(properties.SolutionFile))
+        {
+            var path = PathToCSharpString(properties.SolutionFile);
+            builder.AppendLine($$"""        public static ProjectFile SolutionFile { get; } = new({{path}});""");
+        }
+    }
+
+    static bool HasAnyDefaultProperty(MSBuildProperties properties) =>
+        !string.IsNullOrWhiteSpace(properties.ProjectDirectory) ||
+        !string.IsNullOrWhiteSpace(properties.ProjectFile) ||
+        !string.IsNullOrWhiteSpace(properties.SolutionDirectory) ||
+        !string.IsNullOrWhiteSpace(properties.SolutionFile);
 
     static void GenerateRootProperties(StringBuilder builder, List<DirectoryNode> topLevelNodes, Cancel cancel)
     {
@@ -267,6 +320,12 @@ public class Generator :
 
         return (topLevelDirectories.Values.ToList(), rootFiles);
     }
+
+    record MSBuildProperties(
+        string? ProjectDirectory,
+        string? ProjectFile,
+        string? SolutionDirectory,
+        string? SolutionFile);
 
     class DirectoryNode
     {
