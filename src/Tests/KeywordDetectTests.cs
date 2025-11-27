@@ -116,7 +116,7 @@ public class KeywordDetectTests
             .Select(k => new
             {
                 Keyword = k,
-                Sanitized = KeywordDetect.Sanitize(new StringBuilder(k))
+                Sanitized = KeywordDetect.Sanitize(new(k))
             })
             .ToList();
 
