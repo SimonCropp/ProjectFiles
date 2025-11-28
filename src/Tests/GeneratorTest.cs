@@ -479,7 +479,7 @@ public class GeneratorTest
     }
 
     [Test]
-    public Task MSBuildPropertiesWithFiles()
+    public Task MsBuildPropertiesWithFiles()
     {
         var additionalFiles = new[]
         {
@@ -519,7 +519,7 @@ public class GeneratorTest
     }
 
     [Test]
-    public Task PartialMSBuildProperties()
+    public Task PartialMsBuildProperties()
     {
         var additionalFiles = new[]
         {
