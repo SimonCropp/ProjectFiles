@@ -22,6 +22,7 @@ https://nuget.org/packages/ProjectFiles/
 
 - **Strongly-typed access** to project files via generated classes and properties
 - **Compile-time safety** - typos in file paths become compilation errors
+- **MSBuild property access** - automatic properties for project and solution paths
 - **IntelliSense support** - discover available files through IDE autocomplete
 - **Automatic synchronization** - regenerates when project files change
 - **Hierarchical structure** - mirrors the project's directory structure
@@ -44,6 +45,101 @@ Mark files with `CopyToOutputDirectory` set to either `PreserveNewest` or `Alway
   </Content>
   
   <None Include="SpecificDirectory\Dir1\*.txt">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+```
+
+
+## MSBuild Default Properties
+
+The generator automatically exposes MSBuild project and solution paths as strongly-typed properties. These are always available regardless of which files are marked with `CopyToOutputDirectory`.
+
+
+### Available Properties
+
+Four properties are automatically generated when their corresponding MSBuild properties are available:
+
+- **`ProjectFiles.ProjectDirectory`** - The project's root directory (`MSBuildProjectDirectory`)
+- **`ProjectFiles.ProjectFile`** - The project file path (`MSBuildProjectFullPath`)
+- **`ProjectFiles.SolutionDirectory`** - The solution's root directory (`SolutionDir`)
+- **`ProjectFiles.SolutionFile`** - The solution file path (`SolutionPath`)
+
+
+### Usage Example
+
+```csharp
+// Access project directory
+var projectDir = ProjectFiles.ProjectDirectory;
+Console.WriteLine($"Project directory: {projectDir.Path}");
+// Output: C:/Projects/MyApp
+
+// Access project file
+var projectFile = ProjectFiles.ProjectFile;
+Console.WriteLine($"Project file: {projectFile.Path}");
+// Output: C:/Projects/MyApp/MyApp.csproj
+
+// Access solution directory
+var solutionDir = ProjectFiles.SolutionDirectory;
+Console.WriteLine($"Solution directory: {solutionDir.Path}");
+// Output: C:/Projects/
+
+// Access solution file
+var solutionFile = ProjectFiles.SolutionFile;
+Console.WriteLine($"Solution file: {solutionFile.Path}");
+// Output: C:/Projects/MySolution.sln
+
+// Navigate relative to project directory
+var configPath = Path.Combine(ProjectFiles.ProjectDirectory, "Config", "app.json");
+
+// Read project file metadata
+var projectXml = XDocument.Load(ProjectFiles.ProjectFile);
+```
+
+
+### Property Availability
+
+Properties are only generated when their corresponding MSBuild values are available:
+
+| Property | MSBuild Source | When Available |
+|----------|----------------|----------------|
+| `ProjectDirectory` | `MSBuildProjectDirectory` | Always (when building a project) |
+| `ProjectFile` | `MSBuildProjectFullPath` | Always (when building a project) |
+| `SolutionDirectory` | `SolutionDir` | Only when building from a solution |
+| `SolutionFile` | `SolutionPath` | Only when building from a solution |
+
+**Note**: `SolutionDirectory` and `SolutionFile` will not be available when building a standalone project file (e.g., `dotnet build MyProject.csproj`) without a solution context.
+
+
+### Reserved Names
+
+To prevent conflicts, you **cannot** use these reserved names for root-level files or directories in your project:
+
+❌ **Invalid** - Will cause build errors:
+```xml
+<ItemGroup>
+  <!-- ERROR: Root-level file conflicts with ProjectDirectory property -->
+  <None Include="ProjectDirectory.txt">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  
+  <!-- ERROR: Root-level directory conflicts with SolutionFile property -->
+  <None Include="SolutionFile\config.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+```
+
+✅ **Valid** - No conflicts:
+```xml
+<ItemGroup>
+  <!-- OK: Files in subdirectories don't conflict -->
+  <None Include="Config\ProjectDirectory.txt">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  
+  <!-- OK: Different root-level name -->
+  <None Include="MyProjectDir.txt">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
 </ItemGroup>
