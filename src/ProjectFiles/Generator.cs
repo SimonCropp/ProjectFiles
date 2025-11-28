@@ -69,8 +69,11 @@ public class Generator : IIncrementalGenerator
 
             // Check for conflicts and report diagnostics
             var conflicts = FindReservedNameConflicts(fileList);
+            var conflictingFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             foreach (var (file, property) in conflicts)
             {
+                conflictingFiles.Add(file);
                 var diagnostic = Diagnostic.Create(
                     ReservedNameConflict,
                     Location.None,
@@ -79,13 +82,10 @@ public class Generator : IIncrementalGenerator
                 context.ReportDiagnostic(diagnostic);
             }
 
-            // Only generate source if there are no conflicts
-            if (conflicts.Count != 0)
-            {
-                return;
-            }
+            // Filter out conflicting files before generating source
+            var filteredFileList = fileList.Where(f => !conflictingFiles.Contains(f)).ToImmutableArray();
 
-            var source = GenerateSource(fileList, props, context.CancellationToken);
+            var source = GenerateSource(filteredFileList, props, context.CancellationToken);
             context.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
             context.AddSource("ProjectFiles.ProjectDirectory.g.cs", projectDirectoryContent);
             context.AddSource("ProjectFiles.ProjectFile.g.cs", projectFileContent);

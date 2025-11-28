@@ -757,7 +757,8 @@ public class GeneratorTest
     [Test]
     public Task NoConflictWhenPropertyNotSet()
     {
-        // File named ProjectDirectory should work fine if MSBuildProjectDirectory isn't set
+        // File named ProjectDirectory is now always reserved, even if MSBuildProjectDirectory isn't set
+        // This test should report a conflict
         var additionalFiles = new[]
         {
             CreateAdditionalText("ProjectDirectory.json", "content")
@@ -828,6 +829,49 @@ public class GeneratorTest
             ["projectdirectory.txt"] = new()
             {
                 ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "projectdirectory.txt"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task ConflictWithOtherValidFiles()
+    {
+        // When there's a conflict, the conflicting file should be excluded but other files should still generate
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("ProjectDirectory.txt", "content"),
+            CreateAdditionalText("appsettings.json", "content"),
+            CreateAdditionalText("Config/database.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["ProjectDirectory.txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+            },
+            ["appsettings.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "appsettings.json"
+            },
+            ["Config/database.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Config/database.json"
             }
         };
 
