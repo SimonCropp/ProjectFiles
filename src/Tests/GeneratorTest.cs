@@ -400,7 +400,7 @@ public class GeneratorTest
     }
 
     [Test]
-    public Task AllMSBuildProperties()
+    public Task AllMsBuildProperties()
     {
         var additionalFiles = new[]
         {
