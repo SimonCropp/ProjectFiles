@@ -1,9 +1,10 @@
-﻿namespace ProjectFilesGenerator;
+﻿//HintName: ProjectFiles.ProjectDirectory.g.cs
+namespace ProjectFilesGenerator;
 
 using System.IO;
 using System.Collections.Generic;
 
-partial class ProjectDirectory(string path)
+abstract partial class ProjectDirectory(string path)
 {
     public string Path { get; } = path;
 
