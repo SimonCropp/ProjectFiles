@@ -1,6 +1,18 @@
 ﻿{
   Diagnostics: [
     {
+      Message: File 'ProjectFile.txt' would generate property name 'ProjectFile' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
+      Severity: Error,
+      Descriptor: {
+        Id: PROJFILES001,
+        Title: File name conflicts with reserved property,
+        MessageFormat: File '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
+        Category: ProjectFilesGenerator,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    },
+    {
       Message: Directory 'SolutionDirectory/config.json' would generate property name 'SolutionDirectory' that conflicts with reserved MSBuild property. Rename the directory or exclude its files from CopyToOutputDirectory.,
       Severity: Error,
       Descriptor: {

@@ -685,6 +685,50 @@ public class GeneratorTest
     }
 
     [Test]
+    public Task MixedFileAndDirectoryConflicts()
+    {
+        // Test both file and directory conflicts together
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("ProjectFile.txt", "content"), // File conflict
+            CreateAdditionalText("SolutionDirectory/config.json", "content"), // Directory conflict
+            CreateAdditionalText("appsettings.json", "content") // Valid file
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["ProjectFile.txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile.txt"
+            },
+            ["SolutionDirectory/config.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionDirectory/config.json"
+            },
+            ["appsettings.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "appsettings.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj",
+            ["build_property.SolutionDir"] = "C:/Projects/"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
     public Task ConflictWithSolutionFile()
     {
         var additionalFiles = new[]

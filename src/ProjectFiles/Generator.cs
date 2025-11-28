@@ -70,12 +70,13 @@ public class Generator : IIncrementalGenerator
             // Check for conflicts and report diagnostics
             var conflicts = FindReservedNameConflicts(fileList);
             var conflictingFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var (file, property) in conflicts)
+            
+            foreach (var (file, property, isDirectory) in conflicts)
             {
                 conflictingFiles.Add(file);
+                var descriptor = isDirectory ? ReservedDirectoryNameConflict : ReservedFileNameConflict;
                 var diagnostic = Diagnostic.Create(
-                    ReservedNameConflict,
+                    descriptor,
                     Location.None,
                     file,
                     property);
@@ -84,7 +85,7 @@ public class Generator : IIncrementalGenerator
 
             // Filter out conflicting files before generating source
             var filteredFileList = fileList.Where(f => !conflictingFiles.Contains(f)).ToImmutableArray();
-
+            
             var source = GenerateSource(filteredFileList, props, context.CancellationToken);
             context.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
             context.AddSource("ProjectFiles.ProjectDirectory.g.cs", projectDirectoryContent);
@@ -100,9 +101,9 @@ public class Generator : IIncrementalGenerator
         "SolutionFile"
     };
 
-    static List<(string FilePath, string PropertyName)> FindReservedNameConflicts(ImmutableArray<string> files)
+    static List<(string FilePath, string PropertyName, bool IsDirectory)> FindReservedNameConflicts(ImmutableArray<string> files)
     {
-        var conflicts = new List<(string, string)>();
+        var conflicts = new List<(string, string, bool)>();
 
         foreach (var file in files)
         {
@@ -119,7 +120,9 @@ public class Generator : IIncrementalGenerator
 
             if (reservedNames.Contains(propertyName))
             {
-                conflicts.Add((file, propertyName));
+                // It's a directory if there are more path parts (subdirectories or files within)
+                var isDirectory = parts.Length > 1;
+                conflicts.Add((file, propertyName, isDirectory));
             }
         }
 
@@ -373,10 +376,18 @@ public class Generator : IIncrementalGenerator
         return (topLevelDirectories.Values.ToList(), rootFiles);
     }
 
-    static readonly DiagnosticDescriptor ReservedNameConflict = new(
+    static readonly DiagnosticDescriptor ReservedFileNameConflict = new(
         id: "PROJFILES001",
-        title: "File or directory name conflicts with reserved property",
-        messageFormat: "File or directory '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the file/directory or exclude it from CopyToOutputDirectory.",
+        title: "File name conflicts with reserved property",
+        messageFormat: "File '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.",
+        category: "ProjectFilesGenerator",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    static readonly DiagnosticDescriptor ReservedDirectoryNameConflict = new(
+        id: "PROJFILES002",
+        title: "Directory name conflicts with reserved property",
+        messageFormat: "Directory '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the directory or exclude its files from CopyToOutputDirectory.",
         category: "ProjectFilesGenerator",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
