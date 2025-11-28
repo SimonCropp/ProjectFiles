@@ -70,11 +70,11 @@ public class Generator : IIncrementalGenerator
             // Check for conflicts and report diagnostics
             var conflicts = FindReservedNameConflicts(fileList);
             var conflictingFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            
+
             foreach (var (file, property, isDirectory) in conflicts)
             {
                 conflictingFiles.Add(file);
-                var descriptor = isDirectory ? ReservedDirectoryNameConflict : ReservedFileNameConflict;
+                var descriptor = isDirectory ? reservedDirectoryNameConflict : reservedFileNameConflict;
                 var diagnostic = Diagnostic.Create(
                     descriptor,
                     Location.None,
@@ -84,9 +84,9 @@ public class Generator : IIncrementalGenerator
             }
 
             // Filter out conflicting files before generating source
-            var filteredFileList = fileList.Where(f => !conflictingFiles.Contains(f)).ToImmutableArray();
-            
-            var source = GenerateSource(filteredFileList, props, context.CancellationToken);
+            var filteredFiles = fileList.Where(f => !conflictingFiles.Contains(f)).ToImmutableArray();
+
+            var source = GenerateSource(filteredFiles, props, context.CancellationToken);
             context.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
             context.AddSource("ProjectFiles.ProjectDirectory.g.cs", projectDirectoryContent);
             context.AddSource("ProjectFiles.ProjectFile.g.cs", projectFileContent);
@@ -195,25 +195,25 @@ public class Generator : IIncrementalGenerator
     {
         if (!string.IsNullOrWhiteSpace(properties.ProjectDirectory))
         {
-            var path = PathToCSharpString(properties.ProjectDirectory);
+            var path = PathToCSharpString(properties.ProjectDirectory!);
             builder.AppendLine($$"""        public static ProjectDirectory ProjectDirectory { get; } = new({{path}});""");
         }
 
         if (!string.IsNullOrWhiteSpace(properties.ProjectFile))
         {
-            var path = PathToCSharpString(properties.ProjectFile);
+            var path = PathToCSharpString(properties.ProjectFile!);
             builder.AppendLine($$"""        public static ProjectFile ProjectFile { get; } = new({{path}});""");
         }
 
         if (!string.IsNullOrWhiteSpace(properties.SolutionDirectory))
         {
-            var path = PathToCSharpString(properties.SolutionDirectory);
+            var path = PathToCSharpString(properties.SolutionDirectory!);
             builder.AppendLine($$"""        public static ProjectDirectory SolutionDirectory { get; } = new({{path}});""");
         }
 
         if (!string.IsNullOrWhiteSpace(properties.SolutionFile))
         {
-            var path = PathToCSharpString(properties.SolutionFile);
+            var path = PathToCSharpString(properties.SolutionFile!);
             builder.AppendLine($$"""        public static ProjectFile SolutionFile { get; } = new({{path}});""");
         }
     }
@@ -376,7 +376,7 @@ public class Generator : IIncrementalGenerator
         return (topLevelDirectories.Values.ToList(), rootFiles);
     }
 
-    static readonly DiagnosticDescriptor ReservedFileNameConflict = new(
+    static readonly DiagnosticDescriptor reservedFileNameConflict = new(
         id: "PROJFILES001",
         title: "File name conflicts with reserved property",
         messageFormat: "File '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.",
@@ -384,7 +384,7 @@ public class Generator : IIncrementalGenerator
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    static readonly DiagnosticDescriptor ReservedDirectoryNameConflict = new(
+    static readonly DiagnosticDescriptor reservedDirectoryNameConflict = new(
         id: "PROJFILES002",
         title: "Directory name conflicts with reserved property",
         messageFormat: "Directory '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the directory or exclude its files from CopyToOutputDirectory.",
