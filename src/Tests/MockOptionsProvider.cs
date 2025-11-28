@@ -1,15 +1,9 @@
-﻿class MockOptionsProvider : AnalyzerConfigOptionsProvider
+﻿class MockOptionsProvider(
+    Dictionary<string, Dictionary<string, string>> fileOptions,
+    Dictionary<string, string>? globalOptions = null) :
+    AnalyzerConfigOptionsProvider
 {
-    readonly Dictionary<string, Dictionary<string, string>> fileOptions;
-    readonly Dictionary<string, string> globalOptions;
-
-    public MockOptionsProvider(
-        Dictionary<string, Dictionary<string, string>> fileOptions,
-        Dictionary<string, string>? globalOptions = null)
-    {
-        this.fileOptions = fileOptions;
-        this.globalOptions = globalOptions ?? new();
-    }
+    Dictionary<string, string> globalOptions = globalOptions ?? new();
 
     public override AnalyzerConfigOptions GlobalOptions =>
         new MockGlobalOptions(globalOptions);

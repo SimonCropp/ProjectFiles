@@ -1,4 +1,3 @@
-
 [TestFixture]
 public class KeywordDetectTests
 {
@@ -113,10 +112,10 @@ public class KeywordDetectTests
         };
 
         var results = keywords
-            .Select(k => new
+            .Select(_ => new
             {
-                Keyword = k,
-                Sanitized = KeywordDetect.Sanitize(new(k))
+                Keyword = _,
+                Sanitized = KeywordDetect.Sanitize(new(_))
             })
             .ToList();
 
