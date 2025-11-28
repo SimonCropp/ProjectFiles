@@ -226,7 +226,7 @@ public class Generator : IIncrementalGenerator
         !string.IsNullOrWhiteSpace(properties.SolutionDirectory) ||
         !string.IsNullOrWhiteSpace(properties.SolutionFile);
 
-    static void GenerateRootProperties(StringBuilder builder, List<DirectoryNode> topLevelNodes, Cancel cancel)
+    static void GenerateRootProperties(StringBuilder builder, IReadOnlyCollection<DirectoryNode> topLevelNodes, Cancel cancel)
     {
         foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
         {
@@ -237,7 +237,7 @@ public class Generator : IIncrementalGenerator
         }
     }
 
-    static void GenerateTypeDefinitions(StringBuilder builder, List<DirectoryNode> topLevelNodes, int indentCount, Cancel cancel)
+    static void GenerateTypeDefinitions(StringBuilder builder, IReadOnlyCollection<DirectoryNode> topLevelNodes, int indentCount, Cancel cancel)
     {
         var indent = new string(' ', indentCount * 4);
 
@@ -319,7 +319,7 @@ public class Generator : IIncrementalGenerator
         return propertyName;
     }
 
-    static (List<DirectoryNode> Directories, List<string> RootFiles) BuildFileTree(ImmutableArray<string> files, Cancel cancel)
+    static (IReadOnlyCollection<DirectoryNode> Directories, List<string> RootFiles) BuildFileTree(ImmutableArray<string> files, Cancel cancel)
     {
         var topLevelDirectories = new Dictionary<string, DirectoryNode>();
         var rootFiles = new List<string>();
@@ -374,7 +374,7 @@ public class Generator : IIncrementalGenerator
             current.Files.Add(file);
         }
 
-        return (topLevelDirectories.Values.ToList(), rootFiles);
+        return (topLevelDirectories.Values, rootFiles);
     }
 
     static readonly DiagnosticDescriptor reservedFileNameConflict = new(
