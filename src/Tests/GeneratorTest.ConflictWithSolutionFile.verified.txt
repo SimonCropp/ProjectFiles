@@ -1,0 +1,16 @@
+﻿{
+  Diagnostics: [
+    {
+      Message: File 'SolutionFile.xml' would generate property name 'SolutionFile' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
+      Severity: Error,
+      Descriptor: {
+        Id: PROJFILES001,
+        Title: File name conflicts with reserved property,
+        MessageFormat: File '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
+        Category: ProjectFilesGenerator,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}

@@ -4,6 +4,15 @@ using ProjectFilesGenerator;
 public class ComsumeTests
 {
     [Test]
+    public void DefaultProperties()
+    {
+        IsTrue(Directory.Exists(ProjectFiles.SolutionDirectory));
+        IsTrue(Directory.Exists(ProjectFiles.ProjectDirectory));
+        IsTrue(File.Exists(ProjectFiles.SolutionFile));
+        IsTrue(File.Exists(ProjectFiles.ProjectFile));
+    }
+
+    [Test]
     public void Recursive() =>
         IsTrue(File.Exists(ProjectFiles.RecursiveDirectory.SomeFile_txt));
 

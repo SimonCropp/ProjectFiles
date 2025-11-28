@@ -399,6 +399,542 @@ public class GeneratorTest
         return Verify(driver);
     }
 
+    [Test]
+    public Task AllMsBuildProperties()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("config.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["config.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "config.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp",
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj",
+            ["build_property.SolutionDir"] = "C:/Projects/",
+            ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task OnlyProjectProperties()
+    {
+        var additionalFiles = Array.Empty<AdditionalText>();
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Dev/WebApi",
+            ["build_property.MSBuildProjectFullPath"] = "C:/Dev/WebApi/WebApi.csproj"
+        };
+
+        var options = new MockOptionsProvider([], globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task OnlySolutionProperties()
+    {
+        var additionalFiles = Array.Empty<AdditionalText>();
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.SolutionDir"] = "C:/Source/",
+            ["build_property.SolutionPath"] = "C:/Source/MyProduct.sln"
+        };
+
+        var options = new MockOptionsProvider([], globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task MsBuildPropertiesWithFiles()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("appsettings.json", "content"),
+            CreateAdditionalText("Config/database.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["appsettings.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "appsettings.json"
+            },
+            ["Config/database.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Config/database.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp",
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj",
+            ["build_property.SolutionDir"] = "C:/Projects/",
+            ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task PartialMsBuildProperties()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("readme.md", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["readme.md"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "readme.md"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Work/Library",
+            // ProjectFile missing
+            // SolutionDir missing
+            ["build_property.SolutionPath"] = "C:/Work/Library.sln"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task MSBuildPropertiesWithUnixPaths()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("config.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["config.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "config.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "/home/user/projects/myapp",
+            ["build_property.MSBuildProjectFullPath"] = "/home/user/projects/myapp/myapp.csproj",
+            ["build_property.SolutionDir"] = "/home/user/projects/",
+            ["build_property.SolutionPath"] = "/home/user/projects/mysolution.sln"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task ConflictWithProjectDirectory()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("ProjectDirectory.txt", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["ProjectDirectory.txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task ConflictWithProjectFile()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("ProjectFile.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["ProjectFile.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task ConflictWithSolutionDirectory()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("SolutionDirectory/config.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["SolutionDirectory/config.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionDirectory/config.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.SolutionDir"] = "C:/Projects/"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task MixedFileAndDirectoryConflicts()
+    {
+        // Test both file and directory conflicts together
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("ProjectFile.txt", "content"), // File conflict
+            CreateAdditionalText("SolutionDirectory/config.json", "content"), // Directory conflict
+            CreateAdditionalText("appsettings.json", "content") // Valid file
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["ProjectFile.txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile.txt"
+            },
+            ["SolutionDirectory/config.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionDirectory/config.json"
+            },
+            ["appsettings.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "appsettings.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj",
+            ["build_property.SolutionDir"] = "C:/Projects/"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task ConflictWithSolutionFile()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("SolutionFile.xml", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["SolutionFile.xml"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile.xml"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task MultipleConflicts()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("ProjectDirectory.txt", "content"),
+            CreateAdditionalText("SolutionFile.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["ProjectDirectory.txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+            },
+            ["SolutionFile.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp",
+            ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task NoConflictWhenPropertyNotSet()
+    {
+        // File named ProjectDirectory is now always reserved, even if MSBuildProjectDirectory isn't set
+        // This test should report a conflict
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("ProjectDirectory.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["ProjectDirectory.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.json"
+            }
+        };
+
+        var options = new MockOptionsProvider(metadata);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task NoConflictInSubdirectory()
+    {
+        // File named ProjectDirectory in a subdirectory should be fine
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Config/ProjectDirectory.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Config/ProjectDirectory.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Config/ProjectDirectory.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task ConflictCaseInsensitive()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("projectdirectory.txt", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["projectdirectory.txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "projectdirectory.txt"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task ConflictWithOtherValidFiles()
+    {
+        // When there's a conflict, the conflicting file should be excluded but other files should still generate
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("ProjectDirectory.txt", "content"),
+            CreateAdditionalText("appsettings.json", "content"),
+            CreateAdditionalText("Config/database.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["ProjectDirectory.txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+            },
+            ["appsettings.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "appsettings.json"
+            },
+            ["Config/database.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Config/database.json"
+            }
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp"
+        };
+
+        var options = new MockOptionsProvider(metadata, globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
     static AdditionalText CreateAdditionalText(string path, string content) =>
         new MockAdditionalText(path, content);
 

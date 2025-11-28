@@ -1,19 +1,10 @@
-﻿namespace ProjectFiles;
+namespace ProjectFiles;
 
 [Generator]
-public class Generator :
-    IIncrementalGenerator
+public class Generator : IIncrementalGenerator
 {
     static SourceText projectFileContent;
     static SourceText projectDirectoryContent;
-
-    // static readonly DiagnosticDescriptor LogWarning = new(
-    //     id: "PFSG001",
-    //     title: "ProjectFiles Message",
-    //     messageFormat: "{0}",
-    //     category: "ProjectFiles.Generator",
-    //     DiagnosticSeverity.Warning,
-    //     isEnabledByDefault: true);
 
     static Generator()
     {
@@ -32,14 +23,31 @@ public class Generator :
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        // Get MSBuild properties
+        var msbuildProperties = context.AnalyzerConfigOptionsProvider
+            .Select((provider, _) =>
+            {
+                provider.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDir);
+                provider.GlobalOptions.TryGetValue("build_property.MSBuildProjectFullPath", out var projectFile);
+                provider.GlobalOptions.TryGetValue("build_property.SolutionDir", out var solutionDir);
+                provider.GlobalOptions.TryGetValue("build_property.SolutionPath", out var solutionFile);
+
+                return new MsBuildProperties(
+                    projectDir,
+                    projectFile,
+                    solutionDir,
+                    solutionFile
+                );
+            });
+
         // Get all additional files with CopyToOutputDirectory metadata
         var files = context.AdditionalTextsProvider
             .Combine(context.AnalyzerConfigOptionsProvider)
-            .Select(pair =>
+            .Select((pair) =>
             {
-                var (additionalText, configOptions) = pair;
+                var (text, config) = pair;
 
-                var options = configOptions.GetOptions(additionalText);
+                var options = config.GetOptions(text);
                 if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var relativePath))
                 {
                     return relativePath;
@@ -51,18 +59,77 @@ public class Generator :
             .Select(_ => _!)
             .Collect();
 
+        // Combine files and properties
+        var combined = files.Combine(msbuildProperties);
+
         // Generate the source
-        context.RegisterSourceOutput(files, (context, files) =>
+        context.RegisterSourceOutput(combined, (context, data) =>
         {
-            //spc.ReportDiagnostic(Diagnostic.Create(LogWarning, Location.None, "AAA"));
-            var source = GenerateSource(files, context.CancellationToken);
+            var (fileList, props) = data;
+
+            // Check for conflicts and report diagnostics
+            var conflicts = FindReservedNameConflicts(fileList);
+            var conflictingFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            
+            foreach (var (file, property, isDirectory) in conflicts)
+            {
+                conflictingFiles.Add(file);
+                var descriptor = isDirectory ? ReservedDirectoryNameConflict : ReservedFileNameConflict;
+                var diagnostic = Diagnostic.Create(
+                    descriptor,
+                    Location.None,
+                    file,
+                    property);
+                context.ReportDiagnostic(diagnostic);
+            }
+
+            // Filter out conflicting files before generating source
+            var filteredFileList = fileList.Where(f => !conflictingFiles.Contains(f)).ToImmutableArray();
+            
+            var source = GenerateSource(filteredFileList, props, context.CancellationToken);
             context.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
             context.AddSource("ProjectFiles.ProjectDirectory.g.cs", projectDirectoryContent);
             context.AddSource("ProjectFiles.ProjectFile.g.cs", projectFileContent);
         });
     }
 
-    static string GenerateSource(ImmutableArray<string> files, Cancel cancel)
+    static HashSet<string> reservedNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "ProjectDirectory",
+        "ProjectFile",
+        "SolutionDirectory",
+        "SolutionFile"
+    };
+
+    static List<(string FilePath, string PropertyName, bool IsDirectory)> FindReservedNameConflicts(ImmutableArray<string> files)
+    {
+        var conflicts = new List<(string, string, bool)>();
+
+        foreach (var file in files)
+        {
+            var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            if (parts.Length <= 0)
+            {
+                continue;
+            }
+
+            var rootName = parts[0];
+            var nameWithoutExtension = Path.GetFileNameWithoutExtension(rootName);
+            var propertyName = Identifier.Build(nameWithoutExtension);
+
+            if (reservedNames.Contains(propertyName))
+            {
+                // It's a directory if there are more path parts (subdirectories or files within)
+                var isDirectory = parts.Length > 1;
+                conflicts.Add((file, propertyName, isDirectory));
+            }
+        }
+
+        return conflicts;
+    }
+
+    static string GenerateSource(ImmutableArray<string> files, MsBuildProperties properties, Cancel cancel)
     {
         var (tree, rootFiles) = BuildFileTree(files, cancel);
         var builder = new StringBuilder();
@@ -80,6 +147,14 @@ public class Generator :
                 static partial class ProjectFiles
                 {
             """);
+
+        // Generate default properties
+        GenerateDefaultProperties(builder, properties);
+
+        if ((rootFiles.Count > 0 || tree.Count > 0) && HasAnyDefaultProperty(properties))
+        {
+            builder.AppendLine();
+        }
 
         // Generate root-level file properties
         foreach (var filePath in rootFiles.OrderBy(_ => _))
@@ -115,6 +190,39 @@ public class Generator :
 
         return builder.ToString();
     }
+
+    static void GenerateDefaultProperties(StringBuilder builder, MsBuildProperties properties)
+    {
+        if (!string.IsNullOrWhiteSpace(properties.ProjectDirectory))
+        {
+            var path = PathToCSharpString(properties.ProjectDirectory);
+            builder.AppendLine($$"""        public static ProjectDirectory ProjectDirectory { get; } = new({{path}});""");
+        }
+
+        if (!string.IsNullOrWhiteSpace(properties.ProjectFile))
+        {
+            var path = PathToCSharpString(properties.ProjectFile);
+            builder.AppendLine($$"""        public static ProjectFile ProjectFile { get; } = new({{path}});""");
+        }
+
+        if (!string.IsNullOrWhiteSpace(properties.SolutionDirectory))
+        {
+            var path = PathToCSharpString(properties.SolutionDirectory);
+            builder.AppendLine($$"""        public static ProjectDirectory SolutionDirectory { get; } = new({{path}});""");
+        }
+
+        if (!string.IsNullOrWhiteSpace(properties.SolutionFile))
+        {
+            var path = PathToCSharpString(properties.SolutionFile);
+            builder.AppendLine($$"""        public static ProjectFile SolutionFile { get; } = new({{path}});""");
+        }
+    }
+
+    static bool HasAnyDefaultProperty(MsBuildProperties properties) =>
+        !string.IsNullOrWhiteSpace(properties.ProjectDirectory) ||
+        !string.IsNullOrWhiteSpace(properties.ProjectFile) ||
+        !string.IsNullOrWhiteSpace(properties.SolutionDirectory) ||
+        !string.IsNullOrWhiteSpace(properties.SolutionFile);
 
     static void GenerateRootProperties(StringBuilder builder, List<DirectoryNode> topLevelNodes, Cancel cancel)
     {
@@ -267,6 +375,28 @@ public class Generator :
 
         return (topLevelDirectories.Values.ToList(), rootFiles);
     }
+
+    static readonly DiagnosticDescriptor ReservedFileNameConflict = new(
+        id: "PROJFILES001",
+        title: "File name conflicts with reserved property",
+        messageFormat: "File '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.",
+        category: "ProjectFilesGenerator",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    static readonly DiagnosticDescriptor ReservedDirectoryNameConflict = new(
+        id: "PROJFILES002",
+        title: "Directory name conflicts with reserved property",
+        messageFormat: "Directory '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the directory or exclude its files from CopyToOutputDirectory.",
+        category: "ProjectFilesGenerator",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    record MsBuildProperties(
+        string? ProjectDirectory,
+        string? ProjectFile,
+        string? SolutionDirectory,
+        string? SolutionFile);
 
     class DirectoryNode
     {
