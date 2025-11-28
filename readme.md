@@ -113,7 +113,7 @@ Properties are only generated when their corresponding MSBuild values are availa
 
 ### Reserved Names
 
-To prevent conflicts, you **cannot** use these reserved names for root-level files or directories in your project:
+To prevent conflicts, dont use these reserved names for root-level files or directories:
 
 ❌ **Invalid** - Will cause build errors:
 ```xml
