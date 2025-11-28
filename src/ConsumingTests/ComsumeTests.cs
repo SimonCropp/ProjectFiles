@@ -6,8 +6,10 @@ public class ComsumeTests
     [Test]
     public void DefaultProperties()
     {
-        IsTrue(File.Exists(ProjectFiles.fileAtRoot_txt));
-        IsTrue(File.Exists(ProjectFiles.globFileAtRoot_txt));
+        IsTrue(Directory.Exists(ProjectFiles.SolutionDirectory));
+        IsTrue(Directory.Exists(ProjectFiles.ProjectDirectory));
+        IsTrue(File.Exists(ProjectFiles.SolutionFile));
+        IsTrue(File.Exists(ProjectFiles.ProjectFile));
     }
 
     [Test]
