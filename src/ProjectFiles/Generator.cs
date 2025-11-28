@@ -68,7 +68,7 @@ public class Generator : IIncrementalGenerator
             var (fileList, props) = data;
 
             // Check for conflicts and report diagnostics
-            var conflicts = FindReservedNameConflicts(fileList, props);
+            var conflicts = FindReservedNameConflicts(fileList);
             foreach (var (file, property) in conflicts)
             {
                 var diagnostic = Diagnostic.Create(
@@ -92,47 +92,34 @@ public class Generator : IIncrementalGenerator
         });
     }
 
-    static List<(string FilePath, string PropertyName)> FindReservedNameConflicts(
-        ImmutableArray<string> files,
-        MsBuildProperties properties)
+    static HashSet<string> reservedNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "ProjectDirectory",
+        "ProjectFile",
+        "SolutionDirectory",
+        "SolutionFile"
+    };
+
+    static List<(string FilePath, string PropertyName)> FindReservedNameConflicts(ImmutableArray<string> files)
     {
         var conflicts = new List<(string, string)>();
-        var reservedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        if (!string.IsNullOrWhiteSpace(properties.ProjectDirectory))
-        {
-            reservedNames.Add("ProjectDirectory");
-        }
-
-        if (!string.IsNullOrWhiteSpace(properties.ProjectFile))
-        {
-            reservedNames.Add("ProjectFile");
-        }
-
-        if (!string.IsNullOrWhiteSpace(properties.SolutionDirectory))
-        {
-            reservedNames.Add("SolutionDirectory");
-        }
-
-        if (!string.IsNullOrWhiteSpace(properties.SolutionFile))
-        {
-            reservedNames.Add("SolutionFile");
-        }
 
         foreach (var file in files)
         {
             var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-            if (parts.Length > 0)
+            if (parts.Length <= 0)
             {
-                var rootName = parts[0];
-                var nameWithoutExtension = Path.GetFileNameWithoutExtension(rootName);
-                var propertyName = Identifier.Build(nameWithoutExtension);
+                continue;
+            }
 
-                if (reservedNames.Contains(propertyName))
-                {
-                    conflicts.Add((file, propertyName));
-                }
+            var rootName = parts[0];
+            var nameWithoutExtension = Path.GetFileNameWithoutExtension(rootName);
+            var propertyName = Identifier.Build(nameWithoutExtension);
+
+            if (reservedNames.Contains(propertyName))
+            {
+                conflicts.Add((file, propertyName));
             }
         }
 
