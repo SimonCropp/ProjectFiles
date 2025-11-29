@@ -55,7 +55,7 @@ Mark files with `CopyToOutputDirectory` set to either `PreserveNewest` or `Alway
 
 **Critical difference:**
 
-**Include**: Use this to add ANY file to the Content collection.
+**Include**: Use this to add ANY file to the collection.
 
 ```xml
 <Content Include="myfile.txt">
@@ -63,7 +63,7 @@ Mark files with `CopyToOutputDirectory` set to either `PreserveNewest` or `Alway
 </Content>
 ```
 
-**Update**: ONLY works for files that are already in the `@(Content)` collection (typically SDK-default files in web projects like `appsettings.json`, `web.config`, etc.). Using `Update` on a file that isn't already in the collection will do nothing.
+**Update**: ONLY works for files that are already in the collection (typically SDK-default files in web projects like `appsettings.json`, `web.config`, etc.). Using `Update` on a file that isn't already in the collection will do nothing.
 
 ```xml
 <!-- This ONLY works if appsettings.json is already in @(Content) -->
@@ -72,7 +72,7 @@ Mark files with `CopyToOutputDirectory` set to either `PreserveNewest` or `Alway
 </Content>
 ```
 
-**Recommendation**: Use `Content Include` for additional custom files. Only use `Content Update` when modifying SDK-default Content items in web projects.
+**Recommendation**: Use `Include` for additional custom files. Only use `Update` when modifying SDK-default Content items in web projects.
 
 
 ## MSBuild Default Properties
