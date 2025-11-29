@@ -51,6 +51,30 @@ Mark files with `CopyToOutputDirectory` set to either `PreserveNewest` or `Alway
 ```
 
 
+### Include vs Update - IMPORTANT
+
+**Critical difference:**
+
+**Include**: Use this to add ANY file to the Content collection.
+
+```xml
+<Content Include="myfile.txt">
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+```
+
+**Update**: ONLY works for files that are already in the `@(Content)` collection (typically SDK-default files in web projects like `appsettings.json`, `web.config`, etc.). Using `Update` on a file that isn't already in the collection will do nothing.
+
+```xml
+<!-- This ONLY works if appsettings.json is already in @(Content) -->
+<Content Update="appsettings.json">
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+```
+
+**Recommendation**: Use `Content Include` for additional custom files. Only use `Content Update` when modifying SDK-default Content items in web projects.
+
+
 ## MSBuild Default Properties
 
 The generator automatically exposes MSBuild project and solution paths as strongly-typed properties. These are always available regardless of which files are marked with `CopyToOutputDirectory`.
