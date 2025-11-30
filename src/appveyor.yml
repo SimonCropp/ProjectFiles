@@ -9,6 +9,9 @@ build_script:
     ./dotnet-install.ps1 -JSonFile src/global.json -Architecture x64 -InstallDir 'C:\Program Files\dotnet'
 - dotnet build src --configuration Release
 - dotnet test src --configuration Release --no-build --no-restore
+- dotnet build IntegrationTests --configuration Release
+- dotnet test IntegrationTests --configuration Release --no-build --no-restore
+
 test: off
 artifacts:
 - path: nugets\*.nupkg
