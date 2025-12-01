@@ -11,6 +11,11 @@ Creates a type-safe API for accessing files that are copied to the projects outp
 **See [Milestones](../../milestones?state=closed) for release notes.**
 
 
+## Minimum SDK
+
+A minimum of SDK 10.0.100 is required.
+
+
 ## NuGet package
 
 https://nuget.org/packages/ProjectFiles/
