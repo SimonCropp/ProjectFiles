@@ -12,5 +12,6 @@
   <Project Path="Templates/Templates.csproj" />
   <Project Path="Tests/Tests.csproj" />
   <Project Path="ConsumingTests/ConsumingTests.csproj" />
+  <Project Path="ConsumingTests.OtherFiles/ConsumingTests.OtherFiles.csproj" Id="86275db4-cdd6-4aa7-9d67-b37ee5b68601" />
   <Project Path="ProjectFiles/ProjectFiles.csproj" />
 </Solution>
