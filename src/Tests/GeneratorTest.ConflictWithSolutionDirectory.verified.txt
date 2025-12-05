@@ -7,7 +7,7 @@
         Id: PROJFILES002,
         Title: Directory name conflicts with reserved property,
         MessageFormat: Directory '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the directory or exclude its files from CopyToOutputDirectory.,
-        Category: ProjectFilesGenerator,
+        Category: ProjectFiles,
         DefaultSeverity: Error,
         IsEnabledByDefault: true
       }

@@ -66,7 +66,7 @@ public class Generator : IIncrementalGenerator
             .Collect();
 
         var langVersion = context.ParseOptionsProvider
-            .Select((p, ct) => ((CSharpParseOptions)p).LanguageVersion);
+            .Select((p, _) => ((CSharpParseOptions)p).LanguageVersion);
 
         // Combine files, properties and langversion
         var combined = files.Combine(msbuildProperties.Combine(langVersion));
@@ -78,9 +78,9 @@ public class Generator : IIncrementalGenerator
             {
                 var (fileList, (props, langVersion)) = data;
 
-                if (langVersion < LanguageVersion.CSharp12)
+                if (langVersion < LanguageVersion.CSharp14)
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.PF0001_CSharp12Required, Location.None));
+                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MinLangVersion, Location.None));
                     return;
                 }
 
@@ -92,7 +92,7 @@ public class Generator : IIncrementalGenerator
                 foreach (var (file, property, isDirectory) in reservedConflicts)
                 {
                     conflictingFiles.Add(file);
-                    var descriptor = isDirectory ? reservedDirectoryNameConflict : reservedFileNameConflict;
+                    var descriptor = isDirectory ? Diagnostics.ReservedDirectoryNameConflict : Diagnostics.ReservedFileNameConflict;
                     var diagnostic = Diagnostic.Create(
                         descriptor,
                         Location.None,
@@ -102,7 +102,7 @@ public class Generator : IIncrementalGenerator
                 }
 
                 // Filter out conflicting files before generating source
-                var filteredFiles = fileList.Where(f => !conflictingFiles.Contains(f)).ToImmutableArray();
+                var filteredFiles = fileList.Where(_ => !conflictingFiles.Contains(_)).ToImmutableArray();
 
                 var source = GenerateSource(filteredFiles, props, context.CancellationToken);
                 context.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
@@ -142,12 +142,14 @@ public class Generator : IIncrementalGenerator
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(rootName);
             var propertyName = Identifier.Build(nameWithoutExtension);
 
-            if (reservedNames.Contains(propertyName))
+            if (!reservedNames.Contains(propertyName))
             {
-                // It's a directory if there are more path parts (subdirectories or files within)
-                var isDirectory = parts.Length > 1;
-                conflicts.Add((file, propertyName, isDirectory));
+                continue;
             }
+
+            // It's a directory if there are more path parts (subdirectories or files within)
+            var isDirectory = parts.Length > 1;
+            conflicts.Add((file, propertyName, isDirectory));
         }
 
         return conflicts;
@@ -411,22 +413,6 @@ public class Generator : IIncrementalGenerator
 
         return (topLevelDirectories.Values, rootFiles);
     }
-
-    static readonly DiagnosticDescriptor reservedFileNameConflict = new(
-        id: "PROJFILES001",
-        title: "File name conflicts with reserved property",
-        messageFormat: "File '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.",
-        category: "ProjectFilesGenerator",
-        DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
-
-    static readonly DiagnosticDescriptor reservedDirectoryNameConflict = new(
-        id: "PROJFILES002",
-        title: "Directory name conflicts with reserved property",
-        messageFormat: "Directory '{0}' would generate property name '{1}' that conflicts with reserved MSBuild property. Rename the directory or exclude its files from CopyToOutputDirectory.",
-        category: "ProjectFilesGenerator",
-        DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
 
     record MsBuildProperties(
         string? ProjectDirectory,
