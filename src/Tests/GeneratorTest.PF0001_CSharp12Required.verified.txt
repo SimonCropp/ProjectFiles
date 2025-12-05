@@ -1,0 +1,16 @@
+﻿{
+  Diagnostics: [
+    {
+      Message: This generator requires C# 12 or later to run,
+      Severity: Error,
+      Descriptor: {
+        Id: PF0001,
+        Title: C# 12 or later is required,
+        MessageFormat: This generator requires C# 12 or later to run,
+        Category: ProjectFiles,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}

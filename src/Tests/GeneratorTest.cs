@@ -1837,6 +1837,19 @@ public class GeneratorTest
         return Verify(driver);
     }
 
+    [Test]
+    public Task PF0001_CSharp12Required()
+    {
+        var compilation = CreateCompilation();
+
+        var driver = CSharpGeneratorDriver
+            .Create([new Generator().AsSourceGenerator()],
+            parseOptions: CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp11))
+            .RunGenerators(compilation);
+
+        return Verify(driver);
+    }
+
     static AdditionalText CreateAdditionalText(string path, string content) =>
         new MockAdditionalText(path, content);
 

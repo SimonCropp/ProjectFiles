@@ -65,15 +65,24 @@ public class Generator : IIncrementalGenerator
             .Select(_ => _!)
             .Collect();
 
-        // Combine files and properties
-        var combined = files.Combine(msbuildProperties);
+        var langVersion = context.ParseOptionsProvider
+            .Select((p, ct) => ((CSharpParseOptions)p).LanguageVersion);
+
+        // Combine files, properties and langversion
+        var combined = files.Combine(msbuildProperties.Combine(langVersion));
 
         // Generate the source
         context.RegisterSourceOutput(
             combined,
             (context, data) =>
             {
-                var (fileList, props) = data;
+                var (fileList, (props, langVersion)) = data;
+
+                if (langVersion < LanguageVersion.CSharp12)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.PF0001_CSharp12Required, Location.None));
+                    return;
+                }
 
                 // Check for conflicts and report diagnostics
                 var reservedConflicts = FindReservedNameConflicts(fileList);
