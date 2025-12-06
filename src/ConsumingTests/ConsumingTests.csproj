@@ -60,6 +60,10 @@
     <None Update="SameNamedDescendants\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="..\ConsumingTests.OtherFiles\file in other project.txt">
+      <Link>file in other project.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   
   <Import Project="$(ProjectDir)..\ProjectFiles\buildTransitive\ProjectFiles.props" />
