@@ -4,10 +4,10 @@ public class ComsumeTests
     [Test]
     public void DefaultProperties()
     {
-        IsTrue(Directory.Exists(ProjectFiles.SolutionDirectory));
-        IsTrue(Directory.Exists(ProjectFiles.ProjectDirectory));
-        IsTrue(File.Exists(ProjectFiles.SolutionFile));
-        IsTrue(File.Exists(ProjectFiles.ProjectFile));
+        IsTrue(Directory.Exists(ProjectFiles.SolutionDirectory), ProjectFiles.SolutionDirectory);
+        IsTrue(Directory.Exists(ProjectFiles.ProjectDirectory), ProjectFiles.ProjectDirectory);
+        IsTrue(File.Exists(ProjectFiles.SolutionFile), ProjectFiles.SolutionFile);
+        IsTrue(File.Exists(ProjectFiles.ProjectFile), ProjectFiles.ProjectFile);
     }
 
     [Test]
@@ -20,6 +20,7 @@ public class ComsumeTests
         IsTrue(File.Exists(ProjectFiles.fileAtRoot_txt));
         IsTrue(File.Exists(ProjectFiles.globFileAtRoot_txt));
     }
+
     [Test]
     public void FileIncludeAtRoot() =>
         IsTrue(File.Exists(ProjectFiles.fileIncludeAtRoot_txt));
@@ -51,6 +52,7 @@ public class ComsumeTests
     [Test]
     public void Config() =>
         IsTrue(File.Exists(ProjectFiles.Config.appsettings_json));
+
     [Test]
     public void LowerCase() =>
         IsTrue(File.Exists(ProjectFiles.lower_case.lower_case_json));

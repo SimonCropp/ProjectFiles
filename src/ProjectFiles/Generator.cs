@@ -1,3 +1,4 @@
+#pragma warning disable RS1035
 namespace ProjectFiles;
 
 [Generator]
@@ -30,16 +31,12 @@ public class Generator : IIncrementalGenerator
             .Select((provider, _) =>
             {
                 var options = provider.GlobalOptions;
-                options.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectpry);
-                options.TryGetValue("build_property.MSBuildProjectFullPath", out var projectFile);
-                options.TryGetValue("build_property.SolutionDir", out var solutionDirectory);
-                options.TryGetValue("build_property.SolutionPath", out var solutionFile);
-                options.TryGetValue("build_property.ImplicitUsings", out var implicitUsings);
+                var projectFile = options.GetValue("build_property.MSBuildProjectFullPath");
+                var solutionFile = options.GetValue("build_property.SolutionPath");
+                var implicitUsings = options.GetValue("build_property.ImplicitUsings");
 
                 return new MsBuildProperties(
-                    projectDirectpry,
                     projectFile,
-                    solutionDirectory,
                     solutionFile,
                     string.Equals(implicitUsings, "enable", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(implicitUsings, "true", StringComparison.OrdinalIgnoreCase)
@@ -110,7 +107,7 @@ public class Generator : IIncrementalGenerator
                 context.AddSource("ProjectFiles.ProjectFile.g.cs", projectFileContent);
 
                 // Generate global using if ImplicitUsings is enabled
-                if (props.ImplicitUsingsEnabled)
+                if (props.ImplicitUsings)
                 {
                     context.AddSource("ProjectFiles.GlobalUsings.g.cs", globalUsing);
                 }
@@ -188,7 +185,7 @@ public class Generator : IIncrementalGenerator
         {
             cancel.ThrowIfCancellationRequested();
             var propertyName = ToFilePropertyName(filePath);
-            var path = PathToCSharpString(filePath);
+            var path = PathToCSharp(filePath);
 
             builder.AppendLine($$"""        public static ProjectFile {{propertyName}} { get; } = new({{path}});""");
         }
@@ -219,35 +216,35 @@ public class Generator : IIncrementalGenerator
 
     static void GenerateDefaultProperties(StringBuilder builder, MsBuildProperties properties)
     {
-        if (!string.IsNullOrWhiteSpace(properties.ProjectDirectory))
+        if (properties.ProjectFile != null)
         {
-            var path = PathToCSharpString(properties.ProjectDirectory!);
-            builder.AppendLine($$"""        public static ProjectDirectory ProjectDirectory { get; } = new({{path}});""");
+            AppendFile(builder, properties.ProjectFile!, "Project");
         }
 
-        if (!string.IsNullOrWhiteSpace(properties.ProjectFile))
+        var solutionFile = properties.SolutionFile;
+
+        if (solutionFile == null && properties.ProjectFile != null)
         {
-            var path = PathToCSharpString(properties.ProjectFile!);
-            builder.AppendLine($$"""        public static ProjectFile ProjectFile { get; } = new({{path}});""");
+            solutionFile = SolutionDirectoryFinder.Find(properties.ProjectFile!);
         }
 
-        if (!string.IsNullOrWhiteSpace(properties.SolutionDirectory))
+        if (solutionFile != null)
         {
-            var path = PathToCSharpString(properties.SolutionDirectory!);
-            builder.AppendLine($$"""        public static ProjectDirectory SolutionDirectory { get; } = new({{path}});""");
-        }
-
-        if (!string.IsNullOrWhiteSpace(properties.SolutionFile))
-        {
-            var path = PathToCSharpString(properties.SolutionFile!);
-            builder.AppendLine($$"""        public static ProjectFile SolutionFile { get; } = new({{path}});""");
+            AppendFile(builder, solutionFile!, "Solution");
         }
     }
 
+    static void AppendFile(StringBuilder builder, string file, string prefix)
+    {
+        var directory = Directory.GetParent(file)!;
+        var directoryCSharp = PathToCSharp($"{directory.FullName}/");
+        builder.AppendLine($$"""        public static ProjectDirectory {{prefix}}Directory { get; } = new({{directoryCSharp}});""");
+        var fileCSharp = PathToCSharp(file);
+        builder.AppendLine($$"""        public static ProjectFile {{prefix}}File { get; } = new({{fileCSharp}});""");
+    }
+
     static bool HasAnyDefaultProperty(MsBuildProperties properties) =>
-        !string.IsNullOrWhiteSpace(properties.ProjectDirectory) ||
         !string.IsNullOrWhiteSpace(properties.ProjectFile) ||
-        !string.IsNullOrWhiteSpace(properties.SolutionDirectory) ||
         !string.IsNullOrWhiteSpace(properties.SolutionFile);
 
     static void GenerateRootProperties(StringBuilder builder, IReadOnlyCollection<DirectoryNode> topLevelNodes, Cancel cancel)
@@ -270,7 +267,7 @@ public class Generator : IIncrementalGenerator
             cancel.ThrowIfCancellationRequested();
 
             var className = Identifier.Build(Path.GetFileName(node.Path));
-            var pathString = PathToCSharpString(node.Path);
+            var pathString = PathToCSharp(node.Path);
             builder.AppendLine(
                 $$"""
                   {{indent}}partial class {{className}}Type() : ProjectDirectory({{pathString}})
@@ -325,13 +322,13 @@ public class Generator : IIncrementalGenerator
         foreach (var filePath in node.Files.OrderBy(_ => _))
         {
             var propertyName = ToFilePropertyName(filePath);
-            var path = PathToCSharpString(filePath);
+            var path = PathToCSharp(filePath);
 
             builder.AppendLine($$"""{{indent}}public ProjectFile {{propertyName}} { get; } = new({{path}});""");
         }
     }
 
-    static string PathToCSharpString(string filePath)
+    static string PathToCSharp(string filePath)
     {
         var path = filePath.Replace('\\', '/');
         return $"\"{path}\"";
@@ -412,20 +409,5 @@ public class Generator : IIncrementalGenerator
         }
 
         return (topLevelDirectories.Values, rootFiles);
-    }
-
-    record MsBuildProperties(
-        string? ProjectDirectory,
-        string? ProjectFile,
-        string? SolutionDirectory,
-        string? SolutionFile,
-        bool ImplicitUsingsEnabled);
-
-    class DirectoryNode
-    {
-        public required string Path { get; init; }
-        public required int Depth { get; init; }
-        public Dictionary<string, DirectoryNode> Directories { get; } = [];
-        public List<string> Files { get; } = [];
     }
 }

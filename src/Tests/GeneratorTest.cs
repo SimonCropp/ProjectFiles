@@ -417,9 +417,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp",
             ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj",
-            ["build_property.SolutionDir"] = "C:/Projects/",
             ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
         };
 
@@ -435,14 +433,56 @@ public class GeneratorTest
     }
 
     [Test]
-    public Task OnlyProjectProperties()
+    public Task OnlyProjectProperty()
     {
         var additionalFiles = Array.Empty<AdditionalText>();
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Dev/WebApi",
             ["build_property.MSBuildProjectFullPath"] = "C:/Dev/WebApi/WebApi.csproj"
+        };
+
+        var options = new MockOptionsProvider([], globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task OnlyProjectPropertyUndefined()
+    {
+        var additionalFiles = Array.Empty<AdditionalText>();
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectFullPath"] = "*Undefined*"
+        };
+
+        var options = new MockOptionsProvider([], globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task ProjectPropertyAndSolutionUndefined()
+    {
+        var additionalFiles = Array.Empty<AdditionalText>();
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectFullPath"] = "C:/Dev/WebApi/WebApi.csproj",
+            ["build_property.SolutionPath"] = "*Undefined*"
         };
 
         var options = new MockOptionsProvider([], globalOptions);
@@ -463,7 +503,6 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.SolutionDir"] = "C:/Source/",
             ["build_property.SolutionPath"] = "C:/Source/MyProduct.sln"
         };
 
@@ -501,9 +540,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp",
             ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj",
-            ["build_property.SolutionDir"] = "C:/Projects/",
             ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
         };
 
@@ -536,9 +573,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Work/Library",
             // ProjectFile missing
-            // SolutionDir missing
             ["build_property.SolutionPath"] = "C:/Work/Library.sln"
         };
 
@@ -571,9 +606,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "/home/user/projects/myapp",
             ["build_property.MSBuildProjectFullPath"] = "/home/user/projects/myapp/myapp.csproj",
-            ["build_property.SolutionDir"] = "/home/user/projects/",
             ["build_property.SolutionPath"] = "/home/user/projects/mysolution.sln"
         };
 
@@ -606,7 +639,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp"
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj"
         };
 
         var options = new MockOptionsProvider(metadata, globalOptions);
@@ -670,7 +703,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.SolutionDir"] = "C:/Projects/"
+            ["build_property.SolutionPath"] = "C:/Source/MyProduct.sln"
         };
 
         var options = new MockOptionsProvider(metadata, globalOptions);
@@ -690,9 +723,12 @@ public class GeneratorTest
         // Test both file and directory conflicts together
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectFile.txt", "content"), // File conflict
-            CreateAdditionalText("SolutionDirectory/config.json", "content"), // Directory conflict
-            CreateAdditionalText("appsettings.json", "content") // Valid file
+            // File conflict
+            CreateAdditionalText("ProjectFile.txt", "content"),
+            // Directory conflict
+            CreateAdditionalText("SolutionDirectory/config.json", "content"),
+            // Valid file
+            CreateAdditionalText("appsettings.json", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
@@ -714,7 +750,7 @@ public class GeneratorTest
         var globalOptions = new Dictionary<string, string>
         {
             ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj",
-            ["build_property.SolutionDir"] = "C:/Projects/"
+            ["build_property.SolutionPath"] = "C:/Source/MyProduct.sln"
         };
 
         var options = new MockOptionsProvider(metadata, globalOptions);
@@ -783,7 +819,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp",
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/foo.csproj",
             ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
         };
 
@@ -846,7 +882,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp"
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/foo.csproj"
         };
 
         var options = new MockOptionsProvider(metadata, globalOptions);
@@ -878,7 +914,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp"
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/foo.csproj"
         };
 
         var options = new MockOptionsProvider(metadata, globalOptions);
@@ -921,7 +957,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp"
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/foo.csproj"
         };
 
         var options = new MockOptionsProvider(metadata, globalOptions);
@@ -1113,9 +1149,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Projects/MyApp",
             ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj",
-            ["build_property.SolutionDir"] = "C:/Projects/",
             ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln",
             ["build_property.ImplicitUsings"] = "enable"
         };
@@ -1138,7 +1172,7 @@ public class GeneratorTest
 
         var globalOptions = new Dictionary<string, string>
         {
-            ["build_property.MSBuildProjectDirectory"] = "C:/Dev/WebApi",
+            ["build_property.MSBuildProjectFullPath"] = "C:/Dev/WebApi/foo.csproj",
             ["build_property.ImplicitUsings"] = "enable"
         };
 
@@ -1650,9 +1684,9 @@ public class GeneratorTest
         // Mix of Content Include (new files) and Update (SDK defaults in web projects)
         var additionalFiles = new[]
         {
-            CreateAdditionalText("Templates/email.html", "content"),     // Include (new file)
-            CreateAdditionalText("appsettings.json", "content"),         // Update (SDK default in web projects)
-            CreateAdditionalText("Data/seed.sql", "content"),            // Include (new file)
+            CreateAdditionalText("Templates/email.html", "content"), // Include (new file)
+            CreateAdditionalText("appsettings.json", "content"), // Update (SDK default in web projects)
+            CreateAdditionalText("Data/seed.sql", "content"), // Include (new file)
             CreateAdditionalText("appsettings.Development.json", "content") // Update (SDK default in web projects)
         };
 
@@ -1844,7 +1878,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create([new Generator().AsSourceGenerator()],
-            parseOptions: CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp11))
+                parseOptions: CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp11))
             .RunGenerators(compilation);
 
         return Verify(driver);
