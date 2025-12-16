@@ -10,6 +10,8 @@ partial class ProjectFile(string path)
 {
     public string Path { get; } = path;
 
+    public string FullPath => System.IO.Path.GetFullPath(Path);
+
     public override string ToString() => Path;
 
     public static implicit operator string(ProjectFile temp) =>

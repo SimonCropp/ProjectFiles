@@ -415,6 +415,8 @@ partial class ProjectDirectory(string path)
 {
     public string Path { get; } = path;
 
+    public string FullPath => System.IO.Path.GetFullPath(Path);
+
     public override string ToString() => Path;
 
     public static implicit operator string(ProjectDirectory temp) =>
@@ -438,7 +440,7 @@ partial class ProjectDirectory(string path)
     public DirectoryInfo Info => new(Path);
 }
 ```
-<sup><a href='/src/Templates/ProjectDirectory.cs#L1-L31' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectDirectory.cs' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Templates/ProjectDirectory.cs#L1-L33' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectDirectory.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
@@ -459,7 +461,8 @@ using System.Threading.Tasks;
 partial class ProjectFile(string path)
 {
     public string Path { get; } = path;
-    public string FullPath { get; } => System.IO.Path.GetFullPath(path);
+
+    public string FullPath => System.IO.Path.GetFullPath(Path);
 
     public override string ToString() => Path;
 
@@ -498,7 +501,7 @@ partial class ProjectFile(string path)
 #endif
 }
 ```
-<sup><a href='/src/Templates/ProjectFile.cs#L1-L48' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectFile.cs' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Templates/ProjectFile.cs#L1-L49' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectFile.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
