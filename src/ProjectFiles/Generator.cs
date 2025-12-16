@@ -31,16 +31,12 @@ public class Generator : IIncrementalGenerator
             .Select((provider, _) =>
             {
                 var options = provider.GlobalOptions;
-                options.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectpry);
                 options.TryGetValue("build_property.MSBuildProjectFullPath", out var projectFile);
-                options.TryGetValue("build_property.SolutionDir", out var solutionDirectory);
                 options.TryGetValue("build_property.SolutionPath", out var solutionFile);
                 options.TryGetValue("build_property.ImplicitUsings", out var implicitUsings);
 
                 return new MsBuildProperties(
-                    projectDirectpry,
                     projectFile,
-                    solutionDirectory,
                     solutionFile,
                     string.Equals(implicitUsings, "enable", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(implicitUsings, "true", StringComparison.OrdinalIgnoreCase)
@@ -111,7 +107,7 @@ public class Generator : IIncrementalGenerator
                 context.AddSource("ProjectFiles.ProjectFile.g.cs", projectFileContent);
 
                 // Generate global using if ImplicitUsings is enabled
-                if (props.ImplicitUsingsEnabled)
+                if (props.ImplicitUsings)
                 {
                     context.AddSource("ProjectFiles.GlobalUsings.g.cs", globalUsing);
                 }
@@ -242,9 +238,7 @@ public class Generator : IIncrementalGenerator
     }
 
     static bool HasAnyDefaultProperty(MsBuildProperties properties) =>
-        !string.IsNullOrWhiteSpace(properties.ProjectDirectory) ||
         !string.IsNullOrWhiteSpace(properties.ProjectFile) ||
-        !string.IsNullOrWhiteSpace(properties.SolutionDirectory) ||
         !string.IsNullOrWhiteSpace(properties.SolutionFile);
 
     static void GenerateRootProperties(StringBuilder builder, IReadOnlyCollection<DirectoryNode> topLevelNodes, Cancel cancel)
@@ -409,20 +403,5 @@ public class Generator : IIncrementalGenerator
         }
 
         return (topLevelDirectories.Values, rootFiles);
-    }
-
-    record MsBuildProperties(
-        string? ProjectDirectory,
-        string? ProjectFile,
-        string? SolutionDirectory,
-        string? SolutionFile,
-        bool ImplicitUsingsEnabled);
-
-    class DirectoryNode
-    {
-        public required string Path { get; init; }
-        public required int Depth { get; init; }
-        public Dictionary<string, DirectoryNode> Directories { get; } = [];
-        public List<string> Files { get; } = [];
     }
 }
