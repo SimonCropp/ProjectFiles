@@ -230,7 +230,7 @@ public class Generator : IIncrementalGenerator
 
         if (solutionFile != null)
         {
-            AppendFile(builder, solutionFile!, "Solution");
+            AppendFile(builder, solutionFile, "Solution");
         }
     }
 
