@@ -47,15 +47,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -84,15 +76,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -116,15 +100,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -158,15 +134,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -195,15 +163,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -232,15 +192,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -269,15 +221,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -306,15 +250,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -353,15 +289,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -388,15 +316,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -421,15 +341,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -442,15 +354,7 @@ public class GeneratorTest
             ["build_property.MSBuildProjectFullPath"] = "C:/Dev/WebApi/WebApi.csproj"
         };
 
-        var options = new MockOptionsProvider([], globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, [], globalOptions));
     }
 
     [Test]
@@ -463,15 +367,7 @@ public class GeneratorTest
             ["build_property.MSBuildProjectFullPath"] = "*Undefined*"
         };
 
-        var options = new MockOptionsProvider([], globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, [], globalOptions));
     }
 
     [Test]
@@ -485,15 +381,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "*Undefined*"
         };
 
-        var options = new MockOptionsProvider([], globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, [], globalOptions));
     }
 
     [Test]
@@ -506,15 +394,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "C:/Source/MyProduct.sln"
         };
 
-        var options = new MockOptionsProvider([], globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, [], globalOptions));
     }
 
     [Test]
@@ -544,15 +424,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -577,15 +449,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "C:/Work/Library.sln"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -610,15 +474,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "/home/user/projects/mysolution.sln"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -642,15 +498,7 @@ public class GeneratorTest
             ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -674,15 +522,7 @@ public class GeneratorTest
             ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -706,15 +546,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "C:/Source/MyProduct.sln"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -753,15 +585,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "C:/Source/MyProduct.sln"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -785,15 +609,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -823,15 +639,7 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -852,15 +660,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -885,15 +685,7 @@ public class GeneratorTest
             ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/foo.csproj"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -917,15 +709,7 @@ public class GeneratorTest
             ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/foo.csproj"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -960,15 +744,7 @@ public class GeneratorTest
             ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/foo.csproj"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -992,15 +768,7 @@ public class GeneratorTest
             ["build_property.ImplicitUsings"] = "enable"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -1024,15 +792,7 @@ public class GeneratorTest
             ["build_property.ImplicitUsings"] = "true"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -1056,15 +816,7 @@ public class GeneratorTest
             ["build_property.ImplicitUsings"] = "disable"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -1088,15 +840,7 @@ public class GeneratorTest
             ["build_property.ImplicitUsings"] = "false"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -1115,15 +859,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1154,15 +890,7 @@ public class GeneratorTest
             ["build_property.ImplicitUsings"] = "enable"
         };
 
-        var options = new MockOptionsProvider(metadata, globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
     [Test]
@@ -1176,15 +904,7 @@ public class GeneratorTest
             ["build_property.ImplicitUsings"] = "enable"
         };
 
-        var options = new MockOptionsProvider([], globalOptions);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, [], globalOptions));
     }
 
     [Test]
@@ -1203,15 +923,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1230,15 +942,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1267,15 +971,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1294,15 +990,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1331,15 +1019,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1359,15 +1039,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1396,15 +1068,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1428,15 +1092,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1455,15 +1111,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1492,15 +1140,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1536,15 +1176,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1589,15 +1221,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1629,15 +1253,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1667,15 +1283,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1710,15 +1318,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1738,15 +1338,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1776,15 +1368,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1804,15 +1388,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1832,15 +1408,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1860,15 +1428,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1897,15 +1457,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1930,15 +1482,7 @@ public class GeneratorTest
             }
         };
 
-        var options = new MockOptionsProvider(metadata);
-
-        var driver = CSharpGeneratorDriver
-            .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
-            .WithUpdatedAnalyzerConfigOptions(options)
-            .RunGenerators(CreateCompilation());
-
-        return Verify(driver);
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     [Test]
@@ -1957,7 +1501,23 @@ public class GeneratorTest
     static AdditionalText CreateAdditionalText(string path, string content) =>
         new MockAdditionalText(path, content);
 
-    static Compilation CreateCompilation() =>
+    static GeneratorDriver RunGenerator(
+        AdditionalText[] additionalFiles,
+        Dictionary<string, Dictionary<string, string>> metadata,
+        Dictionary<string, string>? globalOptions = null)
+    {
+        var options = globalOptions != null
+            ? new MockOptionsProvider(metadata, globalOptions)
+            : new MockOptionsProvider(metadata);
+
+        return CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+    }
+
+    static CSharpCompilation CreateCompilation() =>
         CSharpCompilation.Create(
             "TestAssembly",
             [],
