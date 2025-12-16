@@ -1838,6 +1838,76 @@ public class GeneratorTest
     }
 
     [Test]
+    public Task LinkedFileFromOtherProject()
+    {
+        // When a file is linked from another project using the Link metadata,
+        // the generator should use the Link path, not the actual file path.
+        // Example:
+        // <Content Include="..\OtherProject\file in other project.txt">
+        //   <Link>file in other project.txt</Link>
+        //   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        // </Content>
+        // The ProjectFilesGenerator metadata will contain "file in other project.txt" (the Link)
+        // instead of "..\OtherProject\file in other project.txt" (the actual path)
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("../OtherProject/file in other project.txt", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["../OtherProject/file in other project.txt"] = new()
+            {
+                // The Link path is used as the ProjectFilesGenerator metadata
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "file in other project.txt"
+            }
+        };
+
+        var options = new MockOptionsProvider(metadata);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task LinkedFileInSubdirectory()
+    {
+        // When a linked file should appear in a subdirectory
+        // Example:
+        // <Content Include="..\SharedAssets\logo.png">
+        //   <Link>Assets\Images\logo.png</Link>
+        //   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        // </Content>
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("../SharedAssets/logo.png", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["../SharedAssets/logo.png"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Assets/Images/logo.png"
+            }
+        };
+
+        var options = new MockOptionsProvider(metadata);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
     public Task PF0001_CSharp12Required()
     {
         var compilation = CreateCompilation();
