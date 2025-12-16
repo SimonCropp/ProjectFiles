@@ -9,8 +9,8 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     static partial class ProjectFiles
     {
-        public static ProjectDirectory ProjectDirectory { get; } = new("C:/Projects/MyApp/");
-        public static ProjectFile ProjectFile { get; } = new("C:/Projects/MyApp/MyApp.csproj");
+        public static ProjectDirectory ProjectDirectory { get; } = new("C:/Dev/WebApi/");
+        public static ProjectFile ProjectFile { get; } = new("C:/Dev/WebApi/WebApi.csproj");
     }
 }
 

@@ -64,13 +64,9 @@
       MetadataName="ProjectFilesGenerator" />
   </ItemGroup>
 
-  <!--
-    Expose project and solution paths to the source generator
-  -->
+  <!-- Expose project and solution paths to the source generator -->
   <ItemGroup>
-    <CompilerVisibleProperty Include="MSBuildProjectDirectory" />
     <CompilerVisibleProperty Include="MSBuildProjectFullPath" />
-    <CompilerVisibleProperty Include="SolutionDir" />
     <CompilerVisibleProperty Include="SolutionPath" />
     <CompilerVisibleProperty Include="ImplicitUsings" />
   </ItemGroup>
