@@ -218,23 +218,31 @@ public class Generator : IIncrementalGenerator
     {
         if (!string.IsNullOrWhiteSpace(properties.ProjectFile))
         {
-            var projectFile = properties.ProjectFile!;
-            var directory = Directory.GetParent(projectFile)!;
-            var directoryCSharp = PathToCSharp($"{directory.FullName}/");
-            builder.AppendLine($$"""        public static ProjectDirectory ProjectDirectory { get; } = new({{directoryCSharp}});""");
-            var fileCSharp = PathToCSharp(projectFile);
-            builder.AppendLine($$"""        public static ProjectFile ProjectFile { get; } = new({{fileCSharp}});""");
+            AppendFile(builder, properties.ProjectFile!, "Project");
         }
 
-        if (!string.IsNullOrWhiteSpace(properties.SolutionFile))
+        var solutionFile = properties.SolutionFile;
+
+        if (string.IsNullOrWhiteSpace(solutionFile) &&
+            !string.IsNullOrWhiteSpace(properties.ProjectFile))
         {
-            var solutionFile = properties.SolutionFile!;
-            var directory = Directory.GetParent(solutionFile)!;
-            var directoryCSharp = PathToCSharp($"{directory.FullName}/");
-            builder.AppendLine($$"""        public static ProjectDirectory SolutionDirectory { get; } = new({{directoryCSharp}});""");
-            var fileCSharp = PathToCSharp(solutionFile);
-            builder.AppendLine($$"""        public static ProjectFile SolutionFile { get; } = new({{fileCSharp}});""");
+            solutionFile = SolutionDirectoryFinder.Find(properties.ProjectFile!);
         }
+
+        if (!string.IsNullOrWhiteSpace(solutionFile))
+        {
+            AppendFile(builder, solutionFile!, "Solution");
+        }
+    }
+
+
+    static void AppendFile(StringBuilder builder, string file, string prefix)
+    {
+        var directory = Directory.GetParent(file)!;
+        var directoryCSharp = PathToCSharp($"{directory.FullName}/");
+        builder.AppendLine($$"""        public static ProjectDirectory {{prefix}}Directory { get; } = new({{directoryCSharp}});""");
+        var fileCSharp = PathToCSharp(file);
+        builder.AppendLine($$"""        public static ProjectFile {{prefix}}File { get; } = new({{fileCSharp}});""");
     }
 
     static bool HasAnyDefaultProperty(MsBuildProperties properties) =>
