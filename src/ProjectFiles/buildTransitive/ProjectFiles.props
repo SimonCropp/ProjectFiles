@@ -22,8 +22,9 @@
           BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
     <ItemGroup>
       <!-- Add None items with CopyToOutputDirectory -->
+      <!-- Use %(Link) if available (for linked files from other projects), otherwise use actual path -->
       <AdditionalFiles Include="@(None)"
-                       ProjectFilesGenerator="%(RelativeDir)%(Filename)%(Extension)"
+                       ProjectFilesGenerator="$([MSBuild]::ValueOrDefault('%(None.Link)', '%(RelativeDir)%(Filename)%(Extension)'))"
                        Condition="
                          (
                            '%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR
@@ -36,8 +37,9 @@
                          )
                        " />
       <!-- Add Content items with CopyToOutputDirectory -->
+      <!-- Use %(Link) if available (for linked files from other projects), otherwise use actual path -->
       <AdditionalFiles Include="@(Content)"
-                       ProjectFilesGenerator="%(RelativeDir)%(Filename)%(Extension)"
+                       ProjectFilesGenerator="$([MSBuild]::ValueOrDefault('%(Content.Link)', '%(RelativeDir)%(Filename)%(Extension)'))"
                        Condition="
                          (
                            '%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR
