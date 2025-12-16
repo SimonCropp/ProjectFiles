@@ -1,3 +1,4 @@
+#pragma warning disable RS1035
 namespace ProjectFiles;
 
 [Generator]
@@ -188,7 +189,7 @@ public class Generator : IIncrementalGenerator
         {
             cancel.ThrowIfCancellationRequested();
             var propertyName = ToFilePropertyName(filePath);
-            var path = PathToCSharpString(filePath);
+            var path = PathToCSharp(filePath);
 
             builder.AppendLine($$"""        public static ProjectFile {{propertyName}} { get; } = new({{path}});""");
         }
@@ -219,28 +220,24 @@ public class Generator : IIncrementalGenerator
 
     static void GenerateDefaultProperties(StringBuilder builder, MsBuildProperties properties)
     {
-        if (!string.IsNullOrWhiteSpace(properties.ProjectDirectory))
-        {
-            var path = PathToCSharpString(properties.ProjectDirectory!);
-            builder.AppendLine($$"""        public static ProjectDirectory ProjectDirectory { get; } = new({{path}});""");
-        }
-
         if (!string.IsNullOrWhiteSpace(properties.ProjectFile))
         {
-            var path = PathToCSharpString(properties.ProjectFile!);
-            builder.AppendLine($$"""        public static ProjectFile ProjectFile { get; } = new({{path}});""");
-        }
-
-        if (!string.IsNullOrWhiteSpace(properties.SolutionDirectory))
-        {
-            var path = PathToCSharpString(properties.SolutionDirectory!);
-            builder.AppendLine($$"""        public static ProjectDirectory SolutionDirectory { get; } = new({{path}});""");
+            var projectFile = properties.ProjectFile!;
+            var directory = Directory.GetParent(projectFile)!;
+            var directoryCSharp = PathToCSharp($"{directory.FullName}/");
+            builder.AppendLine($$"""        public static ProjectDirectory ProjectDirectory { get; } = new({{directoryCSharp}});""");
+            var fileCSharp = PathToCSharp(projectFile);
+            builder.AppendLine($$"""        public static ProjectFile ProjectFile { get; } = new({{fileCSharp}});""");
         }
 
         if (!string.IsNullOrWhiteSpace(properties.SolutionFile))
         {
-            var path = PathToCSharpString(properties.SolutionFile!);
-            builder.AppendLine($$"""        public static ProjectFile SolutionFile { get; } = new({{path}});""");
+            var solutionFile = properties.SolutionFile!;
+            var directory = Directory.GetParent(solutionFile)!;
+            var directoryCSharp = PathToCSharp($"{directory.FullName}/");
+            builder.AppendLine($$"""        public static ProjectDirectory SolutionDirectory { get; } = new({{directoryCSharp}});""");
+            var fileCSharp = PathToCSharp(solutionFile);
+            builder.AppendLine($$"""        public static ProjectFile SolutionFile { get; } = new({{fileCSharp}});""");
         }
     }
 
@@ -270,7 +267,7 @@ public class Generator : IIncrementalGenerator
             cancel.ThrowIfCancellationRequested();
 
             var className = Identifier.Build(Path.GetFileName(node.Path));
-            var pathString = PathToCSharpString(node.Path);
+            var pathString = PathToCSharp(node.Path);
             builder.AppendLine(
                 $$"""
                   {{indent}}partial class {{className}}Type() : ProjectDirectory({{pathString}})
@@ -325,13 +322,13 @@ public class Generator : IIncrementalGenerator
         foreach (var filePath in node.Files.OrderBy(_ => _))
         {
             var propertyName = ToFilePropertyName(filePath);
-            var path = PathToCSharpString(filePath);
+            var path = PathToCSharp(filePath);
 
             builder.AppendLine($$"""{{indent}}public ProjectFile {{propertyName}} { get; } = new({{path}});""");
         }
     }
 
-    static string PathToCSharpString(string filePath)
+    static string PathToCSharp(string filePath)
     {
         var path = filePath.Replace('\\', '/');
         return $"\"{path}\"";
