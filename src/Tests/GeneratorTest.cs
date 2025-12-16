@@ -433,13 +433,56 @@ public class GeneratorTest
     }
 
     [Test]
-    public Task OnlyProjectProperties()
+    public Task OnlyProjectProperty()
     {
         var additionalFiles = Array.Empty<AdditionalText>();
 
         var globalOptions = new Dictionary<string, string>
         {
             ["build_property.MSBuildProjectFullPath"] = "C:/Dev/WebApi/WebApi.csproj"
+        };
+
+        var options = new MockOptionsProvider([], globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task OnlyProjectPropertyUndefined()
+    {
+        var additionalFiles = Array.Empty<AdditionalText>();
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectFullPath"] = "*Undefined*"
+        };
+
+        var options = new MockOptionsProvider([], globalOptions);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts(additionalFiles)
+            .WithUpdatedAnalyzerConfigOptions(options)
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task ProjectPropertyAndSolutionUndefined()
+    {
+        var additionalFiles = Array.Empty<AdditionalText>();
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectFullPath"] = "C:/Dev/WebApi/WebApi.csproj",
+            ["build_property.SolutionPath"] = "*Undefined*"
         };
 
         var options = new MockOptionsProvider([], globalOptions);
@@ -1641,9 +1684,9 @@ public class GeneratorTest
         // Mix of Content Include (new files) and Update (SDK defaults in web projects)
         var additionalFiles = new[]
         {
-            CreateAdditionalText("Templates/email.html", "content"),     // Include (new file)
-            CreateAdditionalText("appsettings.json", "content"),         // Update (SDK default in web projects)
-            CreateAdditionalText("Data/seed.sql", "content"),            // Include (new file)
+            CreateAdditionalText("Templates/email.html", "content"), // Include (new file)
+            CreateAdditionalText("appsettings.json", "content"), // Update (SDK default in web projects)
+            CreateAdditionalText("Data/seed.sql", "content"), // Include (new file)
             CreateAdditionalText("appsettings.Development.json", "content") // Update (SDK default in web projects)
         };
 
@@ -1835,7 +1878,7 @@ public class GeneratorTest
 
         var driver = CSharpGeneratorDriver
             .Create([new Generator().AsSourceGenerator()],
-            parseOptions: CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp11))
+                parseOptions: CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp11))
             .RunGenerators(compilation);
 
         return Verify(driver);

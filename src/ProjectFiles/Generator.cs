@@ -31,9 +31,9 @@ public class Generator : IIncrementalGenerator
             .Select((provider, _) =>
             {
                 var options = provider.GlobalOptions;
-                options.TryGetValue("build_property.MSBuildProjectFullPath", out var projectFile);
-                options.TryGetValue("build_property.SolutionPath", out var solutionFile);
-                options.TryGetValue("build_property.ImplicitUsings", out var implicitUsings);
+                var projectFile = options.GetValue("build_property.MSBuildProjectFullPath");
+                var solutionFile = options.GetValue("build_property.SolutionPath");
+                var implicitUsings = options.GetValue("build_property.ImplicitUsings");
 
                 return new MsBuildProperties(
                     projectFile,
@@ -216,25 +216,23 @@ public class Generator : IIncrementalGenerator
 
     static void GenerateDefaultProperties(StringBuilder builder, MsBuildProperties properties)
     {
-        if (!string.IsNullOrWhiteSpace(properties.ProjectFile))
+        if (properties.ProjectFile != null)
         {
             AppendFile(builder, properties.ProjectFile!, "Project");
         }
 
         var solutionFile = properties.SolutionFile;
 
-        if (string.IsNullOrWhiteSpace(solutionFile) &&
-            !string.IsNullOrWhiteSpace(properties.ProjectFile))
+        if (solutionFile == null && properties.ProjectFile != null)
         {
             solutionFile = SolutionDirectoryFinder.Find(properties.ProjectFile!);
         }
 
-        if (!string.IsNullOrWhiteSpace(solutionFile))
+        if (solutionFile != null)
         {
             AppendFile(builder, solutionFile!, "Solution");
         }
     }
-
 
     static void AppendFile(StringBuilder builder, string file, string prefix)
     {
