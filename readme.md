@@ -459,6 +459,7 @@ using System.Threading.Tasks;
 partial class ProjectFile(string path)
 {
     public string Path { get; } = path;
+    public string FullPath { get; } => System.IO.Path.GetFullPath(path);
 
     public override string ToString() => Path;
 
@@ -497,7 +498,7 @@ partial class ProjectFile(string path)
 #endif
 }
 ```
-<sup><a href='/src/Templates/ProjectFile.cs#L1-L47' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectFile.cs' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Templates/ProjectFile.cs#L1-L48' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectFile.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
