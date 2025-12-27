@@ -1,6 +1,6 @@
 # <img src="https://raw.githubusercontent.com/SimonCropp/ProjectFiles/master/src/icon.png" height="40px"> ProjectFiles Source Generator
 
-[![Build status](https://ci.appveyor.com/api/projects/status/mwwl3xe6drr2gn2a/branch/main?svg=true)](https://ci.appveyor.com/project/SimonCropp/projectfiles)
+[![Build status](https://img.shields.io/appveyor/build/SimonCropp/projectfiles)](https://ci.appveyor.com/project/SimonCropp/projectfiles)
 [![NuGet Status](https://img.shields.io/nuget/v/ProjectFiles.svg)](https://www.nuget.org/packages/ProjectFiles/)
 
 
