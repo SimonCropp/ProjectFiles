@@ -359,6 +359,48 @@ The generator follows these rules when converting file and directory names to C#
 - **Extension lowercased with underscore**: `File.txt` → `File_txt`
 - **Multiple dots preserved**: `app.config.json` → `app_config_json`
 - **Special characters replaced**: `my-file.xml` → `my_file_xml`
+- **Dot files handled**: `.gitignore` → `_gitignore`, `.env` → `_env`, `.txt` → `_txt`
+
+
+### Dot Files
+
+Files that start with a dot are supported:
+
+```xml
+<ItemGroup>
+  <None Update=".gitignore">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+
+  <None Update=".env">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+
+  <None Update=".editorconfig">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+```
+
+Access them with underscore-prefixed property names:
+
+```csharp
+// Access dot files
+var gitignore = ProjectFiles._gitignore;
+var envFile = ProjectFiles._env;
+var editorConfig = ProjectFiles._editorconfig;
+
+// Read contents
+string ignoreRules = File.ReadAllText(ProjectFiles._gitignore);
+string envVars = File.ReadAllText(ProjectFiles._env);
+```
+
+**Naming Pattern:**
+
+- `.gitignore` → `_gitignore` (dot replaced with underscore, no extension suffix)
+- `.env` → `_env`
+- `.editorconfig` → `_editorconfig`
+- `.txt` → `_txt`
 
 
 ## Glob Pattern Support
