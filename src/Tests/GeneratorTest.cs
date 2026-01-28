@@ -309,7 +309,7 @@ public class GeneratorTest
             {
                 ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "has-metadata.json"
             },
-            ["no-metadata.json"] = new(), // Empty metadata
+            ["no-metadata.json"] = [], // Empty metadata
             ["also-has-metadata.txt"] = new()
             {
                 ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "also-has-metadata.txt"
@@ -1496,6 +1496,73 @@ public class GeneratorTest
             .RunGenerators(compilation);
 
         return Verify(driver);
+    }
+
+    [Test]
+    public Task DotFileAtRoot()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText(".txt", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            [".txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = ".txt"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task MultipleDotFilesAtRoot()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText(".gitignore", "content"),
+            CreateAdditionalText(".env", "content"),
+            CreateAdditionalText(".editorconfig", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            [".gitignore"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = ".gitignore"
+            },
+            [".env"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = ".env"
+            },
+            [".editorconfig"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = ".editorconfig"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task DotFileInDirectory()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Config/.env", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Config/.env"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Config/.env"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
     }
 
     static AdditionalText CreateAdditionalText(string path, string content) =>
