@@ -1565,6 +1565,78 @@ public class GeneratorTest
         return Verify(RunGenerator(additionalFiles, metadata));
     }
 
+    [Test]
+    public Task ConflictBetweenDotFileAndRegularFile()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText(".txt", "content"),
+            CreateAdditionalText("_txt", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            [".txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = ".txt"
+            },
+            ["_txt"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "_txt"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task ConflictBetweenFileWithDotsAndUnderscores()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("config.json", "content"),
+            CreateAdditionalText("config_json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["config.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "config.json"
+            },
+            ["config_json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "config_json"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task SameFileNameInDifferentDirectories()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Dir1/config.json", "content"),
+            CreateAdditionalText("Dir2/config.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Dir1/config.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Dir1/config.json"
+            },
+            ["Dir2/config.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Dir2/config.json"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
     static AdditionalText CreateAdditionalText(string path, string content) =>
         new MockAdditionalText(path, content);
 

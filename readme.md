@@ -402,6 +402,36 @@ string envVars = File.ReadAllText(ProjectFiles._env);
 - `.editorconfig` → `_editorconfig`
 - `.txt` → `_txt`
 
+**Important:** Avoid naming conflicts. The generator detects and reports duplicate property names:
+
+**Example 1: Dot file conflict**
+```xml
+<!-- ❌ ERROR: Both generate property '_txt' -->
+<ItemGroup>
+  <None Update=".txt">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  <None Update="_txt">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+```
+
+**Example 2: Dots vs underscores conflict**
+```xml
+<!-- ❌ ERROR: Both generate property 'config_json' -->
+<ItemGroup>
+  <None Update="config.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  <None Update="config_json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+```
+
+Error: `PROJFILES004: Files 'config.json' and 'config_json' both generate the same property name 'config_json'. Rename one of the files to avoid the conflict.`
+
 
 ## Glob Pattern Support
 
