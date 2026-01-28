@@ -46,11 +46,8 @@ public class IdentifierTest
         Verify(Identifier.Build("Class"));
 
     [Test]
-    public Task EmptyString()
-    {
-        Assert.Throws<IndexOutOfRangeException>(() => Identifier.Build(""));
-        return Task.CompletedTask;
-    }
+    public Task EmptyString() =>
+        Verify(Identifier.Build(""));
 
     [Test]
     public Task SingleCharacter() =>
