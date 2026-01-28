@@ -98,6 +98,21 @@ public class Generator : IIncrementalGenerator
                     context.ReportDiagnostic(diagnostic);
                 }
 
+                // Check for duplicate property names
+                var duplicateConflicts = FindDuplicatePropertyNames(fileList);
+                foreach (var (file1, file2, propertyName) in duplicateConflicts)
+                {
+                    conflictingFiles.Add(file1);
+                    conflictingFiles.Add(file2);
+                    var diagnostic = Diagnostic.Create(
+                        Diagnostics.DuplicatePropertyName,
+                        Location.None,
+                        file1,
+                        file2,
+                        propertyName);
+                    context.ReportDiagnostic(diagnostic);
+                }
+
                 // Filter out conflicting files before generating source
                 var filteredFiles = fileList.Where(_ => !conflictingFiles.Contains(_)).ToImmutableArray();
 
@@ -147,6 +162,47 @@ public class Generator : IIncrementalGenerator
             // It's a directory if there are more path parts (subdirectories or files within)
             var isDirectory = parts.Length > 1;
             conflicts.Add((file, propertyName, isDirectory));
+        }
+
+        return conflicts;
+    }
+
+    static List<(string File1, string File2, string PropertyName)> FindDuplicatePropertyNames(ImmutableArray<string> files)
+    {
+        var conflicts = new List<(string, string, string)>();
+
+        // Group files by their directory (same scope)
+        var filesByDirectory = new Dictionary<string, List<string>>();
+
+        foreach (var file in files)
+        {
+            var directory = Path.GetDirectoryName(file) ?? string.Empty;
+            if (!filesByDirectory.TryGetValue(directory, out var filesInDir))
+            {
+                filesInDir = new List<string>();
+                filesByDirectory[directory] = filesInDir;
+            }
+            filesInDir.Add(file);
+        }
+
+        // Check for duplicates within each directory
+        foreach (var filesInDir in filesByDirectory.Values)
+        {
+            var propertyToFile = new Dictionary<string, string>();
+
+            foreach (var file in filesInDir)
+            {
+                var propertyName = ToFilePropertyName(file);
+
+                if (propertyToFile.TryGetValue(propertyName, out var existingFile))
+                {
+                    conflicts.Add((existingFile, file, propertyName));
+                }
+                else
+                {
+                    propertyToFile[propertyName] = file;
+                }
+            }
         }
 
         return conflicts;

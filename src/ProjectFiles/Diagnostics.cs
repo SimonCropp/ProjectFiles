@@ -24,4 +24,12 @@ public static class Diagnostics
         category: "ProjectFiles",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor DuplicatePropertyName = new(
+        id: "PROJFILES004",
+        title: "Duplicate property name generated",
+        messageFormat: "Files '{0}' and '{1}' both generate the same property name '{2}'. Rename one of the files to avoid the conflict.",
+        category: "ProjectFiles",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
