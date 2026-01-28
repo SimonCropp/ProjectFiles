@@ -179,9 +179,10 @@ public class Generator : IIncrementalGenerator
             var directory = Path.GetDirectoryName(file) ?? string.Empty;
             if (!filesByDirectory.TryGetValue(directory, out var filesInDir))
             {
-                filesInDir = new List<string>();
+                filesInDir = [];
                 filesByDirectory[directory] = filesInDir;
             }
+
             filesInDir.Add(file);
         }
 
