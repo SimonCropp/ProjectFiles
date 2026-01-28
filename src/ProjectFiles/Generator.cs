@@ -339,6 +339,13 @@ public class Generator : IIncrementalGenerator
         var nameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
         var extension = Path.GetExtension(filePath);
 
+        // Handle files that start with a dot (like ".txt")
+        if (string.IsNullOrEmpty(nameWithoutExtension) && !string.IsNullOrEmpty(extension))
+        {
+            var fileName = Path.GetFileName(filePath);
+            return Identifier.Build(fileName);
+        }
+
         var propertyName = Identifier.Build(nameWithoutExtension);
 
         if (!string.IsNullOrEmpty(extension))

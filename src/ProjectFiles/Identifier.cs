@@ -2,6 +2,11 @@ public static class Identifier
 {
     public static string Build(string name)
     {
+        if (name.Length == 0)
+        {
+            return "_";
+        }
+
         var builder = new StringBuilder(name.Length + 1);
         var first = name[0];
         if (char.IsLetter(first) || first == '_')
