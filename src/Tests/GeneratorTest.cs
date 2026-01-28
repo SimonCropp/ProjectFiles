@@ -309,7 +309,7 @@ public class GeneratorTest
             {
                 ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "has-metadata.json"
             },
-            ["no-metadata.json"] = new(), // Empty metadata
+            ["no-metadata.json"] = [], // Empty metadata
             ["also-has-metadata.txt"] = new()
             {
                 ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "also-has-metadata.txt"
