@@ -14,7 +14,7 @@
     <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" Condition="$(Configuration)=='Release'" />
+    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" Condition="'$(CI)' == 'true'" />
     <EmbeddedResource Include="..\Templates\ProjectDirectory.cs"/>
     <EmbeddedResource Include="..\Templates\ProjectFile.cs"/>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/roslyn5.0/cs" Visible="false" />
