@@ -81,35 +81,30 @@ public class Generator : IIncrementalGenerator
                     return;
                 }
 
-                // Check for conflicts and report diagnostics
-                var reservedConflicts = FindReservedNameConflicts(fileList);
-
                 var conflictingFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                foreach (var (file, property, isDirectory) in reservedConflicts)
+                foreach (var conflict in FindReservedNameConflicts(fileList))
                 {
-                    conflictingFiles.Add(file);
-                    var descriptor = isDirectory ? Diagnostics.ReservedDirectoryNameConflict : Diagnostics.ReservedFileNameConflict;
+                    conflictingFiles.Add(conflict.FilePath);
+                    var descriptor = conflict.IsDirectory ? Diagnostics.ReservedDirectoryNameConflict : Diagnostics.ReservedFileNameConflict;
                     var diagnostic = Diagnostic.Create(
                         descriptor,
                         Location.None,
-                        file,
-                        property);
+                        conflict.FilePath,
+                        conflict.PropertyName);
                     context.ReportDiagnostic(diagnostic);
                 }
 
-                // Check for duplicate property names
-                var duplicateConflicts = FindDuplicatePropertyNames(fileList);
-                foreach (var (file1, file2, propertyName) in duplicateConflicts)
+                foreach (var conflict in FindDuplicatePropertyNames(fileList))
                 {
-                    conflictingFiles.Add(file1);
-                    conflictingFiles.Add(file2);
+                    conflictingFiles.Add(conflict.File1);
+                    conflictingFiles.Add(conflict.File2);
                     var diagnostic = Diagnostic.Create(
                         Diagnostics.DuplicatePropertyName,
                         Location.None,
-                        file1,
-                        file2,
-                        propertyName);
+                        conflict.File1,
+                        conflict.File2,
+                        conflict.PropertyName);
                     context.ReportDiagnostic(diagnostic);
                 }
 
@@ -137,10 +132,8 @@ public class Generator : IIncrementalGenerator
         "SolutionFile"
     };
 
-    static List<(string FilePath, string PropertyName, bool IsDirectory)> FindReservedNameConflicts(ImmutableArray<string> files)
+    static IEnumerable<ReservedNameConflict> FindReservedNameConflicts(ImmutableArray<string> files)
     {
-        var conflicts = new List<(string, string, bool)>();
-
         foreach (var file in files)
         {
             var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -161,16 +154,12 @@ public class Generator : IIncrementalGenerator
 
             // It's a directory if there are more path parts (subdirectories or files within)
             var isDirectory = parts.Length > 1;
-            conflicts.Add((file, propertyName, isDirectory));
+            yield return new(file, propertyName, isDirectory);
         }
-
-        return conflicts;
     }
 
-    static List<(string File1, string File2, string PropertyName)> FindDuplicatePropertyNames(ImmutableArray<string> files)
+    static IEnumerable<DuplicateProperty> FindDuplicatePropertyNames(ImmutableArray<string> files)
     {
-        var conflicts = new List<(string, string, string)>();
-
         // Group files by their directory (same scope)
         var filesByDirectory = new Dictionary<string, List<string>>();
 
@@ -197,7 +186,7 @@ public class Generator : IIncrementalGenerator
 
                 if (propertyToFile.TryGetValue(propertyName, out var existingFile))
                 {
-                    conflicts.Add((existingFile, file, propertyName));
+                    yield return new(existingFile, file, propertyName);
                 }
                 else
                 {
@@ -205,8 +194,6 @@ public class Generator : IIncrementalGenerator
                 }
             }
         }
-
-        return conflicts;
     }
 
     static string GenerateSource(ImmutableArray<string> files, MsBuildProperties properties, Cancel cancel)
