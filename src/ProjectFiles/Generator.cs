@@ -176,14 +176,15 @@ public class Generator : IIncrementalGenerator
 
         foreach (var file in files)
         {
-            var directory = Path.GetDirectoryName(file) ?? string.Empty;
-            if (!filesByDirectory.TryGetValue(directory, out var filesInDir))
+            var directory = Path.GetDirectoryName(file)!;
+            if (filesByDirectory.TryGetValue(directory, out var filesInDir))
             {
-                filesInDir = [];
-                filesByDirectory[directory] = filesInDir;
+                filesInDir.Add(file);
             }
-
-            filesInDir.Add(file);
+            else
+            {
+                filesByDirectory.Add(directory, [file]);
+            }
         }
 
         // Check for duplicates within each directory
