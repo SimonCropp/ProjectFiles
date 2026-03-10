@@ -109,7 +109,7 @@ public class Generator : IIncrementalGenerator
                 }
 
                 // Filter out conflicting files before generating source
-                var filteredFiles = fileList.Where(_ => !conflictingFiles.Contains(_)).ToImmutableArray();
+                var filteredFiles = fileList.Where(_ => !conflictingFiles.Contains(_));
 
                 var source = GenerateSource(filteredFiles, props, context.CancellationToken);
                 context.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
@@ -196,7 +196,7 @@ public class Generator : IIncrementalGenerator
         }
     }
 
-    static string GenerateSource(ImmutableArray<string> files, MsBuildProperties properties, Cancel cancel)
+    static string GenerateSource(IEnumerable<string> files, MsBuildProperties properties, Cancel cancel)
     {
         var (tree, rootFiles) = BuildFileTree(files, cancel);
         var builder = new StringBuilder();
@@ -402,7 +402,7 @@ public class Generator : IIncrementalGenerator
         return propertyName;
     }
 
-    static (IReadOnlyCollection<DirectoryNode> Directories, List<string> RootFiles) BuildFileTree(ImmutableArray<string> files, Cancel cancel)
+    static (IReadOnlyCollection<DirectoryNode> Directories, List<string> RootFiles) BuildFileTree(IEnumerable<string> files, Cancel cancel)
     {
         var topLevelDirectories = new Dictionary<string, DirectoryNode>();
         var rootFiles = new List<string>();
