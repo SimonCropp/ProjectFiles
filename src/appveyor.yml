@@ -8,13 +8,14 @@ build_script:
     Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "./dotnet-install.ps1"
     ./dotnet-install.ps1 -JSonFile src/global.json -Architecture x64 -InstallDir 'C:\Program Files\dotnet'
 - dotnet build src --configuration Release
-- dotnet test src --configuration Release --no-build --no-restore
 - dotnet build IntegrationTests --configuration Release
-- dotnet test IntegrationTests --configuration Release --no-build --no-restore
 # Test project-level build without $(SolutionDir)
 - dotnet build src/ConsumingTests/ConsumingTests.csproj --configuration Release --force
-- dotnet test src/ConsumingTests/ConsumingTests.csproj --configuration Release --no-build --no-restore
-
+- dotnet test src --configuration Release --no-build --no-restore --logger:Appveyor
+- dotnet test IntegrationTests --configuration Release --no-build --no-restore --logger:Appveyor
+- dotnet test src/ConsumingTests/ConsumingTests.csproj --configuration Release --no-build --no-restore --logger:Appveyor
+on_failure:
+  - ps: Get-ChildItem *.received.* -recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 test: off
 artifacts:
 - path: nugets\*.nupkg
