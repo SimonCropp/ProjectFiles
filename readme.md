@@ -13,7 +13,7 @@ Creates a type-safe API for accessing files that are copied to the projects outp
 
 ## Minimum SDK
 
-A minimum of SDK 10.0.100 is required.
+A minimum of SDK 10.0.202 is required.
 
 
 ## NuGet package

@@ -2,7 +2,7 @@
 
   <Target Name="CheckSdkVersion" BeforeTargets="BeforeBuild">
     <PropertyGroup>
-      <MinimumSdkVersion>10.0.100</MinimumSdkVersion>
+      <MinimumSdkVersion>10.0.202</MinimumSdkVersion>
     </PropertyGroup>
 
     <Error
