@@ -50,7 +50,7 @@ When no `SolutionPath` is provided by MSBuild, `SolutionDirectoryFinder.cs` walk
 
 `src/Tests/` is the unit-test project — drives the generator in-memory with `CSharpGeneratorDriver` and snapshot-verifies every output with **Verify** (`Verify.SourceGenerators`, `Verify.NUnit`, `Verify.DiffPlex`). Each test produces three `.verified.*` files (one per emitted source) plus a `.verified.txt` for diagnostics.
 
-When changing the generator, expect many `*.received.*` files — review and promote them via your Verify diff tool.
+When changing the generator, expect many `*.received.*` files — review and promote them via the Verify diff tool.
 
 The four consumption surfaces each exercise a different integration path and should all keep building:
 - `src/ConsumingTests/` — uses the generator via `ProjectReference` with `OutputItemType="Analyzer"` (imports `buildTransitive/ProjectFiles.props` manually).
