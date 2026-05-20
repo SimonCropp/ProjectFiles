@@ -1637,6 +1637,174 @@ public class GeneratorTest
         return Verify(RunGenerator(additionalFiles, metadata));
     }
 
+    [Test]
+    public Task EmbeddedResourceAtRoot()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("logo.png", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["logo.png"] = EmbeddedMetadata("logo.png", "TestAssembly.logo.png")
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task EmbeddedResourceInDirectory()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Resources/logo.png", "content"),
+            CreateAdditionalText("Resources/template.txt", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Resources/logo.png"] = EmbeddedMetadata("Resources/logo.png", "TestAssembly.Resources.logo.png"),
+            ["Resources/template.txt"] = EmbeddedMetadata("Resources/template.txt", "TestAssembly.Resources.template.txt")
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task EmbeddedResourceNested()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Resources/Images/Icons/home.svg", "content"),
+            CreateAdditionalText("Resources/strings.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Resources/Images/Icons/home.svg"] = EmbeddedMetadata("Resources/Images/Icons/home.svg", "TestAssembly.Resources.Images.Icons.home.svg"),
+            ["Resources/strings.json"] = EmbeddedMetadata("Resources/strings.json", "TestAssembly.Resources.strings.json")
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task MixedEmbeddedResourceAndCopyFile()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Resources/logo.png", "content"),
+            CreateAdditionalText("Config/appsettings.json", "content"),
+            CreateAdditionalText("readme.md", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Resources/logo.png"] = EmbeddedMetadata("Resources/logo.png", "TestAssembly.Resources.logo.png"),
+            ["Config/appsettings.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Config/appsettings.json"
+            },
+            ["readme.md"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "readme.md"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task EmbeddedResourceAndCopyFileSameDirectory()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Assets/logo.png", "content"),
+            CreateAdditionalText("Assets/data.json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Assets/logo.png"] = EmbeddedMetadata("Assets/logo.png", "TestAssembly.Assets.logo.png"),
+            ["Assets/data.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Assets/data.json"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task EmbeddedResourceWithRootNamespace()
+    {
+        // The manifest name is provided by MSBuild and may differ from the relative path
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Resources/logo.png", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Resources/logo.png"] = EmbeddedMetadata("Resources/logo.png", "My.Custom.RootNamespace.Resources.logo.png")
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task EmbeddedResourceConflictWithCopyFile()
+    {
+        // An embedded resource and a copy-to-output file generating the same property name
+        // in the same directory must be reported as a conflict.
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("config.json", "content"),
+            CreateAdditionalText("config_json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["config.json"] = EmbeddedMetadata("config.json", "TestAssembly.config.json"),
+            ["config_json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "config_json"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task EmbeddedResourceWithMsBuildProperties()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Resources/logo.png", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Resources/logo.png"] = EmbeddedMetadata("Resources/logo.png", "TestAssembly.Resources.logo.png")
+        };
+
+        var globalOptions = new Dictionary<string, string>
+        {
+            ["build_property.MSBuildProjectFullPath"] = "C:/Projects/MyApp/MyApp.csproj",
+            ["build_property.SolutionPath"] = "C:/Projects/MySolution.sln"
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
+    }
+
+    static Dictionary<string, string> EmbeddedMetadata(string relativePath, string resourceName) =>
+        new()
+        {
+            ["build_metadata.AdditionalFiles.ProjectFilesEmbeddedResource"] = relativePath,
+            ["build_metadata.AdditionalFiles.ProjectFilesEmbeddedResourceName"] = resourceName
+        };
+
     static AdditionalText CreateAdditionalText(string path, string content) =>
         new MockAdditionalText(path, content);
 

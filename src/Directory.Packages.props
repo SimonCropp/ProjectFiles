@@ -4,6 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="ProjectFiles" Version="$(Version)" />
     <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.2.0" />
     <PackageVersion Include="Polyfill" Version="10.5.1" />
     <PackageVersion Include="ProjectDefaults" Version="1.0.174" />

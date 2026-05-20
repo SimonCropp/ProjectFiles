@@ -1,0 +1,16 @@
+﻿{
+  Diagnostics: [
+    {
+      Message: Files 'config.json' and 'config_json' both generate the same property name 'config_json'. Rename one of the files to avoid the conflict.,
+      Severity: Error,
+      Descriptor: {
+        Id: PROJFILES004,
+        Title: Duplicate property name generated,
+        MessageFormat: Files '{0}' and '{1}' both generate the same property name '{2}'. Rename one of the files to avoid the conflict.,
+        Category: ProjectFiles,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}

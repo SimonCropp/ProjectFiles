@@ -4,9 +4,9 @@
 [![NuGet Status](https://img.shields.io/nuget/v/ProjectFiles.svg)](https://www.nuget.org/packages/ProjectFiles/)
 
 
-A C# source generator that provides strongly-typed, compile-time access to project files marked with `CopyToOutputDirectory` in the `.csproj` file.
+A C# source generator that provides strongly-typed, compile-time access to project files marked with `CopyToOutputDirectory`, and to `EmbeddedResource` files, in the `.csproj` file.
 
-Creates a type-safe API for accessing files that are copied to the projects output directory, eliminating magic strings and providing IntelliSense support for file paths.
+Creates a type-safe API for accessing files that are copied to the projects output directory or embedded into the assembly, eliminating magic strings and providing IntelliSense support for file paths and manifest resource names.
 
 **See [Milestones](../../milestones?state=closed) for release notes.**
 
@@ -26,6 +26,7 @@ https://nuget.org/packages/ProjectFiles/
 ## Features
 
 - **Strongly-typed access** to project files via generated classes and properties
+- **Embedded resource access** - strongly-typed access to `EmbeddedResource` files with helpers to read the embedded stream
 - **Compile-time safety** - typos in file paths become compilation errors
 - **MSBuild property access** - automatic properties for project and solution paths
 - **IntelliSense support** - discover available files through IDE autocomplete
@@ -202,13 +203,49 @@ public class ComsumeTests
 ```
 
 
+## Embedded Resources
+
+Files marked as `EmbeddedResource` are compiled into the assembly rather than copied to the output directory. The generator exposes them through the same hierarchical API, interleaved with `CopyToOutputDirectory` files by their directory, but typed as `EmbeddedResource` instead of `ProjectFile`.
+
+Mark files as embedded resources:
+
+```xml
+<ItemGroup>
+  <EmbeddedResource Include="Resources\logo.png" />
+  <EmbeddedResource Include="Resources\template.txt" />
+</ItemGroup>
+```
+
+Access them via the generated API. The manifest resource name (computed by MSBuild, honouring `RootNamespace`, `LogicalName`, etc.) is captured at compile time:
+
+```csharp
+// Access an embedded resource
+var logo = ProjectFiles.Resources.logo_png;
+
+// The manifest resource name
+string name = logo.Name; // "MyApp.Resources.logo.png"
+
+// Read the embedded stream
+using var stream = logo.OpenRead();
+
+// Or read the content directly
+string template = ProjectFiles.Resources.template_txt.ReadAllText();
+byte[] bytes = logo.ReadAllBytes();
+```
+
+The stream is read from the assembly that contains the generated code, so no `Assembly.GetManifestResourceStream` plumbing or magic resource-name strings are required.
+
+> **Note:** `.resx` files are excluded - they are consumed via `ResourceManager` rather than as raw manifest streams.
+
+
 ## Generated Code Structure
 
-The generator creates three files:
+The generator creates these files:
 
 1. **`ProjectFiles.g.cs`** - Main entry point with directory structure
 2. **`ProjectFiles.ProjectDirectory.g.cs`** - Base class for directory types
 3. **`ProjectFiles.ProjectFile.g.cs`** - Base class for file types
+4. **`ProjectFiles.EmbeddedResource.g.cs`** - Base class for embedded resources (only when embedded resources are present)
 
 
 ### Generated API Example
@@ -577,6 +614,79 @@ partial class ProjectFile(string path)
 <!-- endSnippet -->
 
 
+### `EmbeddedResource`
+
+Class for all generated embedded resource instances:
+
+<!-- snippet: EmbeddedResource.cs -->
+<a id='snippet-EmbeddedResource.cs'></a>
+```cs
+namespace ProjectFilesGenerator;
+
+using System;
+using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+partial class EmbeddedResource(string name)
+{
+    public string Name { get; } = name;
+
+    static Assembly assembly = typeof(EmbeddedResource).Assembly;
+
+    public override string ToString() => Name;
+
+    public static implicit operator string(EmbeddedResource resource) =>
+        resource.Name;
+
+    public Stream OpenRead() =>
+        assembly.GetManifestResourceStream(Name) ??
+        throw new InvalidOperationException($"Could not find embedded resource '{Name}'.");
+
+    public StreamReader OpenText() =>
+        new(OpenRead());
+
+    public StreamReader OpenText(Encoding encoding) =>
+        new(OpenRead(), encoding);
+
+    public string ReadAllText()
+    {
+        using var reader = OpenText();
+        return reader.ReadToEnd();
+    }
+
+    public string ReadAllText(Encoding encoding)
+    {
+        using var reader = OpenText(encoding);
+        return reader.ReadToEnd();
+    }
+
+    public byte[] ReadAllBytes()
+    {
+        using var stream = OpenRead();
+        using var memory = new MemoryStream();
+        stream.CopyTo(memory);
+        return memory.ToArray();
+    }
+
+    public async Task<string> ReadAllTextAsync(CancellationToken cancel = default)
+    {
+        using var reader = OpenText();
+#if NET7_0_OR_GREATER
+        return await reader.ReadToEndAsync(cancel);
+#else
+        cancel.ThrowIfCancellationRequested();
+        return await reader.ReadToEndAsync();
+#endif
+    }
+}
+```
+<sup><a href='/src/Templates/EmbeddedResource.cs#L1-L61' title='Snippet source file'>snippet source</a> | <a href='#snippet-EmbeddedResource.cs' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
+
+
 ### Extending base class
 
 These base classes can be extended with additional functionality by creating partial class definitions.
@@ -586,7 +696,7 @@ These base classes can be extended with additional functionality by creating par
 ```cs
 namespace ProjectFilesGenerator;
 
-abstract partial class ProjectDirectory
+partial class ProjectDirectory
 {
     /// <summary>
     /// Recursively enumerates all files in this directory and subdirectories.

@@ -1,6 +1,6 @@
 namespace ProjectFilesGenerator;
 
-abstract partial class ProjectDirectory
+partial class ProjectDirectory
 {
     /// <summary>
     /// Recursively enumerates all files in this directory and subdirectories.

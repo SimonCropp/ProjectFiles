@@ -55,6 +55,39 @@
   </Target>
 
   <!--
+    This MSBuild target automatically adds all EmbeddedResource files to AdditionalFiles
+    so the source generator can expose them via a strongly-typed API.
+
+    It depends on PrepareResourceNames (which runs AssignTargetPaths, SplitResourcesByCulture
+    and CreateManifestResourceNames in order) so that MSBuild has computed the authoritative
+    %(EmbeddedResource.ManifestResourceName) (honouring RootNamespace, LogicalName, etc.)
+    before we capture it. .resx files are excluded because they are consumed via
+    ResourceManager rather than as raw manifest streams.
+  -->
+
+  <Target Name="AddProjectEmbeddedResourcesToAdditionalFiles"
+          BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun"
+          DependsOnTargets="PrepareResourceNames">
+    <ItemGroup>
+      <!--
+        Embedded resources are always compiled into the assembly being built, so (unlike
+        CopyToOutputDirectory items) there is no need to filter by DefiningProjectFullPath.
+        That metadata is unusable here anyway: AssignTargetPaths removes and re-includes
+        @(EmbeddedResource) inside the SDK targets, so by this point every item's
+        DefiningProjectFullPath points at the SDK targets rather than the consuming project.
+        Use %(Link) if available (for linked files), otherwise the actual relative path.
+      -->
+      <AdditionalFiles Include="@(EmbeddedResource)"
+                       ProjectFilesEmbeddedResource="$([MSBuild]::ValueOrDefault('%(EmbeddedResource.Link)', '%(RelativeDir)%(Filename)%(Extension)'))"
+                       ProjectFilesEmbeddedResourceName="%(EmbeddedResource.ManifestResourceName)"
+                       Condition="
+                         '%(EmbeddedResource.ManifestResourceName)' != '' AND
+                         '%(EmbeddedResource.Extension)' != '.resx'
+                       " />
+    </ItemGroup>
+  </Target>
+
+  <!--
     Make the CopyToOutputDirectory metadata visible to the source generator.
     This allows the generator to verify that files have the correct metadata.
   -->
@@ -62,6 +95,12 @@
     <CompilerVisibleItemMetadata
       Include="AdditionalFiles"
       MetadataName="ProjectFilesGenerator" />
+    <CompilerVisibleItemMetadata
+      Include="AdditionalFiles"
+      MetadataName="ProjectFilesEmbeddedResource" />
+    <CompilerVisibleItemMetadata
+      Include="AdditionalFiles"
+      MetadataName="ProjectFilesEmbeddedResourceName" />
   </ItemGroup>
 
   <!-- Expose project and solution paths to the source generator -->

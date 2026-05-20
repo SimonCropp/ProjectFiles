@@ -58,7 +58,9 @@ The four consumption surfaces each exercise a different integration path and sho
 - `IntegrationTests/IntegrationTests/` — multi-TFM (`net471;net48;net8.0;net9.0;net10.0`) NuGet consumer, also asserts `ImplicitUsings=true` flow.
 - `src/Tests/` — pure generator unit tests, no consumption.
 
-`IntegrationTests/nuget.config` and `src/nuget.config` add `../nugets` as a local feed so `PackageReference Include="ProjectFiles"` picks up a locally-packed build.
+`IntegrationTests/nuget.config` and `src/NugetTests/nuget.config` add `../nugets` as a local feed so `PackageReference Include="ProjectFiles"` picks up a locally-packed build (the latter also overrides the `signatureValidationMode=require` from `src/nuget.config`, since the local package is unsigned). The `ProjectFiles` package version is pinned to `$(Version)` in `src/Directory.Packages.props` / `IntegrationTests/Directory.Packages.props`.
+
+`NugetTests` consumes the locally-packed nuget, so it is **not** in `src/ProjectFiles.slnx` (the package won't exist at restore time during a clean `dotnet build src`). It is built/tested as a separate step in `src/appveyor.yml` after `src` has been packed.
 
 ## Conventions
 
