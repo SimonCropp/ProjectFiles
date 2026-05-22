@@ -48,6 +48,11 @@
     </None>
   </ItemGroup>
 
+  <!-- Example embedded resource -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\embedded.txt" />
+  </ItemGroup>
+
   <Import Project="$(ProjectDir)..\ProjectFiles\buildTransitive\ProjectFiles.props" />
 
 </Project>

@@ -6,12 +6,14 @@ public class Generator : IIncrementalGenerator
 {
     static SourceText projectFileContent;
     static SourceText projectDirectoryContent;
+    static SourceText embeddedResourceContent;
     SourceText globalUsing = SourceText.From("global using ProjectFilesGenerator;\n", Encoding.UTF8);
 
     static Generator()
     {
         projectFileContent = ReadResouce("ProjectFile");
         projectDirectoryContent = ReadResouce("ProjectDirectory");
+        embeddedResourceContent = ReadResouce("EmbeddedResource");
     }
 
     static Assembly assembly = typeof(Generator).Assembly;
@@ -43,7 +45,7 @@ public class Generator : IIncrementalGenerator
                 );
             });
 
-        // Get all additional files with CopyToOutputDirectory metadata
+        // Get all additional files with CopyToOutputDirectory or EmbeddedResource metadata
         var files = context.AdditionalTextsProvider
             .Combine(context.AnalyzerConfigOptionsProvider)
             .Select(pair =>
@@ -51,14 +53,26 @@ public class Generator : IIncrementalGenerator
                 var (text, config) = pair;
 
                 var options = config.GetOptions(text);
-                if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var relativePath))
+
+                // CopyToOutputDirectory files
+                if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var relativePath) &&
+                    !string.IsNullOrWhiteSpace(relativePath))
                 {
-                    return relativePath;
+                    return new ProjectItem(relativePath, IsEmbeddedResource: false, ResourceName: null);
+                }
+
+                // Embedded resources
+                if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResource", out var resourcePath) &&
+                    !string.IsNullOrWhiteSpace(resourcePath) &&
+                    options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResourceName", out var resourceName) &&
+                    !string.IsNullOrWhiteSpace(resourceName))
+                {
+                    return new ProjectItem(resourcePath, IsEmbeddedResource: true, resourceName);
                 }
 
                 return null;
             })
-            .Where(_ => !string.IsNullOrWhiteSpace(_))
+            .Where(_ => _ is not null)
             .Select(_ => _!)
             .Collect();
 
@@ -109,12 +123,20 @@ public class Generator : IIncrementalGenerator
                 }
 
                 // Filter out conflicting files before generating source
-                var filteredFiles = fileList.Where(_ => !conflictingFiles.Contains(_));
+                var filteredFiles = fileList
+                    .Where(_ => !conflictingFiles.Contains(_.Path))
+                    .ToList();
 
                 var source = GenerateSource(filteredFiles, props, context.CancellationToken);
                 context.AddSource("ProjectFiles.g.cs", SourceText.From(source, Encoding.UTF8));
                 context.AddSource("ProjectFiles.ProjectDirectory.g.cs", projectDirectoryContent);
                 context.AddSource("ProjectFiles.ProjectFile.g.cs", projectFileContent);
+
+                // Only emit the EmbeddedResource base class when at least one is in use
+                if (filteredFiles.Any(_ => _.IsEmbeddedResource))
+                {
+                    context.AddSource("ProjectFiles.EmbeddedResource.g.cs", embeddedResourceContent);
+                }
 
                 // Generate global using if ImplicitUsings is enabled
                 if (props.ImplicitUsings)
@@ -132,10 +154,11 @@ public class Generator : IIncrementalGenerator
         "SolutionFile"
     };
 
-    static IEnumerable<ReservedNameConflict> FindReservedNameConflicts(ImmutableArray<string> files)
+    static IEnumerable<ReservedNameConflict> FindReservedNameConflicts(ImmutableArray<ProjectItem> files)
     {
-        foreach (var file in files)
+        foreach (var item in files)
         {
+            var file = item.Path;
             var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
             if (parts.Length <= 0)
@@ -158,13 +181,14 @@ public class Generator : IIncrementalGenerator
         }
     }
 
-    static IEnumerable<DuplicateProperty> FindDuplicatePropertyNames(ImmutableArray<string> files)
+    static IEnumerable<DuplicateProperty> FindDuplicatePropertyNames(ImmutableArray<ProjectItem> files)
     {
         // Group files by their directory (same scope)
         var filesByDirectory = new Dictionary<string, List<string>>();
 
-        foreach (var file in files)
+        foreach (var item in files)
         {
+            var file = item.Path;
             var directory = Path.GetDirectoryName(file)!;
             if (filesByDirectory.TryGetValue(directory, out var filesInDir))
             {
@@ -197,7 +221,7 @@ public class Generator : IIncrementalGenerator
         }
     }
 
-    static string GenerateSource(IEnumerable<string> files, MsBuildProperties properties, Cancel cancel)
+    static string GenerateSource(IEnumerable<ProjectItem> files, MsBuildProperties properties, Cancel cancel)
     {
         var (tree, rootFiles) = BuildFileTree(files, cancel);
         var builder = new StringBuilder();
@@ -226,13 +250,10 @@ public class Generator : IIncrementalGenerator
         }
 
         // Generate root-level file properties
-        foreach (var filePath in rootFiles.OrderBy(_ => _))
+        foreach (var item in rootFiles.OrderBy(_ => _.Path))
         {
             cancel.ThrowIfCancellationRequested();
-            var propertyName = ToFilePropertyName(filePath);
-            var path = PathToCSharp(filePath);
-
-            builder.AppendLine($$"""        public static ProjectFile {{propertyName}} { get; } = new({{path}});""");
+            builder.AppendLine(FilePropertyDeclaration("        ", isStatic: true, item));
         }
 
         if (rootFiles.Count > 0 &&
@@ -364,13 +385,33 @@ public class Generator : IIncrementalGenerator
         }
 
         // Generate file properties
-        foreach (var filePath in node.Files.OrderBy(_ => _))
+        foreach (var item in node.Files.OrderBy(_ => _.Path))
         {
-            var propertyName = ToFilePropertyName(filePath);
-            var path = PathToCSharp(filePath);
-
-            builder.AppendLine($$"""{{indent}}public ProjectFile {{propertyName}} { get; } = new({{path}});""");
+            builder.AppendLine(FilePropertyDeclaration(indent, isStatic: false, item));
         }
+    }
+
+    static string FilePropertyDeclaration(string indent, bool isStatic, ProjectItem item)
+    {
+        var propertyName = ToFilePropertyName(item.Path);
+        var staticModifier = isStatic ? "static " : "";
+
+        if (item.IsEmbeddedResource)
+        {
+            var name = StringToCSharp(item.ResourceName!);
+            return $$"""{{indent}}public {{staticModifier}}EmbeddedResource {{propertyName}} { get; } = new({{name}});""";
+        }
+
+        var path = PathToCSharp(item.Path);
+        return $$"""{{indent}}public {{staticModifier}}ProjectFile {{propertyName}} { get; } = new({{path}});""";
+    }
+
+    static string StringToCSharp(string value)
+    {
+        var escaped = value
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"");
+        return $"\"{escaped}\"";
     }
 
     static string PathToCSharp(string filePath)
@@ -403,21 +444,22 @@ public class Generator : IIncrementalGenerator
         return propertyName;
     }
 
-    static (IReadOnlyCollection<DirectoryNode> Directories, List<string> RootFiles) BuildFileTree(IEnumerable<string> files, Cancel cancel)
+    static (IReadOnlyCollection<DirectoryNode> Directories, List<ProjectItem> RootFiles) BuildFileTree(IEnumerable<ProjectItem> files, Cancel cancel)
     {
         var topLevelDirectories = new Dictionary<string, DirectoryNode>();
-        var rootFiles = new List<string>();
+        var rootFiles = new List<ProjectItem>();
 
-        foreach (var file in files)
+        foreach (var item in files)
         {
             cancel.ThrowIfCancellationRequested();
 
+            var file = item.Path;
             var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
             // Handle files at the root of the project
             if (parts.Length < 2)
             {
-                rootFiles.Add(file);
+                rootFiles.Add(item);
                 continue;
             }
 
@@ -457,7 +499,7 @@ public class Generator : IIncrementalGenerator
             }
 
             // Add file to current directory
-            current.Files.Add(file);
+            current.Files.Add(item);
         }
 
         return (topLevelDirectories.Values, rootFiles);

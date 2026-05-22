@@ -63,4 +63,23 @@ public class ComsumeTests
         IsTrue(File.Exists(ProjectFiles.RecursiveDirectory.SubDir.NestedFile_txt));
         IsTrue(File.Exists(ProjectFiles.Config.appsettings_json));
     }
+
+    [Test]
+    public void EmbeddedResource()
+    {
+        var resource = ProjectFiles.Resources.embedded_txt;
+        AreEqual("ConsumingTests.Resources.embedded.txt", resource.Name);
+        AreEqual("embedded content", resource.ReadAllText().Trim());
+
+        using var stream = resource.OpenRead();
+        IsNotNull(stream);
+    }
+
+    [Test]
+    public void NestedEmbeddedResource()
+    {
+        var resource = ProjectFiles.Resources.Nested.nested_json;
+        AreEqual("ConsumingTests.Resources.Nested.nested.json", resource.Name);
+        IsTrue(resource.ReadAllText().Contains("nested"));
+    }
 }

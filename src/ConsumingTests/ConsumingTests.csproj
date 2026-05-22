@@ -61,7 +61,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  
+
+  <!-- Example embedded resources -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\embedded.txt" />
+    <EmbeddedResource Include="Resources\Nested\nested.json" />
+  </ItemGroup>
+
   <Import Project="$(ProjectDir)..\ProjectFiles\buildTransitive\ProjectFiles.props" />
 
 </Project>

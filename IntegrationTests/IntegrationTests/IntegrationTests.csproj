@@ -59,4 +59,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <!-- Example embedded resource -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\embedded.txt" />
+  </ItemGroup>
 </Project>

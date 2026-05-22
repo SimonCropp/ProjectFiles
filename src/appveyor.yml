@@ -8,10 +8,13 @@ build_script:
 - pwsh: ./dotnet-install.ps1 -JSonFile src/global.json -Architecture x64 -InstallDir 'C:\Program Files\dotnet'
 - dotnet build src --configuration Release
 - dotnet build IntegrationTests --configuration Release
+# NugetTests consumes the locally-packed nuget, so build it after src has been packed
+- dotnet build src/NugetTests/NugetTests.csproj --configuration Release
 # Test project-level build without $(SolutionDir)
 - dotnet build src/ConsumingTests/ConsumingTests.csproj --configuration Release --force
 - dotnet test src --configuration Release --no-build --no-restore --logger:trx --results-directory TestResults
 - dotnet test IntegrationTests --configuration Release --no-build --no-restore --logger:trx --results-directory TestResults
+- dotnet test src/NugetTests/NugetTests.csproj --configuration Release --no-build --no-restore --logger:trx --results-directory TestResults
 - dotnet test src/ConsumingTests/ConsumingTests.csproj --configuration Release --no-build --no-restore --logger:trx --results-directory TestResults
 on_finish:
 - ps: |
