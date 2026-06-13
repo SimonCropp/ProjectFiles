@@ -63,6 +63,16 @@ public class ComsumeTests
     }
 
     [Test]
+    public void AddOperators()
+    {
+        AreEqual("RecursiveDirectory/SomeFile.txt", ProjectFiles.RecursiveDirectory + "SomeFile.txt");
+        IsTrue(File.Exists(ProjectFiles.RecursiveDirectory + "SomeFile.txt"));
+        IsTrue(File.Exists(ProjectFiles.ProjectDirectory + ProjectFiles.RecursiveDirectory.SomeFile_txt));
+        IsTrue(Directory.Exists(ProjectFiles.ProjectDirectory + ProjectFiles.RecursiveDirectory));
+        AreEqual("Prefix/RecursiveDirectory/SomeFile.txt", ("Prefix" + ProjectFiles.RecursiveDirectory.SomeFile_txt).Path);
+    }
+
+    [Test]
     public void EmbeddedResource()
     {
         var resource = ProjectFiles.Resources.embedded_txt;

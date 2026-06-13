@@ -19,6 +19,15 @@ partial class ProjectFile(string path)
     public static implicit operator FileInfo(ProjectFile temp) =>
         new(temp.Path);
 
+    public static string operator +(ProjectFile file, string suffix) =>
+        ProjectDirectory.JoinPaths(file.Path, suffix);
+
+    public static ProjectFile operator +(string prefix, ProjectFile file) =>
+        new(ProjectDirectory.JoinPaths(prefix, file.Path));
+
+    public static ProjectFile operator +(ProjectFile prefix, ProjectFile suffix) =>
+        new(ProjectDirectory.JoinPaths(prefix.Path, suffix.Path));
+
     public FileStream OpenRead() =>
         File.OpenRead(Path);
 
