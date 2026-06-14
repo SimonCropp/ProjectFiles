@@ -474,7 +474,11 @@ public class GeneratorTest
             ["build_property.SolutionPath"] = "/home/user/projects/mysolution.sln"
         };
 
-        return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
+        // On Windows, resolving the driveless unix path prepends the current drive (D: locally, C: on CI).
+        // Scrub it so the snapshot is machine independent.
+        var settings = new VerifySettings();
+        settings.ScrubLinesWithReplace(_ => Regex.Replace(_, "[A-Za-z]:/home/user", "/home/user"));
+        return Verify(RunGenerator(additionalFiles, metadata, globalOptions), settings);
     }
 
     [Test]
