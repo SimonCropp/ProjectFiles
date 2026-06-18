@@ -65,7 +65,7 @@ public class ComsumeTests
     [Test]
     public void AddOperators()
     {
-        AreEqual("RecursiveDirectory/SomeFile.txt", ProjectFiles.RecursiveDirectory + "SomeFile.txt");
+        AreEqual("RecursiveDirectory/SomeFile.txt", (ProjectFiles.RecursiveDirectory + "SomeFile.txt").Path);
         IsTrue(File.Exists(ProjectFiles.RecursiveDirectory + "SomeFile.txt"));
         IsTrue(File.Exists(ProjectFiles.ProjectDirectory + ProjectFiles.RecursiveDirectory.SomeFile_txt));
         IsTrue(Directory.Exists(ProjectFiles.ProjectDirectory + ProjectFiles.RecursiveDirectory));
