@@ -17,8 +17,8 @@ partial class ProjectDirectory(string path)
     public static implicit operator FileInfo(ProjectDirectory temp) =>
         new(temp.Path);
 
-    public static string operator +(ProjectDirectory directory, string suffix) =>
-        JoinPaths(directory.Path, suffix);
+    public static ProjectDirectory operator +(ProjectDirectory directory, string suffix) =>
+        new(JoinPaths(directory.Path, suffix));
 
     public static ProjectDirectory operator +(string prefix, ProjectDirectory directory) =>
         new(JoinPaths(prefix, directory.Path));
@@ -28,9 +28,6 @@ partial class ProjectDirectory(string path)
 
     public static ProjectFile operator +(ProjectDirectory directory, ProjectFile file) =>
         new(JoinPaths(directory.Path, file.Path));
-
-    public static ProjectDirectory operator +(ProjectFile file, ProjectDirectory directory) =>
-        new(JoinPaths(file.Path, directory.Path));
 
     internal static string JoinPaths(string left, string right)
     {
