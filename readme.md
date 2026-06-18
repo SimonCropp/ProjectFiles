@@ -534,8 +534,8 @@ partial class ProjectDirectory(string path)
     public static implicit operator FileInfo(ProjectDirectory temp) =>
         new(temp.Path);
 
-    public static string operator +(ProjectDirectory directory, string suffix) =>
-        JoinPaths(directory.Path, suffix);
+    public static ProjectDirectory operator +(ProjectDirectory directory, string suffix) =>
+        new(JoinPaths(directory.Path, suffix));
 
     public static ProjectDirectory operator +(string prefix, ProjectDirectory directory) =>
         new(JoinPaths(prefix, directory.Path));
@@ -545,9 +545,6 @@ partial class ProjectDirectory(string path)
 
     public static ProjectFile operator +(ProjectDirectory directory, ProjectFile file) =>
         new(JoinPaths(directory.Path, file.Path));
-
-    public static ProjectDirectory operator +(ProjectFile file, ProjectDirectory directory) =>
-        new(JoinPaths(file.Path, directory.Path));
 
     internal static string JoinPaths(string left, string right)
     {
@@ -592,7 +589,7 @@ partial class ProjectDirectory(string path)
     public DirectoryInfo Info => new(Path);
 }
 ```
-<sup><a href='/src/Templates/ProjectDirectory.cs#L1-L76' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectDirectory.cs' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Templates/ProjectDirectory.cs#L1-L73' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectDirectory.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
@@ -624,14 +621,8 @@ partial class ProjectFile(string path)
     public static implicit operator FileInfo(ProjectFile temp) =>
         new(temp.Path);
 
-    public static string operator +(ProjectFile file, string suffix) =>
-        ProjectDirectory.JoinPaths(file.Path, suffix);
-
     public static ProjectFile operator +(string prefix, ProjectFile file) =>
         new(ProjectDirectory.JoinPaths(prefix, file.Path));
-
-    public static ProjectFile operator +(ProjectFile prefix, ProjectFile suffix) =>
-        new(ProjectDirectory.JoinPaths(prefix.Path, suffix.Path));
 
     public FileStream OpenRead() =>
         File.OpenRead(Path);
@@ -662,7 +653,7 @@ partial class ProjectFile(string path)
 #endif
 }
 ```
-<sup><a href='/src/Templates/ProjectFile.cs#L1-L58' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectFile.cs' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Templates/ProjectFile.cs#L1-L52' title='Snippet source file'>snippet source</a> | <a href='#snippet-ProjectFile.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
@@ -741,7 +732,7 @@ partial class EmbeddedResource(string name)
 
 ### Combining paths
 
-`ProjectDirectory`, `ProjectFile`, and `string` values can be combined with the `+` operator. The two paths are joined with a single `/` separator at the boundary (an existing trailing or leading separator is respected). The right operand determines the result type: combining with a `ProjectFile` produces a `ProjectFile`, with a `ProjectDirectory` produces a `ProjectDirectory`, and with a `string` produces a `string`.
+A parent path (a `ProjectDirectory` or a `string`) can be combined with a relative child (a `string`, `ProjectDirectory`, or `ProjectFile`) using the `+` operator. The two paths are joined with a single `/` separator at the boundary (an existing trailing or leading separator is respected). The result type follows the child: combining with a `ProjectFile` produces a `ProjectFile`, otherwise the result is a `ProjectDirectory`. A `ProjectFile` cannot be the left operand, since a file has no children.
 
 <!-- snippet: AddOperators -->
 <a id='snippet-AddOperators'></a>
@@ -751,7 +742,7 @@ public void Combinations()
 {
     // ProjectDirectory + string
     var fileInDirectory = ProjectFiles.RecursiveDirectory + "SomeFile.txt";
-    AreEqual("RecursiveDirectory/SomeFile.txt", fileInDirectory);
+    AreEqual("RecursiveDirectory/SomeFile.txt", fileInDirectory.Path);
     IsTrue(File.Exists(fileInDirectory));
 
     // string + ProjectDirectory
@@ -766,24 +757,12 @@ public void Combinations()
     var fileInProject = ProjectFiles.ProjectDirectory + ProjectFiles.fileAtRoot_txt;
     IsTrue(File.Exists(fileInProject), fileInProject.Path);
 
-    // ProjectFile + string
-    var suffixedFile = ProjectFiles.RecursiveDirectory.SomeFile_txt + "Suffix.txt";
-    AreEqual("RecursiveDirectory/SomeFile.txt/Suffix.txt", suffixedFile);
-
     // string + ProjectFile
     var prefixedFile = "Prefix" + ProjectFiles.RecursiveDirectory.SomeFile_txt;
     AreEqual("Prefix/RecursiveDirectory/SomeFile.txt", prefixedFile.Path);
-
-    // ProjectFile + ProjectDirectory
-    var fileThenDirectory = ProjectFiles.fileAtRoot_txt + ProjectFiles.RecursiveDirectory;
-    AreEqual("fileAtRoot.txt/RecursiveDirectory", fileThenDirectory.Path);
-
-    // ProjectFile + ProjectFile
-    var fileThenFile = ProjectFiles.fileAtRoot_txt + ProjectFiles.globFileAtRoot_txt;
-    AreEqual("fileAtRoot.txt/globFileAtRoot.txt", fileThenFile.Path);
 }
 ```
-<sup><a href='/src/ConsumingTests/AddOperatorTests.cs#L4-L41' title='Snippet source file'>snippet source</a> | <a href='#snippet-AddOperators' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/ConsumingTests/AddOperatorTests.cs#L4-L29' title='Snippet source file'>snippet source</a> | <a href='#snippet-AddOperators' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 

@@ -7,7 +7,7 @@ public class AddOperatorTests
     {
         // ProjectDirectory + string
         var fileInDirectory = ProjectFiles.RecursiveDirectory + "SomeFile.txt";
-        AreEqual("RecursiveDirectory/SomeFile.txt", fileInDirectory);
+        AreEqual("RecursiveDirectory/SomeFile.txt", fileInDirectory.Path);
         IsTrue(File.Exists(fileInDirectory));
 
         // string + ProjectDirectory
@@ -22,21 +22,9 @@ public class AddOperatorTests
         var fileInProject = ProjectFiles.ProjectDirectory + ProjectFiles.fileAtRoot_txt;
         IsTrue(File.Exists(fileInProject), fileInProject.Path);
 
-        // ProjectFile + string
-        var suffixedFile = ProjectFiles.RecursiveDirectory.SomeFile_txt + "Suffix.txt";
-        AreEqual("RecursiveDirectory/SomeFile.txt/Suffix.txt", suffixedFile);
-
         // string + ProjectFile
         var prefixedFile = "Prefix" + ProjectFiles.RecursiveDirectory.SomeFile_txt;
         AreEqual("Prefix/RecursiveDirectory/SomeFile.txt", prefixedFile.Path);
-
-        // ProjectFile + ProjectDirectory
-        var fileThenDirectory = ProjectFiles.fileAtRoot_txt + ProjectFiles.RecursiveDirectory;
-        AreEqual("fileAtRoot.txt/RecursiveDirectory", fileThenDirectory.Path);
-
-        // ProjectFile + ProjectFile
-        var fileThenFile = ProjectFiles.fileAtRoot_txt + ProjectFiles.globFileAtRoot_txt;
-        AreEqual("fileAtRoot.txt/globFileAtRoot.txt", fileThenFile.Path);
     }
     // end-snippet
 
