@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <NoWarn>CS1591;NU1608;NU1109;RS2008;RS1041</NoWarn>
+    <NoWarn>CS1591;NU1608;NU1109;RS2008;RS1041;SC023</NoWarn>
     <Version>1.4.0</Version>
     <LangVersion>preview</LangVersion>
     <AssemblyVersion>$(Version)</AssemblyVersion>
@@ -10,5 +10,6 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
     <Description>A C# source generator that provides strongly-typed, compile-time access to project files marked with CopyToOutputDirectory in the .csproj file.</Description>
+    <Verify_SponsorshipLicenseIgnored>true</Verify_SponsorshipLicenseIgnored>
   </PropertyGroup>
 </Project>
