@@ -15,7 +15,7 @@
     <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" Condition="'$(CI)' == 'true'" />
+    <PackageReference Include="Sbom" PrivateAssets="all" />
     <EmbeddedResource Include="..\Templates\ProjectDirectory.cs"/>
     <EmbeddedResource Include="..\Templates\ProjectFile.cs"/>
     <EmbeddedResource Include="..\Templates\EmbeddedResource.cs"/>
