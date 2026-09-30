@@ -8,4 +8,3 @@ global using Microsoft.CodeAnalysis.Text;
 global using NUnit.Framework;
 global using ProjectFiles;
 global using VerifyTests;
-global using VerifyTests.DiffPlex;
