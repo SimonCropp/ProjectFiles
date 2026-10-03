@@ -152,13 +152,13 @@ Properties are only generated when their corresponding MSBuild values are availa
 
 ### Reserved Names
 
-To prevent conflicts, dont use these reserved names for root-level files or directories:
+A root-level file or directory conflicts when the property it generates has one of these names: `ProjectDirectory`, `ProjectFile`, `SolutionDirectory`, `SolutionFile`, `GitRepoDirectory`. For a file that means a file with no extension, since `ProjectFile.json` generates `ProjectFile_json`.
 
 ❌ **Invalid** - Will cause build errors:
 ```xml
 <ItemGroup>
-  <!-- ERROR: Root-level file conflicts with ProjectDirectory property -->
-  <None Include="ProjectDirectory.txt">
+  <!-- ERROR: Root-level file with no extension conflicts with ProjectDirectory property -->
+  <None Include="ProjectDirectory">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
   
@@ -177,8 +177,8 @@ To prevent conflicts, dont use these reserved names for root-level files or dire
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
   
-  <!-- OK: Different root-level name -->
-  <None Include="MyProjectDir.txt">
+  <!-- OK: generates ProjectDirectory_txt -->
+  <None Include="ProjectDirectory.txt">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
 </ItemGroup>
@@ -718,24 +718,44 @@ partial class EmbeddedResource(string name)
     public byte[] ReadAllBytes()
     {
         using var stream = OpenRead();
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
-        return memory.ToArray();
+
+        if (!stream.CanSeek)
+        {
+            using var memory = new MemoryStream();
+            stream.CopyTo(memory);
+            return memory.ToArray();
+        }
+
+        // The length is known, so read straight into a single array of the right size
+        var bytes = new byte[stream.Length];
+        var offset = 0;
+        while (offset < bytes.Length)
+        {
+            var read = stream.Read(bytes, offset, bytes.Length - offset);
+            if (read == 0)
+            {
+                throw new EndOfStreamException($"Embedded resource '{Name}' ended before its reported length.");
+            }
+
+            offset += read;
+        }
+
+        return bytes;
     }
 
     public async Task<string> ReadAllTextAsync(CancellationToken cancel = default)
     {
         using var reader = OpenText();
 #if NET7_0_OR_GREATER
-        return await reader.ReadToEndAsync(cancel);
+        return await reader.ReadToEndAsync(cancel).ConfigureAwait(false);
 #else
         cancel.ThrowIfCancellationRequested();
-        return await reader.ReadToEndAsync();
+        return await reader.ReadToEndAsync().ConfigureAwait(false);
 #endif
     }
 }
 ```
-<sup><a href='/src/Templates/EmbeddedResource.cs#L1-L61' title='Snippet source file'>snippet source</a> | <a href='#snippet-EmbeddedResource.cs' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Templates/EmbeddedResource.cs#L1-L81' title='Snippet source file'>snippet source</a> | <a href='#snippet-EmbeddedResource.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 

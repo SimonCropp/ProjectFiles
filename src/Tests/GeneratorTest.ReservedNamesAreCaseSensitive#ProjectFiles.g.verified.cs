@@ -11,6 +11,8 @@ namespace ProjectFilesGenerator
     {
         public static ProjectDirectory ProjectDirectory { get; } = new("C:/Projects/MyApp/");
         public static ProjectFile ProjectFile { get; } = new("C:/Projects/MyApp/foo.csproj");
+
+        public static ProjectFile projectdirectory_txt { get; } = new("projectdirectory.txt");
     }
 }
 

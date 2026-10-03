@@ -10,8 +10,8 @@ namespace ProjectFilesGenerator
     static partial class ProjectFiles
     {
         public static ProjectFile appsettings_Development_json { get; } = new("appsettings.Development.json");
-        public static ProjectFile appsettings_json { get; } = new("appsettings.json");
         public static ProjectFile appsettings_Production_json { get; } = new("appsettings.Production.json");
+        public static ProjectFile appsettings_json { get; } = new("appsettings.json");
     }
 }
 

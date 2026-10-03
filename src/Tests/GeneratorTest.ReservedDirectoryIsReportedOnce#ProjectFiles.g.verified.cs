@@ -9,9 +9,7 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     static partial class ProjectFiles
     {
-        public static ProjectFile Dockerfile_linux_arm64 { get; } = new("Dockerfile.linux-arm64");
-        public static ProjectFile backup_txt_ { get; } = new("backup.txt~");
-        public static ProjectFile notes_c__ { get; } = new("notes.c++");
+        public static ProjectFile valid_txt { get; } = new("valid.txt");
     }
 }
 

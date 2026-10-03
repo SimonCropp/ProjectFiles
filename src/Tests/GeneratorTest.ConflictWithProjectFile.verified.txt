@@ -1,7 +1,7 @@
 ﻿{
   Diagnostics: [
     {
-      Message: File 'ProjectFile.json' would generate property name 'ProjectFile' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
+      Message: File 'ProjectFile' would generate property name 'ProjectFile' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
       Severity: Error,
       Descriptor: {
         Id: PROJFILES001,

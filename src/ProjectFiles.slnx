@@ -8,6 +8,7 @@
     <File Path="../global.json" />
     <File Path="mdsnippets.json" />
   </Folder>
+  <Project Path="Benchmarks/Benchmarks.csproj" />
   <Project Path="Templates/Templates.csproj" />
   <Project Path="Tests/Tests.csproj" />
   <Project Path="ConsumingTests/ConsumingTests.csproj" />

@@ -96,15 +96,24 @@ public class Generator : IIncrementalGenerator
                 }
 
                 var conflictingFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var conflictingDirectories = new List<string>();
 
                 foreach (var conflict in FindReservedNameConflicts(fileList))
                 {
-                    conflictingFiles.Add(conflict.FilePath);
+                    if (conflict.IsDirectory)
+                    {
+                        conflictingDirectories.Add($"{conflict.Path}/");
+                    }
+                    else
+                    {
+                        conflictingFiles.Add(conflict.Path);
+                    }
+
                     var descriptor = conflict.IsDirectory ? Diagnostics.ReservedDirectoryNameConflict : Diagnostics.ReservedFileNameConflict;
                     var diagnostic = Diagnostic.Create(
                         descriptor,
                         Location.None,
-                        conflict.FilePath,
+                        conflict.Path,
                         conflict.PropertyName);
                     context.ReportDiagnostic(diagnostic);
                 }
@@ -121,8 +130,6 @@ public class Generator : IIncrementalGenerator
                         conflict.PropertyName);
                     context.ReportDiagnostic(diagnostic);
                 }
-
-                var conflictingDirectories = new List<string>();
 
                 foreach (var conflict in FindMemberNameConflicts(fileList))
                 {
@@ -182,7 +189,7 @@ public class Generator : IIncrementalGenerator
     static string NormalizeSeparators(string path) =>
         path.Replace('\\', '/');
 
-    static HashSet<string> reservedNames = new(StringComparer.OrdinalIgnoreCase)
+    static HashSet<string> reservedNames = new(StringComparer.Ordinal)
     {
         "ProjectDirectory",
         "ProjectFile",
@@ -193,28 +200,35 @@ public class Generator : IIncrementalGenerator
 
     static IEnumerable<ReservedNameConflict> FindReservedNameConflicts(ImmutableArray<ProjectItem> files)
     {
+        // a directory is reported once, however many files it contains
+        var reportedDirectories = new HashSet<string>();
+
         foreach (var item in files)
         {
             var file = item.Path;
-            var parts = file.Split('/');
+            var separator = file.IndexOf('/');
 
-            if (parts.Length <= 0)
+            // A file at the root: only a clash when the generated property is a reserved name,
+            // eg a file named "ProjectFile". "ProjectFile.json" generates ProjectFile_json.
+            if (separator == -1)
             {
+                var propertyName = ToFilePropertyName(file);
+                if (reservedNames.Contains(propertyName))
+                {
+                    yield return new(file, propertyName, IsDirectory: false);
+                }
+
                 continue;
             }
 
-            var rootName = parts[0];
-            var nameWithoutExtension = Path.GetFileNameWithoutExtension(rootName);
-            var propertyName = Identifier.Build(nameWithoutExtension);
+            var directory = file.Substring(0, separator);
+            var directoryPropertyName = Identifier.Build(directory);
 
-            if (!reservedNames.Contains(propertyName))
+            if (reservedNames.Contains(directoryPropertyName) &&
+                reportedDirectories.Add(directory))
             {
-                continue;
+                yield return new(directory, directoryPropertyName, IsDirectory: true);
             }
-
-            // It's a directory if there are more path parts (subdirectories or files within)
-            var isDirectory = parts.Length > 1;
-            yield return new(file, propertyName, isDirectory);
         }
     }
 
@@ -398,7 +412,7 @@ public class Generator : IIncrementalGenerator
         }
 
         // Generate root-level file properties
-        foreach (var item in rootFiles.OrderBy(_ => _.Path))
+        foreach (var item in rootFiles.OrderBy(_ => _.Path, StringComparer.Ordinal))
         {
             cancel.ThrowIfCancellationRequested();
             builder.AppendLine(FilePropertyDeclaration("        ", isStatic: true, item));
@@ -473,7 +487,7 @@ public class Generator : IIncrementalGenerator
 
     static void GenerateRootProperties(StringBuilder builder, IReadOnlyCollection<DirectoryNode> topLevelNodes, Cancel cancel)
     {
-        foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
+        foreach (var node in topLevelNodes.OrderBy(_ => _.Path, StringComparer.Ordinal))
         {
             cancel.ThrowIfCancellationRequested();
 
@@ -487,7 +501,7 @@ public class Generator : IIncrementalGenerator
     {
         var indent = new string(' ', indentCount * 4);
 
-        foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
+        foreach (var node in topLevelNodes.OrderBy(_ => _.Path, StringComparer.Ordinal))
         {
             cancel.ThrowIfCancellationRequested();
 
@@ -513,7 +527,7 @@ public class Generator : IIncrementalGenerator
         var parentClassName = Identifier.Build(Path.GetFileName(node.Path));
 
         // Generate subdirectory properties first
-        foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key))
+        foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key, StringComparer.Ordinal))
         {
             cancel.ThrowIfCancellationRequested();
 
@@ -546,7 +560,7 @@ public class Generator : IIncrementalGenerator
         }
 
         // Generate file properties
-        foreach (var item in node.Files.OrderBy(_ => _.Path))
+        foreach (var item in node.Files.OrderBy(_ => _.Path, StringComparer.Ordinal))
         {
             builder.AppendLine(FilePropertyDeclaration(indent, isStatic: false, item));
         }

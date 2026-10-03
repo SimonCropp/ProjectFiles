@@ -486,14 +486,14 @@ public class GeneratorTest
     {
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectDirectory.txt", "content")
+            CreateAdditionalText("ProjectDirectory", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectDirectory.txt"] = new()
+            ["ProjectDirectory"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory"
             }
         };
 
@@ -510,14 +510,14 @@ public class GeneratorTest
     {
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectFile.json", "content")
+            CreateAdditionalText("ProjectFile", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectFile.json"] = new()
+            ["ProjectFile"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile.json"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile"
             }
         };
 
@@ -560,7 +560,7 @@ public class GeneratorTest
         var additionalFiles = new[]
         {
             // File conflict
-            CreateAdditionalText("ProjectFile.txt", "content"),
+            CreateAdditionalText("ProjectFile", "content"),
             // Directory conflict
             CreateAdditionalText("SolutionDirectory/config.json", "content"),
             // Valid file
@@ -569,9 +569,9 @@ public class GeneratorTest
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectFile.txt"] = new()
+            ["ProjectFile"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile.txt"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile"
             },
             ["SolutionDirectory/config.json"] = new()
             {
@@ -597,14 +597,14 @@ public class GeneratorTest
     {
         var additionalFiles = new[]
         {
-            CreateAdditionalText("SolutionFile.xml", "content")
+            CreateAdditionalText("SolutionFile", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["SolutionFile.xml"] = new()
+            ["SolutionFile"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile.xml"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile"
             }
         };
 
@@ -621,19 +621,19 @@ public class GeneratorTest
     {
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectDirectory.txt", "content"),
-            CreateAdditionalText("SolutionFile.json", "content")
+            CreateAdditionalText("ProjectDirectory", "content"),
+            CreateAdditionalText("SolutionFile", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectDirectory.txt"] = new()
+            ["ProjectDirectory"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory"
             },
-            ["SolutionFile.json"] = new()
+            ["SolutionFile"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile.json"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile"
             }
         };
 
@@ -653,14 +653,14 @@ public class GeneratorTest
         // This test should report a conflict
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectDirectory.json", "content")
+            CreateAdditionalText("ProjectDirectory", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectDirectory.json"] = new()
+            ["ProjectDirectory"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.json"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory"
             }
         };
 
@@ -693,7 +693,7 @@ public class GeneratorTest
     }
 
     [Test]
-    public Task ConflictCaseInsensitive()
+    public Task ReservedNamesAreCaseSensitive()
     {
         var additionalFiles = new[]
         {
@@ -722,16 +722,16 @@ public class GeneratorTest
         // When there's a conflict, the conflicting file should be excluded but other files should still generate
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectDirectory.txt", "content"),
+            CreateAdditionalText("ProjectDirectory", "content"),
             CreateAdditionalText("appsettings.json", "content"),
             CreateAdditionalText("Config/database.json", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectDirectory.txt"] = new()
+            ["ProjectDirectory"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory"
             },
             ["appsettings.json"] = new()
             {
@@ -1904,6 +1904,15 @@ public class GeneratorTest
     public Task MembersHidingInheritedMembers() =>
         // directories and files named like members of ProjectDirectory or object get the new modifier
         Verify(RunGeneratorForFiles("Docs/Path/a.txt", "Docs/Info/b.txt", "Docs/Sub/Path/c.txt", "Docs/ToString", "ToString/d.txt", "Equals"));
+
+    [Test]
+    public Task ReservedNameWithExtensionIsNotAConflict() =>
+        // these generate ProjectFile_json, SolutionFile_xml and SolutionFile_Backup, none of which is reserved
+        Verify(RunGeneratorForFiles("ProjectFile.json", "SolutionFile.xml", "SolutionFile.Backup/a.txt"));
+
+    [Test]
+    public Task ReservedDirectoryIsReportedOnce() =>
+        Verify(RunGeneratorForFiles("SolutionDirectory/a.json", "SolutionDirectory/Sub/b.json", "valid.txt"));
 
     static GeneratorDriver RunGeneratorForFiles(params string[] files)
     {
