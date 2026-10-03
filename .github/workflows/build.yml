@@ -22,7 +22,12 @@ env:
 
 jobs:
   build:
-    runs-on: windows-latest
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
     timeout-minutes: 60
     steps:
       - name: Checkout
@@ -32,6 +37,10 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
+          # runtimes for the net8.0 and net9.0 targets of IntegrationTests
+          dotnet-version: |
+            8.0.x
+            9.0.x
 
       # Keyed on everything that decides the package graph. restore-keys lets a changed graph start
       # from the previous cache rather than empty.
@@ -81,9 +90,11 @@ jobs:
       # Framework. The packed analyzer has to load there too, so build the nuget consumer that way.
       # Runs after the tests since it rebuilds the IntegrationTests output.
       - name: Add MSBuild to PATH
+        if: runner.os == 'Windows'
         uses: microsoft/setup-msbuild@v2
 
       - name: Build with .NET Framework MSBuild
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           msbuild -version
@@ -100,13 +111,13 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: received
+          name: received-${{ matrix.os }}
           path: '**/*.received.*'
           if-no-files-found: ignore
           retention-days: 14
 
       - name: Upload packages
-        if: success()
+        if: success() && runner.os == 'Windows'
         uses: actions/upload-artifact@v7
         with:
           name: nupkgs

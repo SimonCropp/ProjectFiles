@@ -50,8 +50,8 @@ public static class SolutionDirectoryFinder
     }
 
     static string? FindSolution(string directory, string extension) =>
-        Directory.EnumerateFiles(directory, $"*{extension}")
-            // the pattern can match longer extensions, eg "*.sln" also matches ".slnx"
+        // No search pattern: outside Windows a pattern is matched case sensitively
+        Directory.EnumerateFiles(directory)
             .Where(_ => _.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
             .OrderBy(_ => _, StringComparer.OrdinalIgnoreCase)
             .FirstOrDefault();

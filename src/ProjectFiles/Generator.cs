@@ -442,8 +442,10 @@ public class Generator : IIncrementalGenerator
 
     static void AppendFile(StringBuilder builder, string file, string prefix)
     {
-        var directory = Directory.GetParent(file)!;
-        var directoryCSharp = PathToCSharp($"{directory.FullName}/");
+        // MSBuild supplies a full path, so the parent is taken from the text. Resolving it against
+        // the file system would make the result depend on the platform and current directory.
+        var directory = Path.GetDirectoryName(file);
+        var directoryCSharp = PathToCSharp($"{directory}/");
         builder.AppendLine($$"""        public static ProjectDirectory {{prefix}}Directory { get; } = new({{directoryCSharp}});""");
         var fileCSharp = PathToCSharp(file);
         builder.AppendLine($$"""        public static ProjectFile {{prefix}}File { get; } = new({{fileCSharp}});""");
