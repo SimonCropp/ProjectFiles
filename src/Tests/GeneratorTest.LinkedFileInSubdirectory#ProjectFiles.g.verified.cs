@@ -18,7 +18,7 @@ namespace ProjectFilesGenerator.Types
 partial class AssetsType() : ProjectDirectory("Assets")
 {
     public ImagesType Images { get; } = new();
-    public partial class ImagesType
+    public partial class ImagesType() : ProjectDirectory("Assets/Images")
     {
         public ProjectFile logo_png { get; } = new("Assets/Images/logo.png");
     }

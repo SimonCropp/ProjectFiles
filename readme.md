@@ -305,7 +305,7 @@ namespace ProjectFilesGenerator.Types
     partial class RecursiveDirectoryType() : ProjectDirectory("RecursiveDirectory")
     {
         public SubDirType SubDir { get; } = new();
-        public partial class SubDirType
+        public partial class SubDirType() : ProjectDirectory("RecursiveDirectory/SubDir")
         {
             public ProjectFile NestedFile_txt { get; } = new("RecursiveDirectory/SubDir/NestedFile.txt");
         }
@@ -316,14 +316,14 @@ namespace ProjectFilesGenerator.Types
     partial class SpecificDirectoryType() : ProjectDirectory("SpecificDirectory")
     {
         public Dir1Type Dir1 { get; } = new();
-        public partial class Dir1Type
+        public partial class Dir1Type() : ProjectDirectory("SpecificDirectory/Dir1")
         {
             public ProjectFile File1_txt { get; } = new("SpecificDirectory/Dir1/File1.txt");
             public ProjectFile File2_txt { get; } = new("SpecificDirectory/Dir1/File2.txt");
         }
 
         public Dir2Type Dir2 { get; } = new();
-        public partial class Dir2Type
+        public partial class Dir2Type() : ProjectDirectory("SpecificDirectory/Dir2")
         {
             public ProjectFile File4_txt { get; } = new("SpecificDirectory/Dir2/File4.txt");
         }

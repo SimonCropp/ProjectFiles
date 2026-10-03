@@ -22,8 +22,8 @@ The throwaway projects lived in a temporary folder and are not part of the repo.
 | [x] | 6 | `SolutionDirectoryFinder` misses or picks the wrong solution | wrong output | generator harness |
 | [ ] | 7 | Analyzer needs Roslyn 5.9 but ships as `roslyn5.0` / `roslyn5.3` | packaging | real build, part inferred |
 | [x] | 8 | File extension is not sanitised | compile break | generator harness |
-| [ ] | 9 | Identifier collisions are not detected | compile break | generator harness, real build |
-| [ ] | 10 | Nested directory types are not `ProjectDirectory` | API | generator harness |
+| [x] | 9 | Identifier collisions are not detected | compile break | generator harness, real build |
+| [x] | 10 | Nested directory types are not `ProjectDirectory` | API | generator harness |
 | [ ] | 11 | `ProjectDirectory` converts implicitly to `FileInfo` | API | inspection |
 | [ ] | 12 | Reserved-name check is broader than needed | diagnostics | generator harness |
 | [x] | 13 | Backslash `Link` produces a different API on Linux | wrong output | real build in Docker |

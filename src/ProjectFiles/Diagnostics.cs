@@ -32,4 +32,12 @@ public static class Diagnostics
         category: "ProjectFiles",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor DuplicateMemberName = new(
+        id: "PROJFILES005",
+        title: "Duplicate member name generated",
+        messageFormat: "'{0}' and '{1}' both generate the same member name '{2}'. Rename one of them to avoid the conflict.",
+        category: "ProjectFiles",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

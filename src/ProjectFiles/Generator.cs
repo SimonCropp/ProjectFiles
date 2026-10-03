@@ -122,9 +122,40 @@ public class Generator : IIncrementalGenerator
                     context.ReportDiagnostic(diagnostic);
                 }
 
+                var conflictingDirectories = new List<string>();
+
+                foreach (var conflict in FindMemberNameConflicts(fileList))
+                {
+                    foreach (var member in new[] {conflict.Existing, conflict.Added})
+                    {
+                        if (member == null)
+                        {
+                            continue;
+                        }
+
+                        if (member.IsFile)
+                        {
+                            conflictingFiles.Add(member.Path);
+                        }
+                        else
+                        {
+                            conflictingDirectories.Add($"{member.Path}/");
+                        }
+                    }
+
+                    var diagnostic = Diagnostic.Create(
+                        Diagnostics.DuplicateMemberName,
+                        Location.None,
+                        conflict.Description,
+                        conflict.Added.Path,
+                        conflict.Name);
+                    context.ReportDiagnostic(diagnostic);
+                }
+
                 // Filter out conflicting files before generating source
                 var filteredFiles = fileList
-                    .Where(_ => !conflictingFiles.Contains(_.Path))
+                    .Where(_ => !conflictingFiles.Contains(_.Path) &&
+                                !conflictingDirectories.Any(directory => _.Path.StartsWith(directory, StringComparison.Ordinal)))
                     .ToList();
 
                 var source = GenerateSource(filteredFiles, props, context.CancellationToken);
@@ -226,6 +257,117 @@ public class Generator : IIncrementalGenerator
             }
         }
     }
+
+    // Finds clashes that FindDuplicatePropertyNames does not cover: a directory against a file,
+    // a directory against another directory, and any member against the type it is declared in.
+    static IEnumerable<MemberNameConflict> FindMemberNameConflicts(ImmutableArray<ProjectItem> files)
+    {
+        // scope (directory path, empty for the root) => member name => what generates it
+        var scopes = new Dictionary<string, Dictionary<string, GeneratedMember?>>();
+        var reported = new HashSet<(string?, string)>();
+
+        foreach (var item in files)
+        {
+            var parts = item.Path.Split('/');
+            var scope = "";
+
+            for (var index = 0; index < parts.Length; index++)
+            {
+                if (!scopes.TryGetValue(scope, out var members))
+                {
+                    members = [];
+                    scopes.Add(scope, members);
+
+                    // member names cannot be the same as their enclosing type
+                    var enclosingType = index == 0 ? "ProjectFiles" : DirectoryTypeName(parts, index - 1);
+                    members.Add(enclosingType, null);
+                }
+
+                var path = scope.Length == 0 ? parts[index] : $"{scope}/{parts[index]}";
+                var isFile = index == parts.Length - 1;
+                var member = new GeneratedMember(path, isFile);
+
+                string[] names = isFile
+                    ? [ToFilePropertyName(path)]
+                    // a directory generates a property and a type
+                    : [Identifier.Build(parts[index]), DirectoryTypeName(parts, index)];
+
+                foreach (var name in names)
+                {
+                    // @class and class are the same identifier
+                    var key = name.TrimStart('@');
+
+                    if (!members.TryGetValue(key, out var existing))
+                    {
+                        members.Add(key, member);
+                        continue;
+                    }
+
+                    // the same directory seen again, or two files (reported as PROJFILES004)
+                    if (existing == member ||
+                        existing is {IsFile: true} && isFile)
+                    {
+                        continue;
+                    }
+
+                    // two directories clash on both the property and the type; report the pair once
+                    if (!reported.Add((existing?.Path, path)))
+                    {
+                        continue;
+                    }
+
+                    var description = existing?.Path ?? $"the enclosing type {key}";
+                    yield return new(description, existing, member, key);
+                }
+
+                scope = path;
+            }
+        }
+    }
+
+    // The name of the type generated for the directory at parts[index]
+    static string DirectoryTypeName(string[] parts, int index)
+    {
+        var name = Identifier.Build(parts[index]);
+
+        // A directory with the same name as its parent gets a depth-based suffix
+        if (index > 0 &&
+            string.Equals(name, Identifier.Build(parts[index - 1]), StringComparison.OrdinalIgnoreCase))
+        {
+            name = $"{name}_Level{index}";
+        }
+
+        return $"{name}Type";
+    }
+
+    // Members every generated type inherits. A file or directory that generates one of these
+    // names hides the inherited member, which needs the "new" modifier to avoid CS0108.
+    static HashSet<string> objectMembers =
+    [
+        "Equals",
+        "GetHashCode",
+        "GetType",
+        "ToString",
+        "MemberwiseClone",
+        "ReferenceEquals",
+        "Finalize"
+    ];
+
+    static HashSet<string> directoryMembers =
+    [
+        ..objectMembers,
+        "Path",
+        "FullPath",
+        "Info",
+        "JoinPaths",
+        "EnumerateDirectories",
+        "EnumerateFiles",
+        "GetFiles",
+        "GetDirectories"
+    ];
+
+    static string NewModifier(HashSet<string> inheritedMembers, string name) =>
+        inheritedMembers.Contains(name.TrimStart('@')) ? "new " : "";
 
     static string GenerateSource(IEnumerable<ProjectItem> files, MsBuildProperties properties, Cancel cancel)
     {
@@ -336,7 +478,8 @@ public class Generator : IIncrementalGenerator
             cancel.ThrowIfCancellationRequested();
 
             var className = Identifier.Build(Path.GetFileName(node.Path));
-            builder.AppendLine($"        public static {className}Type {className} {{ get; }} = new();");
+            var newModifier = NewModifier(objectMembers, className);
+            builder.AppendLine($"        public {newModifier}static {className}Type {className} {{ get; }} = new();");
         }
     }
 
@@ -385,12 +528,14 @@ public class Generator : IIncrementalGenerator
             }
 
             // generate subdirectory property
-            builder.AppendLine($"{indent}public {className}Type {baseClassName} {{ get; }} = new();");
+            var newModifier = NewModifier(directoryMembers, baseClassName);
+            builder.AppendLine($"{indent}public {newModifier}{className}Type {baseClassName} {{ get; }} = new();");
 
             // generate nested type definitions for subdirectory
+            var pathString = PathToCSharp(childNode.Path);
             builder.AppendLine(
                 $$"""
-                  {{indent}}public partial class {{className}}Type
+                  {{indent}}public partial class {{className}}Type() : ProjectDirectory({{pathString}})
                   {{indent}}{
                   """);
 
@@ -411,6 +556,8 @@ public class Generator : IIncrementalGenerator
     {
         var propertyName = ToFilePropertyName(item.Path);
         var staticModifier = isStatic ? "static " : "";
+        // root files are static members of ProjectFiles, the rest are members of a ProjectDirectory
+        staticModifier = NewModifier(isStatic ? objectMembers : directoryMembers, propertyName) + staticModifier;
 
         if (item.IsEmbeddedResource)
         {

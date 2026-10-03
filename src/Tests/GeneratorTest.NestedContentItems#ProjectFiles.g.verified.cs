@@ -18,13 +18,13 @@ namespace ProjectFilesGenerator.Types
 partial class wwwrootType() : ProjectDirectory("wwwroot")
 {
     public assetsType assets { get; } = new();
-    public partial class assetsType
+    public partial class assetsType() : ProjectDirectory("wwwroot/assets")
     {
         public imagesType images { get; } = new();
-        public partial class imagesType
+        public partial class imagesType() : ProjectDirectory("wwwroot/assets/images")
         {
             public iconsType icons { get; } = new();
-            public partial class iconsType
+            public partial class iconsType() : ProjectDirectory("wwwroot/assets/images/icons")
             {
                 public ProjectFile home_svg { get; } = new("wwwroot/assets/images/icons/home.svg");
                 public ProjectFile settings_svg { get; } = new("wwwroot/assets/images/icons/settings.svg");
@@ -34,13 +34,13 @@ partial class wwwrootType() : ProjectDirectory("wwwroot")
         }
 
         public scriptsType scripts { get; } = new();
-        public partial class scriptsType
+        public partial class scriptsType() : ProjectDirectory("wwwroot/assets/scripts")
         {
             public ProjectFile app_js { get; } = new("wwwroot/assets/scripts/app.js");
         }
 
         public stylesType styles { get; } = new();
-        public partial class stylesType
+        public partial class stylesType() : ProjectDirectory("wwwroot/assets/styles")
         {
             public ProjectFile main_css { get; } = new("wwwroot/assets/styles/main.css");
         }

@@ -1876,6 +1876,51 @@ public class GeneratorTest
         return Verify(RunGenerator(additionalFiles, metadata));
     }
 
+    [Test]
+    public Task ConflictBetweenDirectoryAndFile() =>
+        Verify(RunGeneratorForFiles("config_json/inner.txt", "config.json", "valid.txt"));
+
+    [Test]
+    public Task ConflictBetweenDirectories() =>
+        Verify(RunGeneratorForFiles("my-dir/a.txt", "my_dir/b.txt", "valid.txt"));
+
+    [Test]
+    public Task ConflictBetweenNestedDirectories() =>
+        Verify(RunGeneratorForFiles("Top/v1.0/a.txt", "Top/v1_0/b.txt", "Top/valid.txt"));
+
+    [Test]
+    public Task ConflictBetweenDirectoryAndSiblingDirectoryType() =>
+        Verify(RunGeneratorForFiles("Foo/a.txt", "FooType/b.txt"));
+
+    [Test]
+    public Task RootDirectoryNamedProjectFiles() =>
+        Verify(RunGeneratorForFiles("ProjectFiles/a.txt", "valid.txt"));
+
+    [Test]
+    public Task FileNamedAsEnclosingType() =>
+        Verify(RunGeneratorForFiles("Config/ConfigType", "Config/valid.json"));
+
+    [Test]
+    public Task MembersHidingInheritedMembers() =>
+        // directories and files named like members of ProjectDirectory or object get the new modifier
+        Verify(RunGeneratorForFiles("Docs/Path/a.txt", "Docs/Info/b.txt", "Docs/Sub/Path/c.txt", "Docs/ToString", "ToString/d.txt", "Equals"));
+
+    static GeneratorDriver RunGeneratorForFiles(params string[] files)
+    {
+        var additionalFiles = files
+            .Select(_ => CreateAdditionalText(_, "content"))
+            .ToArray();
+
+        var metadata = files.ToDictionary(
+            _ => _,
+            _ => new Dictionary<string, string>
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = _
+            });
+
+        return RunGenerator(additionalFiles, metadata);
+    }
+
     static Dictionary<string, string> EmbeddedMetadata(string relativePath, string resourceName) =>
         new()
         {

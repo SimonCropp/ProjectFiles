@@ -18,10 +18,10 @@ namespace ProjectFilesGenerator.Types
 partial class TemplatesType() : ProjectDirectory("Templates")
 {
     public InvoiceType Invoice { get; } = new();
-    public partial class InvoiceType
+    public partial class InvoiceType() : ProjectDirectory("Templates/Invoice")
     {
         public StylesType Styles { get; } = new();
-        public partial class StylesType
+        public partial class StylesType() : ProjectDirectory("Templates/Invoice/Styles")
         {
             public ProjectFile invoice_css { get; } = new("Templates/Invoice/Styles/invoice.css");
         }
@@ -30,7 +30,7 @@ partial class TemplatesType() : ProjectDirectory("Templates")
     }
 
     public ReceiptType Receipt { get; } = new();
-    public partial class ReceiptType
+    public partial class ReceiptType() : ProjectDirectory("Templates/Receipt")
     {
         public ProjectFile receipt_html { get; } = new("Templates/Receipt/receipt.html");
     }

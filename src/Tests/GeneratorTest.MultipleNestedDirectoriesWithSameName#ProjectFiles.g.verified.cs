@@ -20,10 +20,10 @@ namespace ProjectFilesGenerator.Types
 partial class ConfigType() : ProjectDirectory("Config")
 {
     public Config_Level1Type Config { get; } = new();
-    public partial class Config_Level1Type
+    public partial class Config_Level1Type() : ProjectDirectory("Config/Config")
     {
         public Config_Level2Type Config { get; } = new();
-        public partial class Config_Level2Type
+        public partial class Config_Level2Type() : ProjectDirectory("Config/Config/Config")
         {
             public ProjectFile settings_xml { get; } = new("Config/Config/Config/settings.xml");
         }
@@ -34,7 +34,7 @@ partial class ConfigType() : ProjectDirectory("Config")
 partial class DataType() : ProjectDirectory("Data")
 {
     public Data_Level1Type Data { get; } = new();
-    public partial class Data_Level1Type
+    public partial class Data_Level1Type() : ProjectDirectory("Data/Data")
     {
         public ProjectFile config_json { get; } = new("Data/Data/config.json");
     }
@@ -42,8 +42,8 @@ partial class DataType() : ProjectDirectory("Data")
 }
 partial class ValidType() : ProjectDirectory("Valid")
 {
-    public PathType Path { get; } = new();
-    public partial class PathType
+    public new PathType Path { get; } = new();
+    public partial class PathType() : ProjectDirectory("Valid/Path")
     {
         public ProjectFile file_txt { get; } = new("Valid/Path/file.txt");
     }

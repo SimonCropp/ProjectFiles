@@ -18,19 +18,19 @@ namespace ProjectFilesGenerator.Types
 partial class AssetsType() : ProjectDirectory("Assets")
 {
     public ImagesType Images { get; } = new();
-    public partial class ImagesType
+    public partial class ImagesType() : ProjectDirectory("Assets/Images")
     {
         public ProjectFile logo_png { get; } = new("Assets/Images/logo.png");
     }
 
     public ScriptsType Scripts { get; } = new();
-    public partial class ScriptsType
+    public partial class ScriptsType() : ProjectDirectory("Assets/Scripts")
     {
         public ProjectFile app_js { get; } = new("Assets/Scripts/app.js");
     }
 
     public StylesType Styles { get; } = new();
-    public partial class StylesType
+    public partial class StylesType() : ProjectDirectory("Assets/Styles")
     {
         public ProjectFile theme_css { get; } = new("Assets/Styles/theme.css");
     }

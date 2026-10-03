@@ -77,6 +77,15 @@ public class ComsumeTests
     }
 
     [Test]
+    public void NestedDirectoryIsProjectDirectory()
+    {
+        ProjectDirectory nested = ProjectFiles.RecursiveDirectory.SubDir;
+        AreEqual("RecursiveDirectory/SubDir", nested.Path);
+        IsTrue(Directory.Exists(nested));
+        IsTrue(File.Exists(nested + "NestedFile.txt"));
+    }
+
+    [Test]
     public void IfDifferent() =>
         IsTrue(File.Exists(ProjectFiles.ifDifferentAtRoot_txt));
 

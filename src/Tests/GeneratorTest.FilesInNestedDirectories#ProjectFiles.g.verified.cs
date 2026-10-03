@@ -19,13 +19,13 @@ namespace ProjectFilesGenerator.Types
 partial class ConfigType() : ProjectDirectory("Config")
 {
     public DevType Dev { get; } = new();
-    public partial class DevType
+    public partial class DevType() : ProjectDirectory("Config/Dev")
     {
         public ProjectFile appsettings_dev_json { get; } = new("Config/Dev/appsettings.dev.json");
     }
 
     public ProdType Prod { get; } = new();
-    public partial class ProdType
+    public partial class ProdType() : ProjectDirectory("Config/Prod")
     {
         public ProjectFile appsettings_prod_json { get; } = new("Config/Prod/appsettings.prod.json");
     }
