@@ -8,7 +8,7 @@ A Roslyn C# incremental source generator (`ProjectFiles`) that emits a strongly-
 
 ## Build and test
 
-Requires .NET SDK 10.0.100+ (pinned to 10.0.202 via `src/global.json`).
+Requires .NET SDK 10.0.401+ (pinned via `global.json`). The analyzer is compiled against the Roslyn that SDK ships (5.9), so `Microsoft.CodeAnalysis.CSharp` in `src/Directory.Packages.props`, `MinimumSdkVersion` in `ProjectFiles.props` and the `roslyn5.9` package folder in `ProjectFiles.csproj` must move together.
 
 ```bash
 dotnet build src --configuration Release

@@ -9,6 +9,11 @@
     <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.5.0" />
     <PackageVersion Include="Polyfill" Version="11.4.1" />
     <PackageVersion Include="ProjectDefaults" Version="1.0.182" />
+    <!--
+      Microsoft.CodeAnalysis.* sets the lowest compiler that can load the analyzer. Keep it at the
+      Roslyn shipped by the minimum supported SDK (10.0.401 ships 5.9). When bumping it, also move
+      MinimumSdkVersion in ProjectFiles.props and the roslynX.Y folder in ProjectFiles.csproj.
+    -->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />

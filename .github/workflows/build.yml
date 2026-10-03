@@ -71,6 +71,25 @@ jobs:
           dotnet test src/NugetTests/NugetTests.csproj --configuration Release --no-build --no-restore
           dotnet test src/ConsumingTests/ConsumingTests.csproj --configuration Release --no-build --no-restore
 
+      # Visual Studio builds with the .NET Framework MSBuild, which can run the compiler on .NET
+      # Framework. The packed analyzer has to load there too, so build the nuget consumer that way.
+      # Runs after the tests since it rebuilds the IntegrationTests output.
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build with .NET Framework MSBuild
+        shell: pwsh
+        run: |
+          msbuild -version
+          $project = 'IntegrationTests/IntegrationTests/IntegrationTests.csproj'
+          "Default compiler type: $(msbuild $project -nologo -p:TargetFramework=net10.0 -getProperty:RoslynCompilerType)"
+          # default choice of compiler
+          msbuild $project -restore -t:Rebuild -p:Configuration=Release -nologo -v:m -warnaserror:CS9057,CS8032,CS8034
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # forced onto the .NET Framework hosted compiler
+          msbuild $project -restore -t:Rebuild -p:Configuration=Release -p:BuildWithNetFrameworkHostedCompiler=true -nologo -v:m -warnaserror:CS9057,CS8032,CS8034
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Upload received on failure
         if: failure()
         uses: actions/upload-artifact@v7
