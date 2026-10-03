@@ -58,7 +58,7 @@ public class Generator : IIncrementalGenerator
                 if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var relativePath) &&
                     !string.IsNullOrWhiteSpace(relativePath))
                 {
-                    return new ProjectItem(relativePath, IsEmbeddedResource: false, ResourceName: null);
+                    return new ProjectItem(NormalizeSeparators(relativePath), IsEmbeddedResource: false, ResourceName: null);
                 }
 
                 // Embedded resources
@@ -67,7 +67,7 @@ public class Generator : IIncrementalGenerator
                     options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResourceName", out var resourceName) &&
                     !string.IsNullOrWhiteSpace(resourceName))
                 {
-                    return new ProjectItem(resourcePath, IsEmbeddedResource: true, resourceName);
+                    return new ProjectItem(NormalizeSeparators(resourcePath), IsEmbeddedResource: true, resourceName);
                 }
 
                 return null;
@@ -146,6 +146,11 @@ public class Generator : IIncrementalGenerator
             });
     }
 
+    // Outside Windows a backslash is not a directory separator, and MSBuild can hand over a
+    // Link with backslashes unchanged. Normalize so every platform produces the same tree.
+    static string NormalizeSeparators(string path) =>
+        path.Replace('\\', '/');
+
     static HashSet<string> reservedNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "ProjectDirectory",
@@ -160,7 +165,7 @@ public class Generator : IIncrementalGenerator
         foreach (var item in files)
         {
             var file = item.Path;
-            var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var parts = file.Split('/');
 
             if (parts.Length <= 0)
             {
@@ -443,16 +448,15 @@ public class Generator : IIncrementalGenerator
             return Identifier.Build(fileName);
         }
 
-        var propertyName = Identifier.Build(nameWithoutExtension);
-
-        if (!string.IsNullOrEmpty(extension))
+        if (string.IsNullOrEmpty(extension))
         {
-            // Remove the leading dot and make it lowercase
-            var extensionWithoutDot = extension.TrimStart('.');
-            propertyName += "_" + extensionWithoutDot.ToLowerInvariant();
+            return Identifier.Build(nameWithoutExtension);
         }
 
-        return propertyName;
+        // Remove the leading dot and make it lowercase.
+        // Build from the combined text so the extension is sanitized too (eg "Dockerfile.linux-arm64").
+        var extensionWithoutDot = extension.TrimStart('.').ToLowerInvariant();
+        return Identifier.Build($"{nameWithoutExtension}_{extensionWithoutDot}");
     }
 
     static (IReadOnlyCollection<DirectoryNode> Directories, List<ProjectItem> RootFiles) BuildFileTree(IEnumerable<ProjectItem> files, Cancel cancel)
@@ -465,7 +469,7 @@ public class Generator : IIncrementalGenerator
             cancel.ThrowIfCancellationRequested();
 
             var file = item.Path;
-            var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var parts = file.Split('/');
 
             // Handle files at the root of the project
             if (parts.Length < 2)
@@ -494,7 +498,7 @@ public class Generator : IIncrementalGenerator
             {
                 cancel.ThrowIfCancellationRequested();
                 var part = parts[i];
-                currentPath = currentPath + Path.DirectorySeparatorChar + part;
+                currentPath = currentPath + '/' + part;
 
                 if (!current.Directories.TryGetValue(part, out var child))
                 {

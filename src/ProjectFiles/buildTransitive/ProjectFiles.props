@@ -20,6 +20,14 @@
 
   <Target Name="AddProjectFilesToAdditionalFiles"
           BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+    <PropertyGroup>
+      <!--
+        The Sdks directory of the .NET SDK in use. Items defined by any SDK in there (the default
+        globs of Microsoft.NET.Sdk, and the Content items of the Web and Worker SDKs) belong to the
+        project, as opposed to items contributed by a NuGet package.
+      -->
+      <_ProjectFilesSdksDirectory>$([MSBuild]::NormalizeDirectory('$(MicrosoftNETBuildTasksDirectoryRoot)', '..', '..'))</_ProjectFilesSdksDirectory>
+    </PropertyGroup>
     <ItemGroup>
       <!-- Add None items with CopyToOutputDirectory -->
       <!-- Use %(Link) if available (for linked files from other projects), otherwise use actual path -->
@@ -28,12 +36,13 @@
                        Condition="
                          (
                            '%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR
-                           '%(None.CopyToOutputDirectory)' == 'Always'
+                           '%(None.CopyToOutputDirectory)' == 'Always' OR
+                           '%(None.CopyToOutputDirectory)' == 'IfDifferent'
                          )
                          AND
                          (
                            '%(None.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' OR
-                           $([System.String]::Copy('%(None.DefiningProjectFullPath)').EndsWith('Microsoft.NET.Sdk.DefaultItems.props'))
+                           $([System.String]::Copy('%(None.DefiningProjectFullPath)').StartsWith('$(_ProjectFilesSdksDirectory)', System.StringComparison.OrdinalIgnoreCase))
                          )
                        " />
       <!-- Add Content items with CopyToOutputDirectory -->
@@ -43,12 +52,13 @@
                        Condition="
                          (
                            '%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR
-                           '%(Content.CopyToOutputDirectory)' == 'Always'
+                           '%(Content.CopyToOutputDirectory)' == 'Always' OR
+                           '%(Content.CopyToOutputDirectory)' == 'IfDifferent'
                          )
                          AND
                          (
                            '%(Content.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' OR
-                           $([System.String]::Copy('%(Content.DefiningProjectFullPath)').EndsWith('Microsoft.NET.Sdk.DefaultItems.props'))
+                           $([System.String]::Copy('%(Content.DefiningProjectFullPath)').StartsWith('$(_ProjectFilesSdksDirectory)', System.StringComparison.OrdinalIgnoreCase))
                          )
                        " />
     </ItemGroup>
@@ -60,9 +70,11 @@
 
     It depends on PrepareResourceNames (which runs AssignTargetPaths, SplitResourcesByCulture
     and CreateManifestResourceNames in order) so that MSBuild has computed the authoritative
-    %(EmbeddedResource.ManifestResourceName) (honouring RootNamespace, LogicalName, etc.)
-    before we capture it. .resx files are excluded because they are consumed via
-    ResourceManager rather than as raw manifest streams.
+    %(EmbeddedResource.ManifestResourceName) (honouring RootNamespace etc.) before we capture
+    it. %(LogicalName) wins when set, since that is the name the compiler embeds. .resx files
+    are excluded because they are consumed via ResourceManager rather than as raw manifest
+    streams. Culture specific resources (eg text.fr.txt) are excluded because they are
+    compiled into a satellite assembly rather than the main one.
   -->
 
   <Target Name="AddProjectEmbeddedResourcesToAdditionalFiles"
@@ -79,10 +91,11 @@
       -->
       <AdditionalFiles Include="@(EmbeddedResource)"
                        ProjectFilesEmbeddedResource="$([MSBuild]::ValueOrDefault('%(EmbeddedResource.Link)', '%(RelativeDir)%(Filename)%(Extension)'))"
-                       ProjectFilesEmbeddedResourceName="%(EmbeddedResource.ManifestResourceName)"
+                       ProjectFilesEmbeddedResourceName="$([MSBuild]::ValueOrDefault('%(EmbeddedResource.LogicalName)', '%(EmbeddedResource.ManifestResourceName)'))"
                        Condition="
                          '%(EmbeddedResource.ManifestResourceName)' != '' AND
-                         '%(EmbeddedResource.Extension)' != '.resx'
+                         '%(EmbeddedResource.Extension)' != '.resx' AND
+                         '%(EmbeddedResource.WithCulture)' != 'true'
                        " />
     </ItemGroup>
   </Target>

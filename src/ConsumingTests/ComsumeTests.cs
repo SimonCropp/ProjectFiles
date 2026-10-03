@@ -77,6 +77,25 @@ public class ComsumeTests
     }
 
     [Test]
+    public void IfDifferent() =>
+        IsTrue(File.Exists(ProjectFiles.ifDifferentAtRoot_txt));
+
+    [Test]
+    public void LogicalNameEmbeddedResource()
+    {
+        var resource = ProjectFiles.Resources.logical_txt;
+        AreEqual("Custom.Logical.Name", resource.Name);
+        AreEqual("logical content", resource.ReadAllText().Trim());
+    }
+
+    [Test]
+    public void CultureEmbeddedResourceIsNotExposed()
+    {
+        var properties = ProjectFiles.Resources.GetType().GetProperties().Select(_ => _.Name);
+        IsFalse(properties.Any(_ => _.StartsWith("culture")));
+    }
+
+    [Test]
     public void NestedEmbeddedResource()
     {
         var resource = ProjectFiles.Resources.Nested.nested_json;

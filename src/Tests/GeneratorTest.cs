@@ -1802,6 +1802,80 @@ public class GeneratorTest
         return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
+    [Test]
+    public Task ExtensionWithInvalidIdentifierCharacters()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Dockerfile.linux-arm64", "content"),
+            CreateAdditionalText("backup.txt~", "content"),
+            CreateAdditionalText("notes.c++", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Dockerfile.linux-arm64"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Dockerfile.linux-arm64"
+            },
+            ["backup.txt~"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "backup.txt~"
+            },
+            ["notes.c++"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "notes.c++"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task ConflictBetweenKeywordFileAndUnderscoreFile()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("class.json", "content"),
+            CreateAdditionalText("class_json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["class.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "class.json"
+            },
+            ["class_json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "class_json"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task LinkWithBackslashes()
+    {
+        // Outside Windows, MSBuild can pass a Link through with its backslashes intact.
+        // The tree must be the same as for forward slashes on every platform.
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("../SharedAssets/logo.png", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["../SharedAssets/logo.png"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = @"Assets\Images\logo.png"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
     static Dictionary<string, string> EmbeddedMetadata(string relativePath, string resourceName) =>
         new()
         {

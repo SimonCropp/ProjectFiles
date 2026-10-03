@@ -9,17 +9,12 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     static partial class ProjectFiles
     {
-        public static ProjectFile class_json { get; } = new("class.json");
-        public static ProjectFile namespace_txt { get; } = new("namespace.txt");
-
-        public static ConfigType Config { get; } = new();
+        public static ProjectFile backup_txt_ { get; } = new("backup.txt~");
+        public static ProjectFile Dockerfile_linux_arm64 { get; } = new("Dockerfile.linux-arm64");
+        public static ProjectFile notes_c__ { get; } = new("notes.c++");
     }
 }
 
 namespace ProjectFilesGenerator.Types
 {
-partial class ConfigType() : ProjectDirectory("Config")
-{
-    public ProjectFile string_xml { get; } = new("Config/string.xml");
-}
 }

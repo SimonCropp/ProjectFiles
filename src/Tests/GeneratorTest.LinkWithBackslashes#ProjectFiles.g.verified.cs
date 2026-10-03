@@ -9,17 +9,19 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     static partial class ProjectFiles
     {
-        public static ProjectFile class_json { get; } = new("class.json");
-        public static ProjectFile namespace_txt { get; } = new("namespace.txt");
-
-        public static ConfigType Config { get; } = new();
+        public static AssetsType Assets { get; } = new();
     }
 }
 
 namespace ProjectFilesGenerator.Types
 {
-partial class ConfigType() : ProjectDirectory("Config")
+partial class AssetsType() : ProjectDirectory("Assets")
 {
-    public ProjectFile string_xml { get; } = new("Config/string.xml");
+    public ImagesType Images { get; } = new();
+    public partial class ImagesType
+    {
+        public ProjectFile logo_png { get; } = new("Assets/Images/logo.png");
+    }
+
 }
 }
