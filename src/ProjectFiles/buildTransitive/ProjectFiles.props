@@ -39,20 +39,16 @@
       <!--
         The Sdks directory of the .NET SDK in use. Items defined by any SDK in there (the default
         globs of Microsoft.NET.Sdk, and the Content items of the Web and Worker SDKs) belong to the
-        project, as opposed to items contributed by a NuGet package.
+        project, as opposed to items contributed by a NuGet package. Only items declared in an
+        SDK .props file count: the SDK .targets add build outputs such as the apphost exe.
       -->
       <_ProjectFilesSdksDirectory>$([MSBuild]::NormalizeDirectory('$(MicrosoftNETBuildTasksDirectoryRoot)', '..', '..'))</_ProjectFilesSdksDirectory>
       <_ProjectFilesManifest>$(IntermediateOutputPath)ProjectFiles.manifest.txt</_ProjectFilesManifest>
     </PropertyGroup>
-    <!-- Values are escaped so that a ';' in a path does not split the line into two items -->
     <ItemGroup>
-      <_ProjectFilesManifestLine Include="Project|$([MSBuild]::Escape('$(MSBuildProjectFullPath)'))" />
-      <_ProjectFilesManifestLine Include="Solution|$([MSBuild]::Escape('$(SolutionPath)'))"
-                                 Condition="'$(SolutionPath)' != '' AND '$(SolutionPath)' != '*Undefined*'" />
       <!-- None items with CopyToOutputDirectory -->
-      <!-- Use %(Link) if available (for linked files from other projects), otherwise use actual path -->
-      <_ProjectFilesManifestLine Include="File|$([MSBuild]::Escape($([MSBuild]::ValueOrDefault('%(None.Link)', '%(None.RelativeDir)%(None.Filename)%(None.Extension)'))))"
-                                 Condition="
+      <_ProjectFilesCopied Include="@(None)"
+                           Condition="
                                    (
                                      '%(None.CopyToOutputDirectory)' == 'PreserveNewest' OR
                                      '%(None.CopyToOutputDirectory)' == 'Always' OR
@@ -61,12 +57,15 @@
                                    AND
                                    (
                                      '%(None.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' OR
-                                     $([System.String]::Copy('%(None.DefiningProjectFullPath)').StartsWith('$(_ProjectFilesSdksDirectory)', System.StringComparison.OrdinalIgnoreCase))
+                                     (
+                                       '%(None.DefiningProjectExtension)' == '.props' AND
+                                       $([System.String]::Copy('%(None.DefiningProjectFullPath)').StartsWith('$(_ProjectFilesSdksDirectory)', System.StringComparison.OrdinalIgnoreCase))
+                                     )
                                    )
                                  " />
       <!-- Content items with CopyToOutputDirectory -->
-      <_ProjectFilesManifestLine Include="File|$([MSBuild]::Escape($([MSBuild]::ValueOrDefault('%(Content.Link)', '%(Content.RelativeDir)%(Content.Filename)%(Content.Extension)'))))"
-                                 Condition="
+      <_ProjectFilesCopied Include="@(Content)"
+                           Condition="
                                    (
                                      '%(Content.CopyToOutputDirectory)' == 'PreserveNewest' OR
                                      '%(Content.CopyToOutputDirectory)' == 'Always' OR
@@ -75,9 +74,27 @@
                                    AND
                                    (
                                      '%(Content.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' OR
-                                     $([System.String]::Copy('%(Content.DefiningProjectFullPath)').StartsWith('$(_ProjectFilesSdksDirectory)', System.StringComparison.OrdinalIgnoreCase))
+                                     (
+                                       '%(Content.DefiningProjectExtension)' == '.props' AND
+                                       $([System.String]::Copy('%(Content.DefiningProjectFullPath)').StartsWith('$(_ProjectFilesSdksDirectory)', System.StringComparison.OrdinalIgnoreCase))
+                                     )
                                    )
                                  " />
+    </ItemGroup>
+    <!--
+      Ask MSBuild where each file is copied to, relative to the output directory, the same way
+      the build itself does: an explicit %(TargetPath), then %(Link), then the path relative to
+      the project, then the file name for a file outside the project.
+    -->
+    <AssignTargetPath Files="@(_ProjectFilesCopied)" RootFolder="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="AssignedFiles" ItemName="_ProjectFilesCopiedWithTargetPath" />
+    </AssignTargetPath>
+    <!-- Values are escaped so that a ';' in a path does not split the line into two items -->
+    <ItemGroup>
+      <_ProjectFilesManifestLine Include="Project|$([MSBuild]::Escape('$(MSBuildProjectFullPath)'))" />
+      <_ProjectFilesManifestLine Include="Solution|$([MSBuild]::Escape('$(SolutionPath)'))"
+                                 Condition="'$(SolutionPath)' != '' AND '$(SolutionPath)' != '*Undefined*'" />
+      <_ProjectFilesManifestLine Include="@(_ProjectFilesCopiedWithTargetPath->'File|%(TargetPath)')" />
       <!--
         Embedded resources are always compiled into the assembly being built, so (unlike
         CopyToOutputDirectory items) there is no need to filter by DefiningProjectFullPath.
@@ -90,7 +107,7 @@
         compiled into a satellite assembly rather than the main one.
       -->
       <_ProjectFilesManifestLine Include="Resource|$([MSBuild]::Escape($([MSBuild]::ValueOrDefault('%(EmbeddedResource.Link)', '%(EmbeddedResource.RelativeDir)%(EmbeddedResource.Filename)%(EmbeddedResource.Extension)'))))|$([MSBuild]::Escape($([MSBuild]::ValueOrDefault('%(EmbeddedResource.LogicalName)', '%(EmbeddedResource.ManifestResourceName)'))))"
-                                 Condition="
+                           Condition="
                                    '%(EmbeddedResource.ManifestResourceName)' != '' AND
                                    '%(EmbeddedResource.Extension)' != '.resx' AND
                                    '%(EmbeddedResource.WithCulture)' != 'true'

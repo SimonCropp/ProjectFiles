@@ -60,6 +60,15 @@
     <None Update="SameNamedDescendants\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <!-- copied to a different name than its source -->
+    <None Update="TargetPathSource\source.txt" TargetPath="targetPathRenamed.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- included by absolute path -->
+    <None Remove="AbsoluteInclude\absolute.txt" />
+    <None Include="$(MSBuildProjectDirectory)\AbsoluteInclude\absolute.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="ifDifferentAtRoot.txt">
       <CopyToOutputDirectory>IfDifferent</CopyToOutputDirectory>
     </None>

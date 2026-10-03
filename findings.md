@@ -18,7 +18,7 @@ The throwaway projects lived in a temporary folder and are not part of the repo.
 | [x] | 2 | Culture-suffixed embedded resources point at nothing | wrong output | real build |
 | [x] | 3 | `#` or `;` in a path truncates the value | wrong output | real build |
 | [x] | 4 | SDK default content (Web, Worker) is skipped | missing output | real build (Web), inspection (Worker) |
-| [ ] | 5 | `IfDifferent`, `TargetPath` and absolute includes are mishandled (`IfDifferent` fixed, the rest open) | wrong or missing output | real build |
+| [x] | 5 | `IfDifferent`, `TargetPath` and absolute includes are mishandled | wrong or missing output | real build |
 | [x] | 6 | `SolutionDirectoryFinder` misses or picks the wrong solution | wrong output | generator harness |
 | [ ] | 7 | Analyzer needs Roslyn 5.9 but ships as `roslyn5.0` / `roslyn5.3` | packaging | real build, part inferred |
 | [x] | 8 | File extension is not sanitised | compile break | generator harness |

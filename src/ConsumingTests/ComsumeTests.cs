@@ -86,6 +86,20 @@ public class ComsumeTests
     }
 
     [Test]
+    public void TargetPath()
+    {
+        AreEqual("targetPathRenamed.txt", ProjectFiles.targetPathRenamed_txt.Path);
+        IsTrue(File.Exists(ProjectFiles.targetPathRenamed_txt));
+    }
+
+    [Test]
+    public void AbsoluteInclude()
+    {
+        AreEqual("AbsoluteInclude/absolute.txt", ProjectFiles.AbsoluteInclude.absolute_txt.Path);
+        IsTrue(File.Exists(ProjectFiles.AbsoluteInclude.absolute_txt));
+    }
+
+    [Test]
     public void IfDifferent() =>
         IsTrue(File.Exists(ProjectFiles.ifDifferentAtRoot_txt));
 
