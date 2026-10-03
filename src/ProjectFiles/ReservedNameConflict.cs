@@ -1,4 +1,5 @@
+// Path is the root-level file, or the root-level directory when IsDirectory is true.
 record ReservedNameConflict(
-    string FilePath,
+    string Path,
     string PropertyName,
     bool IsDirectory);

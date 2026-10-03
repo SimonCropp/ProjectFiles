@@ -486,14 +486,14 @@ public class GeneratorTest
     {
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectDirectory.txt", "content")
+            CreateAdditionalText("ProjectDirectory", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectDirectory.txt"] = new()
+            ["ProjectDirectory"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory"
             }
         };
 
@@ -510,14 +510,14 @@ public class GeneratorTest
     {
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectFile.json", "content")
+            CreateAdditionalText("ProjectFile", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectFile.json"] = new()
+            ["ProjectFile"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile.json"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile"
             }
         };
 
@@ -560,7 +560,7 @@ public class GeneratorTest
         var additionalFiles = new[]
         {
             // File conflict
-            CreateAdditionalText("ProjectFile.txt", "content"),
+            CreateAdditionalText("ProjectFile", "content"),
             // Directory conflict
             CreateAdditionalText("SolutionDirectory/config.json", "content"),
             // Valid file
@@ -569,9 +569,9 @@ public class GeneratorTest
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectFile.txt"] = new()
+            ["ProjectFile"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile.txt"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectFile"
             },
             ["SolutionDirectory/config.json"] = new()
             {
@@ -597,14 +597,14 @@ public class GeneratorTest
     {
         var additionalFiles = new[]
         {
-            CreateAdditionalText("SolutionFile.xml", "content")
+            CreateAdditionalText("SolutionFile", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["SolutionFile.xml"] = new()
+            ["SolutionFile"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile.xml"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile"
             }
         };
 
@@ -621,19 +621,19 @@ public class GeneratorTest
     {
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectDirectory.txt", "content"),
-            CreateAdditionalText("SolutionFile.json", "content")
+            CreateAdditionalText("ProjectDirectory", "content"),
+            CreateAdditionalText("SolutionFile", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectDirectory.txt"] = new()
+            ["ProjectDirectory"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory"
             },
-            ["SolutionFile.json"] = new()
+            ["SolutionFile"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile.json"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "SolutionFile"
             }
         };
 
@@ -653,14 +653,14 @@ public class GeneratorTest
         // This test should report a conflict
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectDirectory.json", "content")
+            CreateAdditionalText("ProjectDirectory", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectDirectory.json"] = new()
+            ["ProjectDirectory"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.json"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory"
             }
         };
 
@@ -693,7 +693,7 @@ public class GeneratorTest
     }
 
     [Test]
-    public Task ConflictCaseInsensitive()
+    public Task ReservedNamesAreCaseSensitive()
     {
         var additionalFiles = new[]
         {
@@ -722,16 +722,16 @@ public class GeneratorTest
         // When there's a conflict, the conflicting file should be excluded but other files should still generate
         var additionalFiles = new[]
         {
-            CreateAdditionalText("ProjectDirectory.txt", "content"),
+            CreateAdditionalText("ProjectDirectory", "content"),
             CreateAdditionalText("appsettings.json", "content"),
             CreateAdditionalText("Config/database.json", "content")
         };
 
         var metadata = new Dictionary<string, Dictionary<string, string>>
         {
-            ["ProjectDirectory.txt"] = new()
+            ["ProjectDirectory"] = new()
             {
-                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory.txt"
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "ProjectDirectory"
             },
             ["appsettings.json"] = new()
             {
@@ -1802,6 +1802,134 @@ public class GeneratorTest
         return Verify(RunGenerator(additionalFiles, metadata, globalOptions));
     }
 
+    [Test]
+    public Task ExtensionWithInvalidIdentifierCharacters()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("Dockerfile.linux-arm64", "content"),
+            CreateAdditionalText("backup.txt~", "content"),
+            CreateAdditionalText("notes.c++", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Dockerfile.linux-arm64"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "Dockerfile.linux-arm64"
+            },
+            ["backup.txt~"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "backup.txt~"
+            },
+            ["notes.c++"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "notes.c++"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task ConflictBetweenKeywordFileAndUnderscoreFile()
+    {
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("class.json", "content"),
+            CreateAdditionalText("class_json", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["class.json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "class.json"
+            },
+            ["class_json"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = "class_json"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task LinkWithBackslashes()
+    {
+        // Outside Windows, MSBuild can pass a Link through with its backslashes intact.
+        // The tree must be the same as for forward slashes on every platform.
+        var additionalFiles = new[]
+        {
+            CreateAdditionalText("../SharedAssets/logo.png", "content")
+        };
+
+        var metadata = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["../SharedAssets/logo.png"] = new()
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = @"Assets\Images\logo.png"
+            }
+        };
+
+        return Verify(RunGenerator(additionalFiles, metadata));
+    }
+
+    [Test]
+    public Task ConflictBetweenDirectoryAndFile() =>
+        Verify(RunGeneratorForFiles("config_json/inner.txt", "config.json", "valid.txt"));
+
+    [Test]
+    public Task ConflictBetweenDirectories() =>
+        Verify(RunGeneratorForFiles("my-dir/a.txt", "my_dir/b.txt", "valid.txt"));
+
+    [Test]
+    public Task ConflictBetweenNestedDirectories() =>
+        Verify(RunGeneratorForFiles("Top/v1.0/a.txt", "Top/v1_0/b.txt", "Top/valid.txt"));
+
+    [Test]
+    public Task ConflictBetweenDirectoryAndSiblingDirectoryType() =>
+        Verify(RunGeneratorForFiles("Foo/a.txt", "FooType/b.txt"));
+
+    [Test]
+    public Task RootDirectoryNamedProjectFiles() =>
+        Verify(RunGeneratorForFiles("ProjectFiles/a.txt", "valid.txt"));
+
+    [Test]
+    public Task FileNamedAsEnclosingType() =>
+        Verify(RunGeneratorForFiles("Config/ConfigType", "Config/valid.json"));
+
+    [Test]
+    public Task MembersHidingInheritedMembers() =>
+        // directories and files named like members of ProjectDirectory or object get the new modifier
+        Verify(RunGeneratorForFiles("Docs/Path/a.txt", "Docs/Info/b.txt", "Docs/Sub/Path/c.txt", "Docs/ToString", "ToString/d.txt", "Equals"));
+
+    [Test]
+    public Task ReservedNameWithExtensionIsNotAConflict() =>
+        // these generate ProjectFile_json, SolutionFile_xml and SolutionFile_Backup, none of which is reserved
+        Verify(RunGeneratorForFiles("ProjectFile.json", "SolutionFile.xml", "SolutionFile.Backup/a.txt"));
+
+    [Test]
+    public Task ReservedDirectoryIsReportedOnce() =>
+        Verify(RunGeneratorForFiles("SolutionDirectory/a.json", "SolutionDirectory/Sub/b.json", "valid.txt"));
+
+    static GeneratorDriver RunGeneratorForFiles(params string[] files)
+    {
+        var additionalFiles = files
+            .Select(_ => CreateAdditionalText(_, "content"))
+            .ToArray();
+
+        var metadata = files.ToDictionary(
+            _ => _,
+            _ => new Dictionary<string, string>
+            {
+                ["build_metadata.AdditionalFiles.ProjectFilesGenerator"] = _
+            });
+
+        return RunGenerator(additionalFiles, metadata);
+    }
+
     static Dictionary<string, string> EmbeddedMetadata(string relativePath, string resourceName) =>
         new()
         {
@@ -1821,11 +1949,102 @@ public class GeneratorTest
             ? new MockOptionsProvider(metadata, globalOptions)
             : new MockOptionsProvider(metadata);
 
+        // ProjectFiles.props writes a manifest and passes that single file to the generator.
+        // Build the same manifest from the inputs the tests describe.
+        var manifest = new MockAdditionalText(
+            "obj/ProjectFiles.manifest.txt",
+            BuildManifest(additionalFiles, metadata, globalOptions));
+
         return CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
+            .AddAdditionalTexts([manifest])
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
+    }
+
+    static string BuildManifest(
+        AdditionalText[] additionalFiles,
+        Dictionary<string, Dictionary<string, string>> metadata,
+        Dictionary<string, string>? globalOptions)
+    {
+        var builder = new StringBuilder();
+
+        // the props leave out a path that MSBuild reports as undefined
+        void AppendPath(string kind, string property)
+        {
+            if (globalOptions != null &&
+                globalOptions.TryGetValue(property, out var value) &&
+                value != "*Undefined*")
+            {
+                builder.AppendLine($"{kind}|{value}");
+            }
+        }
+
+        AppendPath("Project", "build_property.MSBuildProjectFullPath");
+        AppendPath("Solution", "build_property.SolutionPath");
+
+        foreach (var file in additionalFiles)
+        {
+            if (!metadata.TryGetValue(file.Path, out var values))
+            {
+                continue;
+            }
+
+            if (values.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var relativePath))
+            {
+                builder.AppendLine($"File|{relativePath}");
+            }
+            else if (values.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResource", out var resourcePath) &&
+                     values.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResourceName", out var resourceName))
+            {
+                builder.AppendLine($"Resource|{resourcePath}|{resourceName}");
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    [Test]
+    public Task ManifestPathsWithHashAndSemicolon()
+    {
+        // these characters end a value in the generated .editorconfig, so paths come from the manifest
+        var manifest = new MockAdditionalText(
+            "obj/ProjectFiles.manifest.txt",
+            """
+            Project|C:/Code/C#/My;App/MyApp.csproj
+            Solution|C:/Code/C#/MySolution.sln
+            File|Docs/C#/note.txt
+            File|a;b.txt
+            Resource|Resources/C#/logo.png|My#App.Resources.logo.png
+            """);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts([manifest])
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task FileThatIsAlsoAnEmbeddedResource()
+    {
+        // exposed once, as the resource
+        var manifest = new MockAdditionalText(
+            "obj/ProjectFiles.manifest.txt",
+            """
+            File|data.json
+            Resource|data.json|TestAssembly.data.json
+            File|other.txt
+            File|other.txt
+            """);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts([manifest])
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
     }
 
     static CSharpCompilation CreateCompilation() =>

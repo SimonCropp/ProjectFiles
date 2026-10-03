@@ -60,12 +60,27 @@
     <None Update="SameNamedDescendants\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <!-- copied to a different name than its source -->
+    <None Update="TargetPathSource\source.txt" TargetPath="targetPathRenamed.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- included by absolute path -->
+    <None Remove="AbsoluteInclude\absolute.txt" />
+    <None Include="$(MSBuildProjectDirectory)\AbsoluteInclude\absolute.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="ifDifferentAtRoot.txt">
+      <CopyToOutputDirectory>IfDifferent</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <!-- Example embedded resources -->
   <ItemGroup>
     <EmbeddedResource Include="Resources\embedded.txt" />
     <EmbeddedResource Include="Resources\Nested\nested.json" />
+    <EmbeddedResource Include="Resources\logical.txt" LogicalName="Custom.Logical.Name" />
+    <!-- culture specific, so compiled into the fr satellite assembly and not exposed -->
+    <EmbeddedResource Include="Resources\culture.fr.txt" />
   </ItemGroup>
 
   <Import Project="$(ProjectDir)..\ProjectFiles\buildTransitive\ProjectFiles.props" />

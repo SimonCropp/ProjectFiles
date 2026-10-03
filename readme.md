@@ -13,7 +13,7 @@ Creates a type-safe API for accessing files that are copied to the projects outp
 
 ## Minimum SDK
 
-A minimum of SDK 10.0.100 is required.
+A minimum of SDK 10.0.401 is required.
 
 
 ## NuGet package
@@ -152,13 +152,13 @@ Properties are only generated when their corresponding MSBuild values are availa
 
 ### Reserved Names
 
-To prevent conflicts, dont use these reserved names for root-level files or directories:
+A root-level file or directory conflicts when the property it generates has one of these names: `ProjectDirectory`, `ProjectFile`, `SolutionDirectory`, `SolutionFile`, `GitRepoDirectory`. For a file that means a file with no extension, since `ProjectFile.json` generates `ProjectFile_json`.
 
 ❌ **Invalid** - Will cause build errors:
 ```xml
 <ItemGroup>
-  <!-- ERROR: Root-level file conflicts with ProjectDirectory property -->
-  <None Include="ProjectDirectory.txt">
+  <!-- ERROR: Root-level file with no extension conflicts with ProjectDirectory property -->
+  <None Include="ProjectDirectory">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
   
@@ -177,8 +177,8 @@ To prevent conflicts, dont use these reserved names for root-level files or dire
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
   
-  <!-- OK: Different root-level name -->
-  <None Include="MyProjectDir.txt">
+  <!-- OK: generates ProjectDirectory_txt -->
+  <None Include="ProjectDirectory.txt">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
 </ItemGroup>
@@ -305,7 +305,7 @@ namespace ProjectFilesGenerator.Types
     partial class RecursiveDirectoryType() : ProjectDirectory("RecursiveDirectory")
     {
         public SubDirType SubDir { get; } = new();
-        public partial class SubDirType
+        public partial class SubDirType() : ProjectDirectory("RecursiveDirectory/SubDir")
         {
             public ProjectFile NestedFile_txt { get; } = new("RecursiveDirectory/SubDir/NestedFile.txt");
         }
@@ -316,14 +316,14 @@ namespace ProjectFilesGenerator.Types
     partial class SpecificDirectoryType() : ProjectDirectory("SpecificDirectory")
     {
         public Dir1Type Dir1 { get; } = new();
-        public partial class Dir1Type
+        public partial class Dir1Type() : ProjectDirectory("SpecificDirectory/Dir1")
         {
             public ProjectFile File1_txt { get; } = new("SpecificDirectory/Dir1/File1.txt");
             public ProjectFile File2_txt { get; } = new("SpecificDirectory/Dir1/File2.txt");
         }
 
         public Dir2Type Dir2 { get; } = new();
-        public partial class Dir2Type
+        public partial class Dir2Type() : ProjectDirectory("SpecificDirectory/Dir2")
         {
             public ProjectFile File4_txt { get; } = new("SpecificDirectory/Dir2/File4.txt");
         }
@@ -540,7 +540,7 @@ partial class ProjectDirectory(string path)
     public static implicit operator string(ProjectDirectory temp) =>
         temp.Path;
 
-    public static implicit operator FileInfo(ProjectDirectory temp) =>
+    public static implicit operator DirectoryInfo(ProjectDirectory temp) =>
         new(temp.Path);
 
     public static ProjectDirectory operator +(ProjectDirectory directory, string suffix) =>
@@ -718,24 +718,44 @@ partial class EmbeddedResource(string name)
     public byte[] ReadAllBytes()
     {
         using var stream = OpenRead();
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
-        return memory.ToArray();
+
+        if (!stream.CanSeek)
+        {
+            using var memory = new MemoryStream();
+            stream.CopyTo(memory);
+            return memory.ToArray();
+        }
+
+        // The length is known, so read straight into a single array of the right size
+        var bytes = new byte[stream.Length];
+        var offset = 0;
+        while (offset < bytes.Length)
+        {
+            var read = stream.Read(bytes, offset, bytes.Length - offset);
+            if (read == 0)
+            {
+                throw new EndOfStreamException($"Embedded resource '{Name}' ended before its reported length.");
+            }
+
+            offset += read;
+        }
+
+        return bytes;
     }
 
     public async Task<string> ReadAllTextAsync(CancellationToken cancel = default)
     {
         using var reader = OpenText();
 #if NET7_0_OR_GREATER
-        return await reader.ReadToEndAsync(cancel);
+        return await reader.ReadToEndAsync(cancel).ConfigureAwait(false);
 #else
         cancel.ThrowIfCancellationRequested();
-        return await reader.ReadToEndAsync();
+        return await reader.ReadToEndAsync().ConfigureAwait(false);
 #endif
     }
 }
 ```
-<sup><a href='/src/Templates/EmbeddedResource.cs#L1-L61' title='Snippet source file'>snippet source</a> | <a href='#snippet-EmbeddedResource.cs' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Templates/EmbeddedResource.cs#L1-L81' title='Snippet source file'>snippet source</a> | <a href='#snippet-EmbeddedResource.cs' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 

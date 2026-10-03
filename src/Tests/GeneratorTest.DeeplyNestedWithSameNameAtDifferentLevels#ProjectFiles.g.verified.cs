@@ -18,13 +18,13 @@ namespace ProjectFilesGenerator.Types
 partial class RootType() : ProjectDirectory("Root")
 {
     public Level1Type Level1 { get; } = new();
-    public partial class Level1Type
+    public partial class Level1Type() : ProjectDirectory("Root/Level1")
     {
         public Level1_Level2Type Level1 { get; } = new();
-        public partial class Level1_Level2Type
+        public partial class Level1_Level2Type() : ProjectDirectory("Root/Level1/Level1")
         {
             public Level2Type Level2 { get; } = new();
-            public partial class Level2Type
+            public partial class Level2Type() : ProjectDirectory("Root/Level1/Level1/Level2")
             {
                 public ProjectFile file_txt { get; } = new("Root/Level1/Level1/Level2/file.txt");
             }

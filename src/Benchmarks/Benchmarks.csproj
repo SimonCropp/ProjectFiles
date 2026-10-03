@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0;net48</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <!-- the templates are compiled in, the same way the generator emits them into a consuming project -->
+    <Compile Include="..\Templates\*.cs" LinkBase="Templates" />
+  </ItemGroup>
+
+  <!-- the generator benchmarks only run on .NET -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <ProjectReference Include="..\ProjectFiles\ProjectFiles.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0'">
+    <Compile Remove="GeneratorBenchmarks.cs" />
+  </ItemGroup>
+
+  <!-- Embedded resources of known sizes, written to obj so no large files are checked in -->
+  <Target Name="WriteBenchmarkResources" BeforeTargets="AssignTargetPaths">
+    <WriteLinesToFile File="$(IntermediateOutputPath)small.txt" Lines="$([System.String]::new('x', 4096))" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)large.txt" Lines="$([System.String]::new('x', 4194304))" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(IntermediateOutputPath)small.txt" LogicalName="small.txt" />
+      <EmbeddedResource Include="$(IntermediateOutputPath)large.txt" LogicalName="large.txt" />
+      <FileWrites Include="$(IntermediateOutputPath)small.txt;$(IntermediateOutputPath)large.txt" />
+    </ItemGroup>
+  </Target>
+
+</Project>

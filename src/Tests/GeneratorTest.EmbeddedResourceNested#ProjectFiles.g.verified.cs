@@ -18,10 +18,10 @@ namespace ProjectFilesGenerator.Types
 partial class ResourcesType() : ProjectDirectory("Resources")
 {
     public ImagesType Images { get; } = new();
-    public partial class ImagesType
+    public partial class ImagesType() : ProjectDirectory("Resources/Images")
     {
         public IconsType Icons { get; } = new();
-        public partial class IconsType
+        public partial class IconsType() : ProjectDirectory("Resources/Images/Icons")
         {
             public EmbeddedResource home_svg { get; } = new("TestAssembly.Resources.Images.Icons.home.svg");
         }

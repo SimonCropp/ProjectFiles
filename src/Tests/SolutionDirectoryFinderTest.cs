@@ -168,6 +168,81 @@ public class SolutionDirectoryFinderTest
     }
 
     [Test]
+    public void SolutionBesideGitDirectory()
+    {
+        var repoDir = Path.Combine(tempRoot, "repo");
+        var projectDir = Path.Combine(repoDir, "src", "MyProject");
+        Directory.CreateDirectory(projectDir);
+        Directory.CreateDirectory(Path.Combine(repoDir, ".git"));
+
+        var solutionPath = Path.Combine(repoDir, "MySolution.sln");
+        File.WriteAllText(solutionPath, "");
+
+        var projectPath = Path.Combine(projectDir, "MyProject.csproj");
+        File.WriteAllText(projectPath, "");
+
+        var result = SolutionDirectoryFinder.Find(projectPath);
+
+        Assert.That(result, Is.EqualTo(solutionPath));
+    }
+
+    [Test]
+    public void StopsAtGitFile()
+    {
+        // worktrees and submodules have a .git file instead of a directory
+        var solutionDir = Path.Combine(tempRoot, "Solution");
+        var worktreeDir = Path.Combine(solutionDir, "worktree");
+        var projectDir = Path.Combine(worktreeDir, "src");
+        Directory.CreateDirectory(projectDir);
+        File.WriteAllText(Path.Combine(worktreeDir, ".git"), "gitdir: elsewhere");
+
+        File.WriteAllText(Path.Combine(solutionDir, "Unrelated.sln"), "");
+
+        var projectPath = Path.Combine(projectDir, "MyProject.csproj");
+        File.WriteAllText(projectPath, "");
+
+        var result = SolutionDirectoryFinder.Find(projectPath);
+
+        Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public void PrefersSlnxOverLongerNamedSln()
+    {
+        var solutionDir = Path.Combine(tempRoot, "Solution");
+        var projectDir = Path.Combine(solutionDir, "src");
+        Directory.CreateDirectory(projectDir);
+
+        var slnxPath = Path.Combine(solutionDir, "A.slnx");
+        File.WriteAllText(slnxPath, "");
+        File.WriteAllText(Path.Combine(solutionDir, "LongerName.sln"), "");
+
+        var projectPath = Path.Combine(projectDir, "MyProject.csproj");
+        File.WriteAllText(projectPath, "");
+
+        var result = SolutionDirectoryFinder.Find(projectPath);
+
+        Assert.That(result, Is.EqualTo(slnxPath));
+    }
+
+    [Test]
+    public void FindsUpperCaseExtension()
+    {
+        var solutionDir = Path.Combine(tempRoot, "Solution");
+        Directory.CreateDirectory(solutionDir);
+
+        var solutionPath = Path.Combine(solutionDir, "APP.SLN");
+        File.WriteAllText(solutionPath, "");
+
+        var projectPath = Path.Combine(solutionDir, "MyProject.csproj");
+        File.WriteAllText(projectPath, "");
+
+        var result = SolutionDirectoryFinder.Find(projectPath);
+
+        Assert.That(result, Is.EqualTo(solutionPath));
+    }
+
+    [Test]
     public void ReturnsNullForNonExistentProjectFile()
     {
         var projectPath = Path.Combine(tempRoot, "NonExistent", "MyProject.csproj");

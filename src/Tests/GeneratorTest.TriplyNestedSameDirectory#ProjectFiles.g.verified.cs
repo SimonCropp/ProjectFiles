@@ -18,10 +18,10 @@ namespace ProjectFilesGenerator.Types
 partial class TestType() : ProjectDirectory("Test")
 {
     public Test_Level1Type Test { get; } = new();
-    public partial class Test_Level1Type
+    public partial class Test_Level1Type() : ProjectDirectory("Test/Test")
     {
         public Test_Level2Type Test { get; } = new();
-        public partial class Test_Level2Type
+        public partial class Test_Level2Type() : ProjectDirectory("Test/Test/Test")
         {
             public ProjectFile data_json { get; } = new("Test/Test/Test/data.json");
         }

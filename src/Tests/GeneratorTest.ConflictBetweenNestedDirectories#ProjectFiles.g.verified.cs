@@ -9,11 +9,14 @@ namespace ProjectFilesGenerator
     /// <summary>Provides strongly-typed access to project files marked with CopyToOutputDirectory.</summary>
     static partial class ProjectFiles
     {
-        public static ProjectDirectory ProjectDirectory { get; } = new("C:/Projects/MyApp/");
-        public static ProjectFile ProjectFile { get; } = new("C:/Projects/MyApp/foo.csproj");
+        public static TopType Top { get; } = new();
     }
 }
 
 namespace ProjectFilesGenerator.Types
 {
+partial class TopType() : ProjectDirectory("Top")
+{
+    public ProjectFile valid_txt { get; } = new("Top/valid.txt");
+}
 }

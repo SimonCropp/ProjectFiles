@@ -14,23 +14,23 @@ The throwaway projects lived in a temporary folder and are not part of the repo.
 
 | Done | # | Finding | Kind | Checked by |
 |---|---|---|---|---|
-| [ ] | 1 | `LogicalName` is ignored for embedded resources | wrong output | real build |
-| [ ] | 2 | Culture-suffixed embedded resources point at nothing | wrong output | real build |
-| [ ] | 3 | `#` or `;` in a path truncates the value | wrong output | real build |
-| [ ] | 4 | SDK default content (Web, Worker) is skipped | missing output | real build (Web), inspection (Worker) |
-| [ ] | 5 | `IfDifferent`, `TargetPath` and absolute includes are mishandled | wrong or missing output | real build |
-| [ ] | 6 | `SolutionDirectoryFinder` misses or picks the wrong solution | wrong output | generator harness |
-| [ ] | 7 | Analyzer needs Roslyn 5.9 but ships as `roslyn5.0` / `roslyn5.3` | packaging | real build, part inferred |
-| [ ] | 8 | File extension is not sanitised | compile break | generator harness |
-| [ ] | 9 | Identifier collisions are not detected | compile break | generator harness, real build |
-| [ ] | 10 | Nested directory types are not `ProjectDirectory` | API | generator harness |
-| [ ] | 11 | `ProjectDirectory` converts implicitly to `FileInfo` | API | inspection |
-| [ ] | 12 | Reserved-name check is broader than needed | diagnostics | generator harness |
-| [ ] | 13 | Backslash `Link` produces a different API on Linux | wrong output | real build in Docker |
-| [ ] | P1 | Editing a copied data file recompiles the project | perf | real build with control |
-| [ ] | P2 | `EmbeddedResource.ReadAllBytes` buffers twice | perf | inspection |
-| [ ] | P3 | `ReadAllTextAsync` is synchronous on older targets | perf | inspection |
-| [ ] | P4 | Culture-sensitive ordering of generated members | perf, stability | generator harness |
+| [x] | 1 | `LogicalName` is ignored for embedded resources | wrong output | real build |
+| [x] | 2 | Culture-suffixed embedded resources point at nothing | wrong output | real build |
+| [x] | 3 | `#` or `;` in a path truncates the value | wrong output | real build |
+| [x] | 4 | SDK default content (Web, Worker) is skipped | missing output | real build (Web), inspection (Worker) |
+| [x] | 5 | `IfDifferent`, `TargetPath` and absolute includes are mishandled | wrong or missing output | real build |
+| [x] | 6 | `SolutionDirectoryFinder` misses or picks the wrong solution | wrong output | generator harness |
+| [x] | 7 | Analyzer needs Roslyn 5.9 but ships as `roslyn5.0` / `roslyn5.3` | packaging | real build, part inferred |
+| [x] | 8 | File extension is not sanitised | compile break | generator harness |
+| [x] | 9 | Identifier collisions are not detected | compile break | generator harness, real build |
+| [x] | 10 | Nested directory types are not `ProjectDirectory` | API | generator harness |
+| [x] | 11 | `ProjectDirectory` converts implicitly to `FileInfo` | API | inspection |
+| [x] | 12 | Reserved-name check is broader than needed | diagnostics | generator harness |
+| [x] | 13 | Backslash `Link` produces a different API on Linux | wrong output | real build in Docker |
+| [x] | P1 | Editing a copied data file recompiles the project | perf | real build with control |
+| [x] | P2 | `EmbeddedResource.ReadAllBytes` buffers twice | perf | inspection |
+| [ ] | P3 | `ReadAllTextAsync` is synchronous on older targets (tried, reverted: 4 to 6 times slower) | perf | inspection |
+| [x] | P4 | Culture-sensitive ordering of generated members | perf, stability | generator harness |
 
 ## Wrong or missing output, no diagnostic
 
@@ -323,6 +323,35 @@ Where: [Generator.cs lines 253, 318, 331, 357, 388](src/ProjectFiles/Generator.c
 Observed: `my_dir` is emitted before `my-dir` and `config` before `Config`, which is culture order, not ordinal order. The member order of the generated file therefore depends on the culture and globalization mode of the compiler host.
 
 Suggested fix: pass `StringComparer.Ordinal`. It is faster and stable across machines. It reorders members in the existing snapshots.
+
+## Benchmark results
+
+Measured with `src/Benchmarks` (BenchmarkDotNet, Release, Windows 11, SDK 10.0.401). Run with `dotnet run -c Release -f net10.0 --project src/Benchmarks -- --filter *`, or `-f net48` for the older-target code paths.
+
+P4, plus the reserved-name rewrite from 12, `GeneratorBenchmarks` on .NET 10 (a cold run of the whole generator):
+
+| Files | Before | After | Allocated before | Allocated after |
+|---|---|---|---|---|
+| 100 | 281.6 µs | 256.2 µs | 955 KB | 932 KB |
+| 10,000 | 30.75 ms | 24.94 ms | 57.1 MB | 55.1 MB |
+
+P2, `ReadAllBytesBenchmarks` (old `MemoryStream` copy against the new single array):
+
+| Runtime | Resource | Before | After | Allocated before | Allocated after |
+|---|---|---|---|---|---|
+| .NET 10 | 4 KB | 435 ns | 193 ns | 8.2 KB | 4.1 KB |
+| .NET 10 | 4 MB | 9.28 ms | 0.54 ms | 20.4 MB | 4.1 MB |
+| .NET Framework 4.8 | 4 KB | 1,831 ns | 295 ns | 88.4 KB | 4.2 KB |
+| .NET Framework 4.8 | 4 MB | 3.04 ms | 0.64 ms | 14.3 MB | 4.1 MB |
+
+P3 was tried and reverted. On .NET Framework 4.8 an asynchronous stream measured against the existing `Task.FromResult(File.ReadAllText)`:
+
+| File size | Existing | Asynchronous stream | Allocated existing | Allocated asynchronous |
+|---|---|---|---|---|
+| 4 KB | 33 µs | 140 µs | 24.1 KB | 32.4 KB |
+| 4 MB | 8.0 ms | 46.1 ms | 16.5 MB | 20.4 MB |
+
+The asynchronous version was slower by a factor of 4 to 6, so the synchronous implementation stays. Only `ConfigureAwait(false)` on `EmbeddedResource.ReadAllTextAsync` was kept.
 
 ## Checked and fine
 

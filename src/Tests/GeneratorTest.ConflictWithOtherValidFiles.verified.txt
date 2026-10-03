@@ -1,7 +1,7 @@
 ﻿{
   Diagnostics: [
     {
-      Message: File 'ProjectDirectory.txt' would generate property name 'ProjectDirectory' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
+      Message: File 'ProjectDirectory' would generate property name 'ProjectDirectory' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
       Severity: Error,
       Descriptor: {
         Id: PROJFILES001,

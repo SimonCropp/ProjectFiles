@@ -18,10 +18,10 @@ namespace ProjectFilesGenerator.Types
 partial class DirectoryType() : ProjectDirectory("Directory")
 {
     public NestedType Nested { get; } = new();
-    public partial class NestedType
+    public partial class NestedType() : ProjectDirectory("Directory/Nested")
     {
         public Nested_Level2Type Nested { get; } = new();
-        public partial class Nested_Level2Type
+        public partial class Nested_Level2Type() : ProjectDirectory("Directory/Nested/Nested")
         {
             public ProjectFile file_txt { get; } = new("Directory/Nested/Nested/file.txt");
         }

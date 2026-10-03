@@ -44,19 +44,39 @@ partial class EmbeddedResource(string name)
     public byte[] ReadAllBytes()
     {
         using var stream = OpenRead();
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
-        return memory.ToArray();
+
+        if (!stream.CanSeek)
+        {
+            using var memory = new MemoryStream();
+            stream.CopyTo(memory);
+            return memory.ToArray();
+        }
+
+        // The length is known, so read straight into a single array of the right size
+        var bytes = new byte[stream.Length];
+        var offset = 0;
+        while (offset < bytes.Length)
+        {
+            var read = stream.Read(bytes, offset, bytes.Length - offset);
+            if (read == 0)
+            {
+                throw new EndOfStreamException($"Embedded resource '{Name}' ended before its reported length.");
+            }
+
+            offset += read;
+        }
+
+        return bytes;
     }
 
     public async Task<string> ReadAllTextAsync(CancellationToken cancel = default)
     {
         using var reader = OpenText();
 #if NET7_0_OR_GREATER
-        return await reader.ReadToEndAsync(cancel);
+        return await reader.ReadToEndAsync(cancel).ConfigureAwait(false);
 #else
         cancel.ThrowIfCancellationRequested();
-        return await reader.ReadToEndAsync();
+        return await reader.ReadToEndAsync().ConfigureAwait(false);
 #endif
     }
 }

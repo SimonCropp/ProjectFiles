@@ -18,7 +18,7 @@ namespace ProjectFilesGenerator.Types
 partial class FolderType() : ProjectDirectory("Folder")
 {
     public folder_Level1Type folder { get; } = new();
-    public partial class folder_Level1Type
+    public partial class folder_Level1Type() : ProjectDirectory("Folder/folder")
     {
         public ProjectFile file_txt { get; } = new("Folder/folder/file.txt");
     }

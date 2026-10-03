@@ -27,67 +27,36 @@ public class Generator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Get MSBuild properties
-        var msbuildProperties = context
+        var implicitUsings = context
             .AnalyzerConfigOptionsProvider
             .Select((provider, _) =>
             {
-                var options = provider.GlobalOptions;
-                var projectFile = options.GetValue("build_property.MSBuildProjectFullPath");
-                var solutionFile = options.GetValue("build_property.SolutionPath");
-                var implicitUsings = options.GetValue("build_property.ImplicitUsings");
+                var value = provider.GlobalOptions.GetValue("build_property.ImplicitUsings");
 
-                return new MsBuildProperties(
-                    projectFile,
-                    solutionFile,
-                    string.Equals(implicitUsings, "enable", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(implicitUsings, "true", StringComparison.OrdinalIgnoreCase)
-                );
+                return string.Equals(value, "enable", StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
             });
 
-        // Get all additional files with CopyToOutputDirectory or EmbeddedResource metadata
-        var files = context.AdditionalTextsProvider
-            .Combine(context.AnalyzerConfigOptionsProvider)
-            .Select(pair =>
-            {
-                var (text, config) = pair;
-
-                var options = config.GetOptions(text);
-
-                // CopyToOutputDirectory files
-                if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var relativePath) &&
-                    !string.IsNullOrWhiteSpace(relativePath))
-                {
-                    return new ProjectItem(relativePath, IsEmbeddedResource: false, ResourceName: null);
-                }
-
-                // Embedded resources
-                if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResource", out var resourcePath) &&
-                    !string.IsNullOrWhiteSpace(resourcePath) &&
-                    options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResourceName", out var resourceName) &&
-                    !string.IsNullOrWhiteSpace(resourceName))
-                {
-                    return new ProjectItem(resourcePath, IsEmbeddedResource: true, resourceName);
-                }
-
-                return null;
-            })
-            .Where(_ => _ is not null)
-            .Select(_ => _!)
+        // The text of the manifest written by ProjectFiles.props. It lists the project and
+        // solution paths, the files copied to the output directory and the embedded resources.
+        // Kept as a string so the step is cached by value.
+        var manifests = context.AdditionalTextsProvider
+            .Where(_ => Manifest.IsManifest(_.Path))
+            .Select((text, cancel) => text.GetText(cancel)?.ToString() ?? "")
             .Collect();
 
         var langVersion = context.ParseOptionsProvider
             .Select((p, _) => ((CSharpParseOptions)p).LanguageVersion);
 
-        // Combine files, properties and langversion
-        var combined = files.Combine(msbuildProperties.Combine(langVersion));
+        // Combine manifest, properties and langversion
+        var combined = manifests.Combine(implicitUsings.Combine(langVersion));
 
         // Generate the source
         context.RegisterSourceOutput(
             combined,
             (context, data) =>
             {
-                var (fileList, (props, langVersion)) = data;
+                var (manifestContents, (implicitUsings, langVersion)) = data;
 
                 if (langVersion < LanguageVersion.CSharp14)
                 {
@@ -95,16 +64,29 @@ public class Generator : IIncrementalGenerator
                     return;
                 }
 
+                var manifest = Manifest.Parse(manifestContents);
+                var fileList = manifest.Items;
+                var props = new MsBuildProperties(manifest.ProjectFile, manifest.SolutionFile, implicitUsings);
+
                 var conflictingFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var conflictingDirectories = new List<string>();
 
                 foreach (var conflict in FindReservedNameConflicts(fileList))
                 {
-                    conflictingFiles.Add(conflict.FilePath);
+                    if (conflict.IsDirectory)
+                    {
+                        conflictingDirectories.Add($"{conflict.Path}/");
+                    }
+                    else
+                    {
+                        conflictingFiles.Add(conflict.Path);
+                    }
+
                     var descriptor = conflict.IsDirectory ? Diagnostics.ReservedDirectoryNameConflict : Diagnostics.ReservedFileNameConflict;
                     var diagnostic = Diagnostic.Create(
                         descriptor,
                         Location.None,
-                        conflict.FilePath,
+                        conflict.Path,
                         conflict.PropertyName);
                     context.ReportDiagnostic(diagnostic);
                 }
@@ -122,9 +104,38 @@ public class Generator : IIncrementalGenerator
                     context.ReportDiagnostic(diagnostic);
                 }
 
+                foreach (var conflict in FindMemberNameConflicts(fileList))
+                {
+                    foreach (var member in new[] {conflict.Existing, conflict.Added})
+                    {
+                        if (member == null)
+                        {
+                            continue;
+                        }
+
+                        if (member.IsFile)
+                        {
+                            conflictingFiles.Add(member.Path);
+                        }
+                        else
+                        {
+                            conflictingDirectories.Add($"{member.Path}/");
+                        }
+                    }
+
+                    var diagnostic = Diagnostic.Create(
+                        Diagnostics.DuplicateMemberName,
+                        Location.None,
+                        conflict.Description,
+                        conflict.Added.Path,
+                        conflict.Name);
+                    context.ReportDiagnostic(diagnostic);
+                }
+
                 // Filter out conflicting files before generating source
                 var filteredFiles = fileList
-                    .Where(_ => !conflictingFiles.Contains(_.Path))
+                    .Where(_ => !conflictingFiles.Contains(_.Path) &&
+                                !conflictingDirectories.Any(directory => _.Path.StartsWith(directory, StringComparison.Ordinal)))
                     .ToList();
 
                 var source = GenerateSource(filteredFiles, props, context.CancellationToken);
@@ -146,7 +157,7 @@ public class Generator : IIncrementalGenerator
             });
     }
 
-    static HashSet<string> reservedNames = new(StringComparer.OrdinalIgnoreCase)
+    static HashSet<string> reservedNames = new(StringComparer.Ordinal)
     {
         "ProjectDirectory",
         "ProjectFile",
@@ -157,28 +168,35 @@ public class Generator : IIncrementalGenerator
 
     static IEnumerable<ReservedNameConflict> FindReservedNameConflicts(ImmutableArray<ProjectItem> files)
     {
+        // a directory is reported once, however many files it contains
+        var reportedDirectories = new HashSet<string>();
+
         foreach (var item in files)
         {
             var file = item.Path;
-            var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var separator = file.IndexOf('/');
 
-            if (parts.Length <= 0)
+            // A file at the root: only a clash when the generated property is a reserved name,
+            // eg a file named "ProjectFile". "ProjectFile.json" generates ProjectFile_json.
+            if (separator == -1)
             {
+                var propertyName = ToFilePropertyName(file);
+                if (reservedNames.Contains(propertyName))
+                {
+                    yield return new(file, propertyName, IsDirectory: false);
+                }
+
                 continue;
             }
 
-            var rootName = parts[0];
-            var nameWithoutExtension = Path.GetFileNameWithoutExtension(rootName);
-            var propertyName = Identifier.Build(nameWithoutExtension);
+            var directory = file.Substring(0, separator);
+            var directoryPropertyName = Identifier.Build(directory);
 
-            if (!reservedNames.Contains(propertyName))
+            if (reservedNames.Contains(directoryPropertyName) &&
+                reportedDirectories.Add(directory))
             {
-                continue;
+                yield return new(directory, directoryPropertyName, IsDirectory: true);
             }
-
-            // It's a directory if there are more path parts (subdirectories or files within)
-            var isDirectory = parts.Length > 1;
-            yield return new(file, propertyName, isDirectory);
         }
     }
 
@@ -222,6 +240,117 @@ public class Generator : IIncrementalGenerator
         }
     }
 
+    // Finds clashes that FindDuplicatePropertyNames does not cover: a directory against a file,
+    // a directory against another directory, and any member against the type it is declared in.
+    static IEnumerable<MemberNameConflict> FindMemberNameConflicts(ImmutableArray<ProjectItem> files)
+    {
+        // scope (directory path, empty for the root) => member name => what generates it
+        var scopes = new Dictionary<string, Dictionary<string, GeneratedMember?>>();
+        var reported = new HashSet<(string?, string)>();
+
+        foreach (var item in files)
+        {
+            var parts = item.Path.Split('/');
+            var scope = "";
+
+            for (var index = 0; index < parts.Length; index++)
+            {
+                if (!scopes.TryGetValue(scope, out var members))
+                {
+                    members = [];
+                    scopes.Add(scope, members);
+
+                    // member names cannot be the same as their enclosing type
+                    var enclosingType = index == 0 ? "ProjectFiles" : DirectoryTypeName(parts, index - 1);
+                    members.Add(enclosingType, null);
+                }
+
+                var path = scope.Length == 0 ? parts[index] : $"{scope}/{parts[index]}";
+                var isFile = index == parts.Length - 1;
+                var member = new GeneratedMember(path, isFile);
+
+                string[] names = isFile
+                    ? [ToFilePropertyName(path)]
+                    // a directory generates a property and a type
+                    : [Identifier.Build(parts[index]), DirectoryTypeName(parts, index)];
+
+                foreach (var name in names)
+                {
+                    // @class and class are the same identifier
+                    var key = name.TrimStart('@');
+
+                    if (!members.TryGetValue(key, out var existing))
+                    {
+                        members.Add(key, member);
+                        continue;
+                    }
+
+                    // the same directory seen again, or two files (reported as PROJFILES004)
+                    if (existing == member ||
+                        existing is {IsFile: true} && isFile)
+                    {
+                        continue;
+                    }
+
+                    // two directories clash on both the property and the type; report the pair once
+                    if (!reported.Add((existing?.Path, path)))
+                    {
+                        continue;
+                    }
+
+                    var description = existing?.Path ?? $"the enclosing type {key}";
+                    yield return new(description, existing, member, key);
+                }
+
+                scope = path;
+            }
+        }
+    }
+
+    // The name of the type generated for the directory at parts[index]
+    static string DirectoryTypeName(string[] parts, int index)
+    {
+        var name = Identifier.Build(parts[index]);
+
+        // A directory with the same name as its parent gets a depth-based suffix
+        if (index > 0 &&
+            string.Equals(name, Identifier.Build(parts[index - 1]), StringComparison.OrdinalIgnoreCase))
+        {
+            name = $"{name}_Level{index}";
+        }
+
+        return $"{name}Type";
+    }
+
+    // Members every generated type inherits. A file or directory that generates one of these
+    // names hides the inherited member, which needs the "new" modifier to avoid CS0108.
+    static HashSet<string> objectMembers =
+    [
+        "Equals",
+        "GetHashCode",
+        "GetType",
+        "ToString",
+        "MemberwiseClone",
+        "ReferenceEquals",
+        "Finalize"
+    ];
+
+    static HashSet<string> directoryMembers =
+    [
+        ..objectMembers,
+        "Path",
+        "FullPath",
+        "Info",
+        "JoinPaths",
+        "EnumerateDirectories",
+        "EnumerateFiles",
+        "GetFiles",
+        "GetDirectories"
+    ];
+
+    static string NewModifier(HashSet<string> inheritedMembers, string name) =>
+        inheritedMembers.Contains(name.TrimStart('@')) ? "new " : "";
+
     static string GenerateSource(IEnumerable<ProjectItem> files, MsBuildProperties properties, Cancel cancel)
     {
         var (tree, rootFiles) = BuildFileTree(files, cancel);
@@ -251,7 +380,7 @@ public class Generator : IIncrementalGenerator
         }
 
         // Generate root-level file properties
-        foreach (var item in rootFiles.OrderBy(_ => _.Path))
+        foreach (var item in rootFiles.OrderBy(_ => _.Path, StringComparer.Ordinal))
         {
             cancel.ThrowIfCancellationRequested();
             builder.AppendLine(FilePropertyDeclaration("        ", isStatic: true, item));
@@ -313,8 +442,10 @@ public class Generator : IIncrementalGenerator
 
     static void AppendFile(StringBuilder builder, string file, string prefix)
     {
-        var directory = Directory.GetParent(file)!;
-        var directoryCSharp = PathToCSharp($"{directory.FullName}/");
+        // MSBuild supplies a full path, so the parent is taken from the text. Resolving it against
+        // the file system would make the result depend on the platform and current directory.
+        var directory = Path.GetDirectoryName(file);
+        var directoryCSharp = PathToCSharp($"{directory}/");
         builder.AppendLine($$"""        public static ProjectDirectory {{prefix}}Directory { get; } = new({{directoryCSharp}});""");
         var fileCSharp = PathToCSharp(file);
         builder.AppendLine($$"""        public static ProjectFile {{prefix}}File { get; } = new({{fileCSharp}});""");
@@ -326,12 +457,13 @@ public class Generator : IIncrementalGenerator
 
     static void GenerateRootProperties(StringBuilder builder, IReadOnlyCollection<DirectoryNode> topLevelNodes, Cancel cancel)
     {
-        foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
+        foreach (var node in topLevelNodes.OrderBy(_ => _.Path, StringComparer.Ordinal))
         {
             cancel.ThrowIfCancellationRequested();
 
             var className = Identifier.Build(Path.GetFileName(node.Path));
-            builder.AppendLine($"        public static {className}Type {className} {{ get; }} = new();");
+            var newModifier = NewModifier(objectMembers, className);
+            builder.AppendLine($"        public {newModifier}static {className}Type {className} {{ get; }} = new();");
         }
     }
 
@@ -339,7 +471,7 @@ public class Generator : IIncrementalGenerator
     {
         var indent = new string(' ', indentCount * 4);
 
-        foreach (var node in topLevelNodes.OrderBy(_ => _.Path))
+        foreach (var node in topLevelNodes.OrderBy(_ => _.Path, StringComparer.Ordinal))
         {
             cancel.ThrowIfCancellationRequested();
 
@@ -365,7 +497,7 @@ public class Generator : IIncrementalGenerator
         var parentClassName = Identifier.Build(Path.GetFileName(node.Path));
 
         // Generate subdirectory properties first
-        foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key))
+        foreach (var (name, childNode) in node.Directories.OrderBy(_ => _.Key, StringComparer.Ordinal))
         {
             cancel.ThrowIfCancellationRequested();
 
@@ -380,12 +512,14 @@ public class Generator : IIncrementalGenerator
             }
 
             // generate subdirectory property
-            builder.AppendLine($"{indent}public {className}Type {baseClassName} {{ get; }} = new();");
+            var newModifier = NewModifier(directoryMembers, baseClassName);
+            builder.AppendLine($"{indent}public {newModifier}{className}Type {baseClassName} {{ get; }} = new();");
 
             // generate nested type definitions for subdirectory
+            var pathString = PathToCSharp(childNode.Path);
             builder.AppendLine(
                 $$"""
-                  {{indent}}public partial class {{className}}Type
+                  {{indent}}public partial class {{className}}Type() : ProjectDirectory({{pathString}})
                   {{indent}}{
                   """);
 
@@ -396,7 +530,7 @@ public class Generator : IIncrementalGenerator
         }
 
         // Generate file properties
-        foreach (var item in node.Files.OrderBy(_ => _.Path))
+        foreach (var item in node.Files.OrderBy(_ => _.Path, StringComparer.Ordinal))
         {
             builder.AppendLine(FilePropertyDeclaration(indent, isStatic: false, item));
         }
@@ -406,6 +540,8 @@ public class Generator : IIncrementalGenerator
     {
         var propertyName = ToFilePropertyName(item.Path);
         var staticModifier = isStatic ? "static " : "";
+        // root files are static members of ProjectFiles, the rest are members of a ProjectDirectory
+        staticModifier = NewModifier(isStatic ? objectMembers : directoryMembers, propertyName) + staticModifier;
 
         if (item.IsEmbeddedResource)
         {
@@ -443,16 +579,15 @@ public class Generator : IIncrementalGenerator
             return Identifier.Build(fileName);
         }
 
-        var propertyName = Identifier.Build(nameWithoutExtension);
-
-        if (!string.IsNullOrEmpty(extension))
+        if (string.IsNullOrEmpty(extension))
         {
-            // Remove the leading dot and make it lowercase
-            var extensionWithoutDot = extension.TrimStart('.');
-            propertyName += "_" + extensionWithoutDot.ToLowerInvariant();
+            return Identifier.Build(nameWithoutExtension);
         }
 
-        return propertyName;
+        // Remove the leading dot and make it lowercase.
+        // Build from the combined text so the extension is sanitized too (eg "Dockerfile.linux-arm64").
+        var extensionWithoutDot = extension.TrimStart('.').ToLowerInvariant();
+        return Identifier.Build($"{nameWithoutExtension}_{extensionWithoutDot}");
     }
 
     static (IReadOnlyCollection<DirectoryNode> Directories, List<ProjectItem> RootFiles) BuildFileTree(IEnumerable<ProjectItem> files, Cancel cancel)
@@ -465,7 +600,7 @@ public class Generator : IIncrementalGenerator
             cancel.ThrowIfCancellationRequested();
 
             var file = item.Path;
-            var parts = file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var parts = file.Split('/');
 
             // Handle files at the root of the project
             if (parts.Length < 2)
@@ -494,7 +629,7 @@ public class Generator : IIncrementalGenerator
             {
                 cancel.ThrowIfCancellationRequested();
                 var part = parts[i];
-                currentPath = currentPath + Path.DirectorySeparatorChar + part;
+                currentPath = currentPath + '/' + part;
 
                 if (!current.Directories.TryGetValue(part, out var child))
                 {

@@ -18,10 +18,10 @@ namespace ProjectFilesGenerator.Types
 partial class Level1Type() : ProjectDirectory("Level1")
 {
     public Level2Type Level2 { get; } = new();
-    public partial class Level2Type
+    public partial class Level2Type() : ProjectDirectory("Level1/Level2")
     {
         public Level3Type Level3 { get; } = new();
-        public partial class Level3Type
+        public partial class Level3Type() : ProjectDirectory("Level1/Level2/Level3")
         {
             public ProjectFile deep_txt { get; } = new("Level1/Level2/Level3/deep.txt");
         }

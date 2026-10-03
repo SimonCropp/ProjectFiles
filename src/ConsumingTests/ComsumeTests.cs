@@ -77,6 +77,48 @@ public class ComsumeTests
     }
 
     [Test]
+    public void NestedDirectoryIsProjectDirectory()
+    {
+        ProjectDirectory nested = ProjectFiles.RecursiveDirectory.SubDir;
+        AreEqual("RecursiveDirectory/SubDir", nested.Path);
+        IsTrue(Directory.Exists(nested));
+        IsTrue(File.Exists(nested + "NestedFile.txt"));
+    }
+
+    [Test]
+    public void TargetPath()
+    {
+        AreEqual("targetPathRenamed.txt", ProjectFiles.targetPathRenamed_txt.Path);
+        IsTrue(File.Exists(ProjectFiles.targetPathRenamed_txt));
+    }
+
+    [Test]
+    public void AbsoluteInclude()
+    {
+        AreEqual("AbsoluteInclude/absolute.txt", ProjectFiles.AbsoluteInclude.absolute_txt.Path);
+        IsTrue(File.Exists(ProjectFiles.AbsoluteInclude.absolute_txt));
+    }
+
+    [Test]
+    public void IfDifferent() =>
+        IsTrue(File.Exists(ProjectFiles.ifDifferentAtRoot_txt));
+
+    [Test]
+    public void LogicalNameEmbeddedResource()
+    {
+        var resource = ProjectFiles.Resources.logical_txt;
+        AreEqual("Custom.Logical.Name", resource.Name);
+        AreEqual("logical content", resource.ReadAllText().Trim());
+    }
+
+    [Test]
+    public void CultureEmbeddedResourceIsNotExposed()
+    {
+        var properties = ProjectFiles.Resources.GetType().GetProperties().Select(_ => _.Name);
+        IsFalse(properties.Any(_ => _.StartsWith("culture")));
+    }
+
+    [Test]
     public void NestedEmbeddedResource()
     {
         var resource = ProjectFiles.Resources.Nested.nested_json;

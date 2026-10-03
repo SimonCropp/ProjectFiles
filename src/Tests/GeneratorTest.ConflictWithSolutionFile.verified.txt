@@ -1,7 +1,7 @@
 ﻿{
   Diagnostics: [
     {
-      Message: File 'SolutionFile.xml' would generate property name 'SolutionFile' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
+      Message: File 'SolutionFile' would generate property name 'SolutionFile' that conflicts with reserved MSBuild property. Rename the file or exclude it from CopyToOutputDirectory.,
       Severity: Error,
       Descriptor: {
         Id: PROJFILES001,

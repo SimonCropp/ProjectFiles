@@ -22,7 +22,12 @@ env:
 
 jobs:
   build:
-    runs-on: windows-latest
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
     timeout-minutes: 60
     steps:
       - name: Checkout
@@ -32,6 +37,10 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
+          # runtimes for the net8.0 and net9.0 targets of IntegrationTests
+          dotnet-version: |
+            8.0.x
+            9.0.x
 
       # Keyed on everything that decides the package graph. restore-keys lets a changed graph start
       # from the previous cache rather than empty.
@@ -41,6 +50,12 @@ jobs:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('global.json', '**/Directory.Packages.props', '**/Directory.Build.props', '**/*.csproj', '**/*.fsproj') }}
           restore-keys: nuget-${{ runner.os }}-
+
+      # The restored cache can hold a ProjectFiles package of the same version built from another
+      # commit. NuGet would use it instead of the one packed by this build, so remove it.
+      - name: Remove cached ProjectFiles package
+        shell: bash
+        run: rm -rf ~/.nuget/packages/projectfiles
 
       # The tag is the version: tag 1.2.3 (or v1.2.3) builds 1.2.3. Other builds use the
       # Version in Directory.Build.props.
@@ -71,17 +86,38 @@ jobs:
           dotnet test src/NugetTests/NugetTests.csproj --configuration Release --no-build --no-restore
           dotnet test src/ConsumingTests/ConsumingTests.csproj --configuration Release --no-build --no-restore
 
+      # Visual Studio builds with the .NET Framework MSBuild, which can run the compiler on .NET
+      # Framework. The packed analyzer has to load there too, so build the nuget consumer that way.
+      # Runs after the tests since it rebuilds the IntegrationTests output.
+      - name: Add MSBuild to PATH
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build with .NET Framework MSBuild
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          msbuild -version
+          $project = 'IntegrationTests/IntegrationTests/IntegrationTests.csproj'
+          "Default compiler type: $(msbuild $project -nologo -p:TargetFramework=net10.0 -getProperty:RoslynCompilerType)"
+          # default choice of compiler
+          msbuild $project -restore -t:Rebuild -p:Configuration=Release -nologo -v:m -warnaserror:CS9057,CS8032,CS8034
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # forced onto the .NET Framework hosted compiler
+          msbuild $project -restore -t:Rebuild -p:Configuration=Release -p:BuildWithNetFrameworkHostedCompiler=true -nologo -v:m -warnaserror:CS9057,CS8032,CS8034
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Upload received on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: received
+          name: received-${{ matrix.os }}
           path: '**/*.received.*'
           if-no-files-found: ignore
           retention-days: 14
 
       - name: Upload packages
-        if: success()
+        if: success() && runner.os == 'Windows'
         uses: actions/upload-artifact@v7
         with:
           name: nupkgs
