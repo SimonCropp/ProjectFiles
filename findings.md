@@ -16,7 +16,7 @@ The throwaway projects lived in a temporary folder and are not part of the repo.
 |---|---|---|---|---|
 | [x] | 1 | `LogicalName` is ignored for embedded resources | wrong output | real build |
 | [x] | 2 | Culture-suffixed embedded resources point at nothing | wrong output | real build |
-| [ ] | 3 | `#` or `;` in a path truncates the value | wrong output | real build |
+| [x] | 3 | `#` or `;` in a path truncates the value | wrong output | real build |
 | [x] | 4 | SDK default content (Web, Worker) is skipped | missing output | real build (Web), inspection (Worker) |
 | [ ] | 5 | `IfDifferent`, `TargetPath` and absolute includes are mishandled (`IfDifferent` fixed, the rest open) | wrong or missing output | real build |
 | [x] | 6 | `SolutionDirectoryFinder` misses or picks the wrong solution | wrong output | generator harness |
@@ -24,10 +24,10 @@ The throwaway projects lived in a temporary folder and are not part of the repo.
 | [x] | 8 | File extension is not sanitised | compile break | generator harness |
 | [x] | 9 | Identifier collisions are not detected | compile break | generator harness, real build |
 | [x] | 10 | Nested directory types are not `ProjectDirectory` | API | generator harness |
-| [ ] | 11 | `ProjectDirectory` converts implicitly to `FileInfo` | API | inspection |
+| [x] | 11 | `ProjectDirectory` converts implicitly to `FileInfo` | API | inspection |
 | [x] | 12 | Reserved-name check is broader than needed | diagnostics | generator harness |
 | [x] | 13 | Backslash `Link` produces a different API on Linux | wrong output | real build in Docker |
-| [ ] | P1 | Editing a copied data file recompiles the project | perf | real build with control |
+| [x] | P1 | Editing a copied data file recompiles the project | perf | real build with control |
 | [x] | P2 | `EmbeddedResource.ReadAllBytes` buffers twice | perf | inspection |
 | [ ] | P3 | `ReadAllTextAsync` is synchronous on older targets (tried, reverted: 4 to 6 times slower) | perf | inspection |
 | [x] | P4 | Culture-sensitive ordering of generated members | perf, stability | generator harness |

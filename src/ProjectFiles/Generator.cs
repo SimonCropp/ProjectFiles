@@ -27,73 +27,46 @@ public class Generator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Get MSBuild properties
-        var msbuildProperties = context
+        var implicitUsings = context
             .AnalyzerConfigOptionsProvider
             .Select((provider, _) =>
             {
-                var options = provider.GlobalOptions;
-                var projectFile = options.GetValue("build_property.MSBuildProjectFullPath");
-                var solutionFile = options.GetValue("build_property.SolutionPath");
-                var implicitUsings = options.GetValue("build_property.ImplicitUsings");
+                var value = provider.GlobalOptions.GetValue("build_property.ImplicitUsings");
 
-                return new MsBuildProperties(
-                    projectFile,
-                    solutionFile,
-                    string.Equals(implicitUsings, "enable", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(implicitUsings, "true", StringComparison.OrdinalIgnoreCase)
-                );
+                return string.Equals(value, "enable", StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
             });
 
-        // Get all additional files with CopyToOutputDirectory or EmbeddedResource metadata
-        var files = context.AdditionalTextsProvider
-            .Combine(context.AnalyzerConfigOptionsProvider)
-            .Select(pair =>
-            {
-                var (text, config) = pair;
-
-                var options = config.GetOptions(text);
-
-                // CopyToOutputDirectory files
-                if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var relativePath) &&
-                    !string.IsNullOrWhiteSpace(relativePath))
-                {
-                    return new ProjectItem(NormalizeSeparators(relativePath), IsEmbeddedResource: false, ResourceName: null);
-                }
-
-                // Embedded resources
-                if (options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResource", out var resourcePath) &&
-                    !string.IsNullOrWhiteSpace(resourcePath) &&
-                    options.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResourceName", out var resourceName) &&
-                    !string.IsNullOrWhiteSpace(resourceName))
-                {
-                    return new ProjectItem(NormalizeSeparators(resourcePath), IsEmbeddedResource: true, resourceName);
-                }
-
-                return null;
-            })
-            .Where(_ => _ is not null)
-            .Select(_ => _!)
+        // The text of the manifest written by ProjectFiles.props. It lists the project and
+        // solution paths, the files copied to the output directory and the embedded resources.
+        // Kept as a string so the step is cached by value.
+        var manifests = context.AdditionalTextsProvider
+            .Where(_ => Manifest.IsManifest(_.Path))
+            .Select((text, cancel) => text.GetText(cancel)?.ToString() ?? "")
             .Collect();
 
         var langVersion = context.ParseOptionsProvider
             .Select((p, _) => ((CSharpParseOptions)p).LanguageVersion);
 
-        // Combine files, properties and langversion
-        var combined = files.Combine(msbuildProperties.Combine(langVersion));
+        // Combine manifest, properties and langversion
+        var combined = manifests.Combine(implicitUsings.Combine(langVersion));
 
         // Generate the source
         context.RegisterSourceOutput(
             combined,
             (context, data) =>
             {
-                var (fileList, (props, langVersion)) = data;
+                var (manifestContents, (implicitUsings, langVersion)) = data;
 
                 if (langVersion < LanguageVersion.CSharp14)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MinLangVersion, Location.None));
                     return;
                 }
+
+                var manifest = Manifest.Parse(manifestContents);
+                var fileList = manifest.Items;
+                var props = new MsBuildProperties(manifest.ProjectFile, manifest.SolutionFile, implicitUsings);
 
                 var conflictingFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var conflictingDirectories = new List<string>();
@@ -183,11 +156,6 @@ public class Generator : IIncrementalGenerator
                 }
             });
     }
-
-    // Outside Windows a backslash is not a directory separator, and MSBuild can hand over a
-    // Link with backslashes unchanged. Normalize so every platform produces the same tree.
-    static string NormalizeSeparators(string path) =>
-        path.Replace('\\', '/');
 
     static HashSet<string> reservedNames = new(StringComparer.Ordinal)
     {

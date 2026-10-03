@@ -15,7 +15,7 @@ partial class ProjectDirectory(string path)
     public static implicit operator string(ProjectDirectory temp) =>
         temp.Path;
 
-    public static implicit operator FileInfo(ProjectDirectory temp) =>
+    public static implicit operator DirectoryInfo(ProjectDirectory temp) =>
         new(temp.Path);
 
     public static ProjectDirectory operator +(ProjectDirectory directory, string suffix) =>

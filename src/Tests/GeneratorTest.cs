@@ -1949,11 +1949,102 @@ public class GeneratorTest
             ? new MockOptionsProvider(metadata, globalOptions)
             : new MockOptionsProvider(metadata);
 
+        // ProjectFiles.props writes a manifest and passes that single file to the generator.
+        // Build the same manifest from the inputs the tests describe.
+        var manifest = new MockAdditionalText(
+            "obj/ProjectFiles.manifest.txt",
+            BuildManifest(additionalFiles, metadata, globalOptions));
+
         return CSharpGeneratorDriver
             .Create(new Generator())
-            .AddAdditionalTexts(additionalFiles)
+            .AddAdditionalTexts([manifest])
             .WithUpdatedAnalyzerConfigOptions(options)
             .RunGenerators(CreateCompilation());
+    }
+
+    static string BuildManifest(
+        AdditionalText[] additionalFiles,
+        Dictionary<string, Dictionary<string, string>> metadata,
+        Dictionary<string, string>? globalOptions)
+    {
+        var builder = new StringBuilder();
+
+        // the props leave out a path that MSBuild reports as undefined
+        void AppendPath(string kind, string property)
+        {
+            if (globalOptions != null &&
+                globalOptions.TryGetValue(property, out var value) &&
+                value != "*Undefined*")
+            {
+                builder.AppendLine($"{kind}|{value}");
+            }
+        }
+
+        AppendPath("Project", "build_property.MSBuildProjectFullPath");
+        AppendPath("Solution", "build_property.SolutionPath");
+
+        foreach (var file in additionalFiles)
+        {
+            if (!metadata.TryGetValue(file.Path, out var values))
+            {
+                continue;
+            }
+
+            if (values.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesGenerator", out var relativePath))
+            {
+                builder.AppendLine($"File|{relativePath}");
+            }
+            else if (values.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResource", out var resourcePath) &&
+                     values.TryGetValue("build_metadata.AdditionalFiles.ProjectFilesEmbeddedResourceName", out var resourceName))
+            {
+                builder.AppendLine($"Resource|{resourcePath}|{resourceName}");
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    [Test]
+    public Task ManifestPathsWithHashAndSemicolon()
+    {
+        // these characters end a value in the generated .editorconfig, so paths come from the manifest
+        var manifest = new MockAdditionalText(
+            "obj/ProjectFiles.manifest.txt",
+            """
+            Project|C:/Code/C#/My;App/MyApp.csproj
+            Solution|C:/Code/C#/MySolution.sln
+            File|Docs/C#/note.txt
+            File|a;b.txt
+            Resource|Resources/C#/logo.png|My#App.Resources.logo.png
+            """);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts([manifest])
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
+    }
+
+    [Test]
+    public Task FileThatIsAlsoAnEmbeddedResource()
+    {
+        // exposed once, as the resource
+        var manifest = new MockAdditionalText(
+            "obj/ProjectFiles.manifest.txt",
+            """
+            File|data.json
+            Resource|data.json|TestAssembly.data.json
+            File|other.txt
+            File|other.txt
+            """);
+
+        var driver = CSharpGeneratorDriver
+            .Create(new Generator())
+            .AddAdditionalTexts([manifest])
+            .RunGenerators(CreateCompilation());
+
+        return Verify(driver);
     }
 
     static CSharpCompilation CreateCompilation() =>

@@ -27,8 +27,8 @@ Run a single test: `dotnet test src/Tests/Tests.csproj --filter "FullyQualifiedN
 
 ### Two-sided design: MSBuild props + generator
 
-1. `src/ProjectFiles/buildTransitive/ProjectFiles.props` — ships in the NuGet package. Before compilation it promotes `None`/`Content` items with `CopyToOutputDirectory` into `AdditionalFiles`, tagging each with a `ProjectFilesGenerator` metadata value (using `%(Link)` if present). Exposes `MSBuildProjectFullPath`, `SolutionPath`, `ImplicitUsings` to the generator via `CompilerVisibleProperty`.
-2. `src/ProjectFiles/Generator.cs` (`IIncrementalGenerator`) — reads those `AdditionalFiles` + MSBuild props and emits three (optionally four) files: `ProjectFiles.g.cs`, `ProjectFiles.ProjectDirectory.g.cs`, `ProjectFiles.ProjectFile.g.cs`, plus `ProjectFiles.GlobalUsings.g.cs` when `ImplicitUsings` is on.
+1. `src/ProjectFiles/buildTransitive/ProjectFiles.props` — ships in the NuGet package. Before compilation it writes `obj/.../ProjectFiles.manifest.txt` and adds that single file to `AdditionalFiles`. The manifest has one line per entry: `Project|path`, `Solution|path`, `File|path` for `None`/`Content` items with `CopyToOutputDirectory` (using `%(Link)` if present), and `Resource|path|name` for embedded resources. A manifest is used (rather than one `AdditionalFiles` item per file) so editing a copied file does not recompile the project, and because values passed through the generated `.editorconfig` are cut at `#` or `;`. Only `ImplicitUsings` is exposed via `CompilerVisibleProperty`.
+2. `src/ProjectFiles/Generator.cs` (`IIncrementalGenerator`) — parses the manifest (`Manifest.cs`) and emits three (optionally four) files: `ProjectFiles.g.cs`, `ProjectFiles.ProjectDirectory.g.cs`, `ProjectFiles.ProjectFile.g.cs`, plus `ProjectFiles.GlobalUsings.g.cs` when `ImplicitUsings` is on.
 
 The two base-class files (`ProjectDirectory.cs`, `ProjectFile.cs`) live in `src/Templates/` and are pulled into `ProjectFiles.csproj` as `EmbeddedResource`s — the `Templates` project itself is a multi-target compile check (every TFM from `net461` to `net10.0`) to ensure the templates stay portable.
 
