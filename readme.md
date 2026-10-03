@@ -88,12 +88,13 @@ The generator automatically exposes MSBuild project and solution paths as strong
 
 ### Available Properties
 
-Four properties are automatically generated when their corresponding MSBuild properties are available:
+Five properties are automatically generated when their corresponding values are available:
 
 - **`ProjectFiles.ProjectDirectory`** - The project's root directory (`MSBuildProjectDirectory`)
 - **`ProjectFiles.ProjectFile`** - The project file path (`MSBuildProjectFullPath`)
 - **`ProjectFiles.SolutionDirectory`** - The solution's root directory (`SolutionDir`)
 - **`ProjectFiles.SolutionFile`** - The solution file path (`SolutionPath`)
+- **`ProjectFiles.GitRepoDirectory`** - The root directory of the git repository containing the project
 
 
 ### Usage Example
@@ -119,6 +120,11 @@ var solutionFile = ProjectFiles.SolutionFile;
 Console.WriteLine($"Solution file: {solutionFile.Path}");
 // Output: C:/Projects/MySolution.sln
 
+// Access git repository root directory
+var gitRepoDir = ProjectFiles.GitRepoDirectory;
+Console.WriteLine($"Git repo directory: {gitRepoDir.Path}");
+// Output: C:/Projects/
+
 // Navigate relative to project directory
 var configPath = Path.Combine(ProjectFiles.ProjectDirectory, "Config", "app.json");
 
@@ -137,8 +143,11 @@ Properties are only generated when their corresponding MSBuild values are availa
 | `ProjectFile` | `MSBuildProjectFullPath` | Always (when building a project) |
 | `SolutionDirectory` | `SolutionDir` | Only when building from a solution |
 | `SolutionFile` | `SolutionPath` | Only when building from a solution |
+| `GitRepoDirectory` | Nearest ancestor of the project directory containing `.git` | Only when the project is inside a git repository |
 
 **Note**: `SolutionDirectory` and `SolutionFile` will not be available when building a standalone project file (e.g., `dotnet build MyProject.csproj`) without a solution context.
+
+`GitRepoDirectory` is found by walking up from the project directory to the first directory containing a `.git` directory or file (worktrees and submodules use a `.git` file, so in those cases it is the worktree or submodule root).
 
 
 ### Reserved Names

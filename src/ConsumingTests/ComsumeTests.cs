@@ -8,6 +8,7 @@ public class ComsumeTests
         IsTrue(Directory.Exists(ProjectFiles.ProjectDirectory), ProjectFiles.ProjectDirectory);
         IsTrue(File.Exists(ProjectFiles.SolutionFile), ProjectFiles.SolutionFile);
         IsTrue(File.Exists(ProjectFiles.ProjectFile), ProjectFiles.ProjectFile);
+        IsTrue(File.Exists(Path.Combine(ProjectFiles.GitRepoDirectory, "readme.md")), ProjectFiles.GitRepoDirectory);
     }
 
     [Test]

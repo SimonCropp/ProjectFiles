@@ -151,7 +151,8 @@ public class Generator : IIncrementalGenerator
         "ProjectDirectory",
         "ProjectFile",
         "SolutionDirectory",
-        "SolutionFile"
+        "SolutionFile",
+        "GitRepoDirectory"
     };
 
     static IEnumerable<ReservedNameConflict> FindReservedNameConflicts(ImmutableArray<ProjectItem> files)
@@ -297,6 +298,16 @@ public class Generator : IIncrementalGenerator
         if (solutionFile != null)
         {
             AppendFile(builder, solutionFile, "Solution");
+        }
+
+        if (properties.ProjectFile != null)
+        {
+            var gitRepoDirectory = GitRepoDirectoryFinder.Find(properties.ProjectFile!);
+            if (gitRepoDirectory != null)
+            {
+                var directoryCSharp = PathToCSharp($"{gitRepoDirectory}/");
+                builder.AppendLine($$"""        public static ProjectDirectory GitRepoDirectory { get; } = new({{directoryCSharp}});""");
+            }
         }
     }
 
