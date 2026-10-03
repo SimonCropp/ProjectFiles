@@ -35,7 +35,7 @@ The two base-class files (`ProjectDirectory.cs`, `ProjectFile.cs`) live in `src/
 ### Conflict detection (before codegen)
 
 `Generator.cs` runs two passes and reports diagnostics `PROJFILES001`–`PROJFILES004`:
-- Reserved-name conflicts (`ProjectDirectory`, `ProjectFile`, `SolutionDirectory`, `SolutionFile`) for root files/directories.
+- Reserved-name conflicts (`ProjectDirectory`, `ProjectFile`, `SolutionDirectory`, `SolutionFile`, `GitRepoDirectory`) for root files/directories.
 - Duplicate property names within the same directory (e.g. `config.json` vs `config_json` → both become `config_json`).
 
 Conflicting files are stripped from the tree; the rest still generate.
@@ -45,6 +45,8 @@ Identifier generation lives in `Identifier.cs` + `KeywordDetect.cs`. `ToFileProp
 Language version is enforced: the generator emits `PROJFILES003` and bails if the consuming compilation is pre-C# 14.
 
 When no `SolutionPath` is provided by MSBuild, `SolutionDirectoryFinder.cs` walks up (bounded, stops at a `.git` dir) looking for `.sln`/`.slnx`.
+
+`GitRepoDirectoryFinder.cs` walks up from the project file to the nearest directory containing `.git` (directory or file) and the generator emits it as `ProjectFiles.GitRepoDirectory`; omitted when the project is not in a git repo.
 
 ### Test strategy
 
