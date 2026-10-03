@@ -42,6 +42,12 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('global.json', '**/Directory.Packages.props', '**/Directory.Build.props', '**/*.csproj', '**/*.fsproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
+      # The restored cache can hold a ProjectFiles package of the same version built from another
+      # commit. NuGet would use it instead of the one packed by this build, so remove it.
+      - name: Remove cached ProjectFiles package
+        shell: bash
+        run: rm -rf ~/.nuget/packages/projectfiles
+
       # The tag is the version: tag 1.2.3 (or v1.2.3) builds 1.2.3. Other builds use the
       # Version in Directory.Build.props.
       - name: Resolve the version from the tag
