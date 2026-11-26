@@ -26,7 +26,7 @@
       The netstandard2.0 build is the one shipped: it loads in both .NET and .NET Framework hosted
       compilers (Visual Studio can run generators in a .NET Framework process).
     -->
-    <None Include="bin\$(Configuration)\netstandard2.0\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/roslyn5.9/cs" Visible="false" />
+    <None Include="bin\$(Configuration)\netstandard2.0\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/roslyn5.12/cs" Visible="false" />
   </ItemGroup>
 
 </Project>

@@ -37,10 +37,11 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
-          # runtimes for the net8.0 and net9.0 targets of IntegrationTests
+          # runtimes for the net8.0, net9.0 and net10.0 targets of IntegrationTests
           dotnet-version: |
             8.0.x
             9.0.x
+            10.0.x
 
       # Keyed on everything that decides the package graph. restore-keys lets a changed graph start
       # from the previous cache rather than empty.
